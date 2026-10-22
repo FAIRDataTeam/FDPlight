@@ -13,6 +13,7 @@ export const NS = {
   sio: 'http://semanticscience.org/resource/',
   r3d: 'http://www.re3data.org/schema/3-0#',
   vcard: 'http://www.w3.org/2006/vcard/ns#',
+  schema: 'https://schema.org/',
 } as const;
 
 export const RDF_TYPE = `${NS.rdf}type`;

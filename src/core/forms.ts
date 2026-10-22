@@ -5,10 +5,10 @@ import { formSchema } from '@fairdatateam/record-core/forms';
 import { expandTerm, fieldKey, nestedShapeOf, recordHasContent, recordToQuads, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
 import { parseShacl } from '@fairdatateam/record-core/shacl';
 import type { Field, Schema } from '@fairdatateam/record-core/types';
-import { Store } from 'n3';
+import { DataFactory, Store } from 'n3';
 import { hashIri } from './iri';
 import type { EntityType } from './profile';
-import { NS } from './vocab';
+import { NS, RDF_TYPE } from './vocab';
 import { generatedPaths } from './wiring';
 
 /**
@@ -72,7 +72,22 @@ export function withHashNodes(form: Schema, entityIri: string, values: RecordNod
   return node;
 }
 
-/** SPEC §5.1. The user graph of an entity from its form values. */
+/**
+ * SPEC §5.1, §5.6. The user graph of an entity from its form values. Each
+ * filled-in nested node is also typed with its shape's target class (e.g.
+ * `E#publisher a foaf:Agent`), as the FDP itself does and as import expects.
+ */
 export function userGraphFromForm(form: Schema, entityIri: string, values: RecordNode): Store {
-  return new Store(recordToQuads(form, entityIri, withHashNodes(form, entityIri, values)));
+  const store = new Store(recordToQuads(form, entityIri, withHashNodes(form, entityIri, values)));
+  const subject = DataFactory.namedNode(entityIri);
+  for (const f of shapeFields(form)) {
+    const ns = nestedShapeOf(form, f);
+    const path = expandTerm(f.path, form.prefixes);
+    const cls = ns?.targetClass ? expandTerm(ns.targetClass, form.prefixes) : null;
+    if (!ns || !path || !cls || f.inversePath) continue;
+    for (const q of store.getQuads(subject, DataFactory.namedNode(path), null, null))
+      if (q.object.termType !== 'Literal' && store.getQuads(q.object, null, null, null).length)
+        store.addQuad(q.object as never, DataFactory.namedNode(RDF_TYPE), DataFactory.namedNode(cls));
+  }
+  return store;
 }

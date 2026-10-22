@@ -63,8 +63,9 @@ describe('Software profile', () => {
     const findings = await checkEntity(f, iri, v, g, shapesGraph(SOFTWARE.shapes.software));
     expect(findings.map(findingText)).toEqual([]);
     const ttl = await toTurtle(g, iri);
-    expect(ttl).toContain('a dcat:Resource, <https://schema.org/SoftwareApplication>');
-    expect(ttl).toContain(`<${S}hasPart> <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl>`);
+    expect(ttl).toContain('a dcat:Resource, schema:SoftwareApplication');
+    expect(ttl).toContain('schema:hasPart <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl>');
+    expect(ttl).toContain(`@prefix schema: <${S}>`);
     expect(ttl).toContain('dct:isPartOf <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl>');
   });
 

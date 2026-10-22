@@ -54,6 +54,7 @@ describe('entityForm (TASKS Phase 2)', () => {
     const g = userGraphFromForm(f, E, values);
     expect(g.getQuads(E, `${NS.dct}publisher`, null, null).map((q) => q.object.value)).toEqual([`${E}#publisher`]);
     expect(g.getQuads(`${E}#publisher`, `${NS.foaf}name`, null, null).map((q) => q.object.value)).toEqual(['University of Twente']);
+    expect(g.getQuads(`${E}#publisher`, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', null, null).map((q) => q.object.value)).toEqual([`${NS.foaf}Agent`]);
     expect(values[fieldKey(pub)][0].value).toBe(''); // the stored value keeps no IRI
   });
 });
