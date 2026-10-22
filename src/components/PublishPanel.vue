@@ -76,6 +76,27 @@ const mode = ref<ImportMode>('keep');
       <ul v-if="pub.loadReport.value.length" class="publish__report">
         <li v-for="r in pub.loadReport.value" :key="r">{{ r }}</li>
       </ul>
+      <details v-if="Object.keys(pub.loadCounts.value).length" class="publish__counts">
+        <summary>What was read from each file</summary>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">File</th>
+              <th scope="col" title="Read into the form">In the form</th>
+              <th scope="col" title="Links, containers, identifiers and timestamps FDPlight writes anew on publish">Regenerated</th>
+              <th scope="col" title="No place in the form: written back as they are">Kept as is</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(c, path) in pub.loadCounts.value" :key="path">
+              <th scope="row">{{ path }}</th>
+              <td>{{ c.mapped }}</td>
+              <td>{{ c.regenerated }}</td>
+              <td>{{ c.kept }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
       <ul v-if="pub.blockers.value.length" class="publish__blockers">
         <li v-for="b in pub.blockers.value" :key="b">{{ b }}</li>
       </ul>
@@ -212,6 +233,31 @@ input {
   margin: 0 0 8px;
   padding-left: 18px;
   color: var(--color-text-lighter);
+}
+.publish__counts {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-lighter);
+}
+.publish__counts summary {
+  cursor: pointer;
+}
+.publish__counts table {
+  margin-top: 4px;
+  border-collapse: collapse;
+}
+.publish__counts th,
+.publish__counts td {
+  padding: 2px 8px;
+  text-align: right;
+}
+.publish__counts thead th:first-child {
+  text-align: left;
+}
+.publish__counts th[scope='row'] {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-weight: 400;
 }
 .publish__blockers {
   margin: 0 0 8px;

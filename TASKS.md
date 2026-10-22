@@ -31,7 +31,7 @@ file tracks how we build it.
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 tree editing done; RI cross-check open |
-| 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 FDPlight projects load back losslessly; foreign FDPs open |
+| 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 imports from a repository done, with report; import by URL open |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish and conflict check done |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
@@ -53,6 +53,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Import report: wiring problems and per-file counts of
+  triples in the form, regenerated and kept (#18). Verified: 150 tests.
 - 2026-10-22 — Move an entity to another parent; the tree starts at an
   imported root's own file instead of `fdp.ttl` (#17). Verified: 148 tests.
 - 2026-10-22 — Import of FDPs FDPlight did not make, keep or migrate IRIs;
@@ -219,11 +221,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] Split each fetched graph into user metadata (mapped to the form), system
       triples (regenerated) and **unmapped triples (kept verbatim)**, using
       record-core's `unmappedQuads` (Contour #28) (#14).
-- [ ] Report on import. A first report lists unreadable files, missing
-      types, parent disagreements and orphans (#14). Still to add: per entity,
-      how many triples were mapped, regenerated
-      and kept, plus wiring problems found (shared container IRIs, dangling
-      links, identifier IRIs that do not match the entity).
+- [x] Report on import. Unreadable files, missing types, parent
+      disagreements, orphans and dangling links (#14); shared container IRIs
+      and identifier nodes that do not match the entity, and per file the
+      triples read into the form, regenerated and kept (#18, SPEC §4.2).
 - [x] Test case. Import ERDERA/WP13.3_document_based_fdp (proqolid), save, and
       check that the container clash and the identifier typo are gone and no
       user metadata was lost (#16; both modes; keep mode round-trips

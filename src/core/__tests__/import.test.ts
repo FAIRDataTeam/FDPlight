@@ -57,6 +57,31 @@ describe('import the WP13.3 proqolid FDP (TASKS Phase 4 test case)', () => {
     expect(loaded.project.entities[0].issued).toBe('2025-11-04T00:00:00Z');
   });
 
+  it('reports the wiring problems and what became of every triple', () => {
+    const loaded = doImport('keep');
+    expect(loaded.report).toContain(
+      'eprovide_distribution.ttl: identifier node eprovide_disribution.ttl#identifier is not the one fdp:metadataIdentifier points to (eprovide_distribution.ttl#identifier); replaced by eprovide_distribution.ttl#identifier',
+    );
+    expect(loaded.report).toContain(
+      'container catalog/datasets/ is declared in eprovide_catalog.ttl and eprovide_dataset.ttl for different parents; each file gets its own container on save',
+    );
+    expect(Object.keys(loaded.counts)).toEqual(['eprovide_fdp.ttl', 'eprovide_catalog.ttl', 'eprovide_dataset.ttl', 'eprovide_distribution.ttl']);
+    for (const c of Object.values(loaded.counts)) {
+      expect(c.mapped + c.regenerated + c.kept).toBe(c.total);
+      expect(Math.min(c.mapped, c.regenerated, c.kept)).toBeGreaterThan(0);
+    }
+    expect(loaded.counts['eprovide_dataset.ttl']).toEqual({ total: 37, mapped: 15, regenerated: 15, kept: 7 });
+    // Migrating keys the counts by the new paths.
+    expect(Object.keys(doImport('migrate').counts)).toContain('distribution/eprovide-distribution.ttl');
+  });
+
+  it('reads files without metadata timestamps', () => {
+    const files = new Map([...FILES].map(([p, t]) => [p, t.replace(/^.*fdp:metadata(Issued|Modified).*$/gm, '')]));
+    const r = importExistingFdp({ rootPath: 'sites/proqolid/eprovide_fdp.ttl', files, types: FDP_DEFAULT.types, forms, mode: 'keep' });
+    expect(r.ok && r.loaded.project.entities.map((e) => e.issued)).toEqual([undefined, undefined, undefined, undefined]);
+    expect(r.ok && Object.keys(r.loaded.counts)).toHaveLength(4);
+  });
+
   it('keep: one save fixes the wiring and keeps the metadata', async () => {
     const loaded = doImport('keep');
     const plan = await publishLoaded(loaded);

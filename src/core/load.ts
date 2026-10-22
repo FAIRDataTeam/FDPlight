@@ -8,11 +8,24 @@
 import { expandTerm, importRecords, normalizeRecord, type RecordNode } from '@fairdatateam/record-core/record';
 import { parseRdf, type Quad } from '@fairdatateam/record-core/rdf';
 import type { Schema } from '@fairdatateam/record-core/types';
-import { filePath, isValidId } from './iri';
+import { Store } from 'n3';
+import { filePath, hashIri, isValidId } from './iri';
 import { rootType, typeByKey, type EntityType, type ProjectFile } from './profile';
 import { iriOf, type Entity, type Project } from './project';
-import { DCT, FDP, LDP, RDF_TYPE } from './vocab';
-import { pickTitle } from './wiring';
+import { DATACITE_IDENTIFIER, DCT, FDP, LDP, RDF_TYPE } from './vocab';
+import { isRegenerated, pickTitle, serializeEntity } from './wiring';
+
+/** What became of one file's triples (TASKS Phase 4 import report). */
+export interface FileCounts {
+  /** Triples in the file. */
+  total: number;
+  /** Read into the form. */
+  mapped: number;
+  /** Wiring FDPlight writes anew on save (SPEC §5.2 to 5.5, §5.7). */
+  regenerated: number;
+  /** No place in the form: written back as they are (SPEC §5.7). */
+  kept: number;
+}
 
 export interface LoadedProject {
   project: Project;
@@ -21,6 +34,8 @@ export interface LoadedProject {
   extras: Record<string, Quad[]>;
   /** What did not fit: shown to the user, never silently dropped. */
   report: string[];
+  /** Per entity path, in tree order. */
+  counts: Record<string, FileCounts>;
 }
 
 interface Node {
@@ -126,6 +141,8 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     if (prefixes.some((x) => new RegExp(`^${x}/[^/]+\\.ttl$`).test(p)) && !nodes.some((n) => n.path === p))
       report.push(`${p}: not linked from the tree; left out`);
 
+  report.push(...wiringProblems(nodes, settings.base));
+
   // Order: depth first from the root; siblings by title, then id (SPEC §4.1).
   const ordered: Node[] = [];
   const visit = (n: Node) => {
@@ -142,6 +159,7 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
 
   const values: Record<string, RecordNode> = {};
   const extras: Record<string, Quad[]> = {};
+  const counts: Record<string, FileCounts> = {};
   for (const n of ordered) {
     const form = forms[n.entity.type];
     // The record engine reads subjects typed with the form's primary class:
@@ -157,7 +175,59 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     if (others.size) report.push(`${n.path}: ${others.size} other record(s) in the file are kept as they are`);
     const kept = new Set(imp.unmappedQuads);
     extras[n.path] = [...imp.unmappedQuads, ...n.quads.filter((q) => others.has(q.subject.value) && !kept.has(q))];
+
+    // Regenerated: wiring, or a kept triple identical to one FDPlight adds
+    // anyway (default access rights, profile conformance and label).
+    const wiring = isRegenerated(project, n.entity, new Store(n.quads as never));
+    const epoch = new Date(0).toISOString(); // timestamps are wiring; any value will do
+    const stamped = { ...n.entity, issued: n.entity.issued ?? epoch, modified: n.entity.modified ?? epoch };
+    const own = new Set([...serializeEntity(project, stamped, new Store())].map(quadKey));
+    const keptCount = extras[n.path].filter((q) => !wiring(q) && !own.has(quadKey(q))).length;
+    const regenerated = n.quads.filter(wiring).length + extras[n.path].filter((q) => !wiring(q) && own.has(quadKey(q))).length;
+    counts[n.path] = { total: n.quads.length, mapped: n.quads.length - regenerated - keptCount, regenerated, kept: keptCount };
   }
 
-  return { project, values, extras, report };
+  return { project, values, extras, report, counts };
+}
+
+/**
+ * Hand-made wiring that a save replaces, named so the user knows why those
+ * files change: container IRIs shared by files for different parents, and
+ * identifier nodes that do not match `fdp:metadataIdentifier`.
+ */
+function wiringProblems(nodes: Node[], base: string): string[] {
+  const out: string[] = [];
+  const short = (iri: string) => (iri.startsWith(base) ? iri.slice(base.length) || iri : iri);
+  const containers = new Map<string, { path: string; member: string }[]>();
+  for (const n of nodes) {
+    for (const q of n.quads) {
+      if (q.predicate.value !== LDP.membershipResource || q.subject.termType !== 'NamedNode') continue;
+      const list = containers.get(q.subject.value) ?? [];
+      list.push({ path: n.path, member: q.object.value });
+      containers.set(q.subject.value, list);
+    }
+
+    const declared = n.quads.find((q) => q.subject.value === n.iri && q.predicate.value === FDP.metadataIdentifier)?.object.value;
+    const nodesFor = n.quads
+      .filter((q) => q.predicate.value === DCT.identifier && q.object.value === n.iri && q.subject.termType === 'NamedNode')
+      .map((q) => q.subject.value)
+      .filter((x) => n.quads.some((q) => q.subject.value === x && q.predicate.value === RDF_TYPE && q.object.value === DATACITE_IDENTIFIER));
+    const odd = nodesFor.filter((x) => x !== declared);
+    const fresh = hashIri(n.iri, 'identifier');
+    if (odd.length)
+      out.push(`${n.path}: identifier node ${odd.map(short).join(', ')} is not the one fdp:metadataIdentifier points to (${declared ? short(declared) : 'none'}); replaced by ${short(fresh)}`);
+    else if (declared && !nodesFor.includes(declared))
+      out.push(`${n.path}: fdp:metadataIdentifier points to ${short(declared)}, which the file does not describe; replaced by ${short(fresh)}`);
+  }
+  for (const [iri, list] of containers) {
+    const paths = [...new Set(list.map((x) => x.path))];
+    if (paths.length > 1 && new Set(list.map((x) => x.member)).size > 1)
+      out.push(`container ${short(iri)} is declared in ${paths.join(' and ')} for different parents; each file gets its own container on save`);
+  }
+  return out;
+}
+
+function quadKey(q: { subject: { value: string }; predicate: { value: string }; object: { termType: string; value: string } }): string {
+  const o = q.object as { termType: string; value: string; language?: string; datatype?: { value: string } };
+  return [q.subject.value, q.predicate.value, o.termType, o.value, o.language ?? '', o.datatype?.value ?? ''].join('\u0000');
 }

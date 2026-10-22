@@ -116,7 +116,9 @@ export function migrate(loaded: LoadedProject): LoadedProject {
 
   const values: Record<string, RecordNode> = {};
   const extras: Record<string, Quad[]> = {};
+  const counts: LoadedProject['counts'] = {};
   for (const [old, now] of pathMap) {
+    if (loaded.counts[old]) counts[now] = loaded.counts[old];
     values[now] = rewriteNode(loaded.values[old] ?? {});
     extras[now] = (loaded.extras[old] ?? []).map(
       (q) => DataFactory.quad(term(q.subject), q.predicate as never, term(q.object), q.graph as never) as unknown as Quad,
@@ -125,5 +127,5 @@ export function migrate(loaded: LoadedProject): LoadedProject {
   const left = before.filter((b) => b.path !== pathMap.get(b.path)).map((b) => b.path);
   const report = [...loaded.report];
   if (left.length) report.push(`Migrated to new IRIs. The old files stay in the repository until you delete them: ${left.join(', ')}`);
-  return { project, values, extras, report };
+  return { project, values, extras, report, counts };
 }

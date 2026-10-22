@@ -329,6 +329,13 @@ file (decided 2026-10-22: the user chooses the mode per import).
   parent, identifier nodes of the entity at any IRI replaced by
   `E#identifier`, `ldp:BasicContainer` / `ldp:contains` on the entity
   removed, `dct:isPartOf` added. Everything else is kept (5.7).
+- The import report names the hand-written wiring the save replaces: a
+  container IRI declared in several files for different parents, and an
+  identifier node that is not the one `fdp:metadataIdentifier` points to (or
+  a `fdp:metadataIdentifier` the file does not describe). Per file it counts
+  the triples read into the form, regenerated, and kept as they are. A kept
+  triple identical to one FDPlight adds anyway (the default access rights,
+  `dct:conformsTo` the profile) counts as regenerated.
 
 ---
 
