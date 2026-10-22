@@ -49,6 +49,7 @@ export function renameEntity(p: Project, path: string, newId: string): TreeResul
   const e = findByPath(p, path);
   if (!e) return { ok: false, error: `no entity at ${path}` };
   if (e.parent === null) return { ok: false, error: 'the root file is always fdp.ttl' };
+  if (e.path) return { ok: false, error: 'an imported entity keeps its file name and IRI' };
   if (!isValidId(newId)) return { ok: false, error: `"${newId}" is not a valid id (lowercase letters, digits and "-")` };
   const newPath = filePath(typeByKey(p.types, e.type).urlPrefix, newId);
   if (newPath === path) return { ok: true, entities: p.entities, path };

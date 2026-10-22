@@ -5,7 +5,7 @@ import { md5Hex } from '../md5';
 import { iriOf, stamp, type Entity, type Project } from '../project';
 import { FDPLIGHT_VERSION } from '../version';
 import { DCAT, DCT, FDP, LDP, RDFS_LABEL, RDF_TYPE, SIO } from '../vocab';
-import { pickTitle, serializeEntity } from '../wiring';
+import { pickTitle, serializeEntity, toTurtle } from '../wiring';
 import { defaultProject, FILE_MODE, REDIRECT_MODE } from './fixtures/defaultTree';
 
 const { literal } = DataFactory;
@@ -195,4 +195,16 @@ describe('stamp (SPEC §5.2)', () => {
 
 it('iriOf follows the mode', () => {
   expect(iriOf(defaultProject(FILE_MODE), { type: 'dataset', id: 'a', parent: null })).toBe(`${B}dataset/a.ttl`);
+});
+
+describe('toTurtle with blank nodes', () => {
+  it('writes the same text however the graph was parsed', async () => {
+    const ttl = `<https://ex.org/e> <https://ex.org/p> [ <https://ex.org/name> "A" ], [ <https://ex.org/name> "B" ; <https://ex.org/q> [ <https://ex.org/v> 1 ] ] .`;
+    const a = await toTurtle(new Store(new Parser().parse(ttl)), 'https://ex.org/e');
+    const b = await toTurtle(new Store(new Parser({ blankNodePrefix: 'zz' }).parse(ttl)), 'https://ex.org/e');
+    const c = await toTurtle(new Store(new Parser().parse(a)), 'https://ex.org/e');
+    expect(b).toBe(a);
+    expect(c).toBe(a);
+    expect(a).toContain('_:b0');
+  });
 });

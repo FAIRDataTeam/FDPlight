@@ -1,0 +1,67 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ejp: <https://w3id.org/ejp-rd/vocabulary#> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+
+
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_fdp.ttl>
+    a fdp:FAIRDataPoint ;
+    a <https://w3id.org/fdp/fdp-o#MetadataService> ;
+    a <http://www.w3.org/ns/dcat#Resource> ;
+
+    ejp:vpConnection ejp:VPDiscoverable ;
+
+    dct:title "ePROVIDE FAIR Data Point" ;
+    dct:description "FAIR Data Point exposing metadata about COA instruments in ePROVIDE." ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dct:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dct:publisher [
+        a foaf:Organization ;
+        foaf:name "MAPi Research Trust" ;
+        foaf:homepage <https://eprovide.mapi-trust.org/about/about-mapi-research-trust> ;
+        foaf:logo <https://eprovide.mapi-trust.org/assets/images/eprovide-logo.png> ;
+    ] ;
+
+    dcat:theme <https://w3id.org/ejp-rd/vocabulary#FAIRData> ;
+    dcat:keyword "FAIR", "COA", "ePROVIDE", "Metadata" ;
+    dcat:landingPage <https://eprovide.mapi-trust.org/about/about-mapi-research-trust> ;
+
+    dcat:contactPoint [
+        a vcard:Organization ;
+        vcard:fn "MAPi Research Trust FAIR Data Team" ;
+        vcard:hasURL <https://eprovide.mapi-trust.org/page/contact> ;
+        vcard:url <https://eprovide.mapi-trust.org/page/contact> 
+        #vcard:url included for backward compatibility
+    ] ;
+
+    foaf:logo <https://eprovide.mapi-trust.org/assets/images/eprovide-logo.png> ;
+    fdp:metadataIssued "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    fdp:metadataModified "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:issued "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:modified "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+
+
+    a ldp:BasicContainer ; 
+    ldp:contains <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl> ;
+    fdp:metadataCatalog <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl> ;
+    fdp:metadataIdentifier <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_fdp.ttl#identifier> ;
+    # dct:conformsTo <https://w3id.org/duchenne-fdp/profile/77aaad6a-0136-4c6e-88b9-07ffccd0ee4c> ;
+    fdp:conformsToFdpSpec <https://w3id.org/fdp/fdp-o/1.2> ;
+    dcat:endpointURL <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_fdp.ttl> .
+
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_fdp.ttl#identifier> a <http://purl.org/spar/datacite/Identifier>;
+  dct:identifier "https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_fdp.ttl" .
+
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/catalog/> a ldp:DirectContainer ;
+  dct:title "Catalogs" ;
+  ldp:hasMemberRelation  <https://w3id.org/fdp/fdp-o#metadataCatalog>;
+  ldp:membershipResource <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_fdp.ttl>;
+  ldp:contains <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl> .
+# 
+
+

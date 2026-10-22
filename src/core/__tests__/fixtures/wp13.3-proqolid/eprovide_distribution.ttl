@@ -1,0 +1,49 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ejp: <https://w3id.org/ejp-rd/vocabulary#> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_distribution.ttl>
+    a dcat:Distribution, dcat:Resource ;
+    dct:title "Clinical Outcome Assessments Search" ;
+    ejp:vpConnection ejp:VPDiscoverable ;
+    dct:description "Search the Catalog of PROQOLID instruments available via ePROVIDE" ;
+    foaf:logo <https://eprovide.mapi-trust.org/assets/images/eprovide-logo.png> ;
+
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    fdp:metadataIssued "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    fdp:metadataModified "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:issued "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:modified "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:issued "2025-11-04"^^xsd:date ;
+    dct:modified "2025-11-04"^^xsd:date ;
+
+    dct:issued "2025-11-04"^^xsd:date ;
+    dct:modified "2025-11-04"^^xsd:date ;
+    dct:license <https://creativecommons.org/licenses/by/4.0/> ;
+
+    dcat:theme <https://w3id.org/ejp-rd/vocabulary#FAIRData> ;
+    dcat:keyword "FAIR", "COA", "ePROVIDE", "Metadata" ;
+    dcat:landingPage <https://fairdata.mapi-trust.org> ;
+
+    dct:publisher [
+        a foaf:Organization ;
+        foaf:name "MAPi Research Trust" ;
+        foaf:homepage <https://eprovide.mapi-trust.org/about/about-mapi-research-trust> ;
+        foaf:logo <https://eprovide.mapi-trust.org/assets/images/eprovide-logo.png> ;
+    ] ;
+
+
+    dcat:contactPoint [
+        a vcard:Organization ;
+        vcard:fn "MAPi Research Trust FAIR Data Team" 
+    ] ;
+    
+    dcat:accessURL <https://eprovide.mapi-trust.org/advanced-search?database=proqolid> ;
+    fdp:metadataIdentifier <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_distribution.ttl#identifier> .
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_disribution.ttl#identifier> a <http://purl.org/spar/datacite/Identifier>;
+  dct:identifier "https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_distribution.ttl" .

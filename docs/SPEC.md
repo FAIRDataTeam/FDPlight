@@ -1,12 +1,13 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.6** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.7** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
 wiring replaces (§5.7). v0.5: the entity tree is derived from the files
 (§4.1). v0.6: repository folder, Index settings and the inline ping workflow
-(§3.1, §4, §7.2); the bundled Software profile (§3.2).
+(§3.1, §4, §7.2); the bundled Software profile (§3.2). v0.7: opening FDPs
+FDPlight did not make, keeping or migrating their IRIs (§4.2).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -232,6 +233,8 @@ home.fairdatapoint.org)
   "pagesWorkflow": "pages-build-deployment" }`: the Index to ping and the
   name of the workflow that deploys Pages. Without it no ping workflow is
   written. See 7.2.
+- `root` (optional) is the root file when it is not `fdp.ttl`, for an FDP
+  imported with its own IRIs (4.2).
 
 The values in the example are those currently served by home.fairdatapoint.org.
 
@@ -299,6 +302,33 @@ Rules
   reported and the next save writes both directions consistently.
 - `fdp:metadataIssued` is read back from each file, so `issued` survives
   re-opening (5.2).
+- The crawl starts at the root file and follows the parent's containers,
+  else its child relations, as the Index harvester does. A child's type is
+  the one its parent's relation implies.
+- Blank nodes are written with canonical labels (`_:b0`, …) derived from
+  their content, so re-opening and saving an unchanged file writes the same
+  text and its `fdp:metadataModified` does not change.
+
+### 4.2 FDPs that FDPlight did not make
+
+A repository with an FDP but no `fdplight.json` is imported from its root
+file (decided 2026-10-22: the user chooses the mode per import).
+
+- The folder is the root file's folder, the base URI the root IRI minus the
+  file name. The root must be a subject typed `fdp:MetadataService`,
+  `fdp:FAIRDataPoint` or `r3d:Repository` whose IRI ends with the file name.
+- **Keep** (default): every imported entity keeps its IRI and file
+  (`eprovide_catalog.ttl`); `fdplight.json` records `root`. New entities use
+  the normal layout. Ids of imported entities cannot change.
+- **Migrate**: entities move to `{urlPrefix}/{id}.ttl` with ids from their
+  old file names; every old IRI (and its hash IRIs, and literals equal to an
+  old IRI) is rewritten. The old files are left in the repository and
+  reported.
+- No default language or licence is added to imported entities.
+- The first save fixes the hand-written wiring (9.4): one container per
+  parent, identifier nodes of the entity at any IRI replaced by
+  `E#identifier`, `ldp:BasicContainer` / `ldp:contains` on the entity
+  removed, `dct:isPartOf` added. Everything else is kept (5.7).
 
 ---
 
@@ -413,11 +443,13 @@ What the wiring **replaces** in its input, and so never counts as unknown
 
 - on `E`: `rdf:type`, `fdp:metadataIdentifier`, `rdfs:label`,
   `fdp:metadataIssued`, `fdp:metadataModified`, `dct:isPartOf`,
-  `sio:SIO_000628`, every child relation of `T`, for catalogs `dct:issued` and
+  `sio:SIO_000628`, `ldp:contains` (a hand-made `ldp:BasicContainer` on the
+  entity), every child relation of `T`, for catalogs `dct:issued` and
   `dct:modified`, for the root `fdp:fdpSoftwareVersion` and
   `dcat:endpointURL`;
-- the nodes `E#identifier`, the generated containers, any other LDP
-  container (5.5), the metric nodes `E/metrics/…`, and `E#accessRights` when
+- the nodes `E#identifier`, any other `datacite:Identifier` node whose
+  `dct:identifier` is `E` (e.g. a hand-written typo of its IRI), the generated
+  containers, any other LDP container (5.5), the metric nodes `E/metrics/…`, and `E#accessRights` when
   the user gave no `dct:accessRights`.
 
 `dct:conformsTo`, `dct:language`, `dct:license` and `dct:accessRights` given

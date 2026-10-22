@@ -1,9 +1,13 @@
 <script setup lang="ts">
 // Connect to a GitHub repository and publish the project in one commit
 // (TASKS Phase 6, SPEC §7.1).
+import { ref } from 'vue';
 import type { usePublish } from '../composables/usePublish';
+import type { ImportMode } from '../core/import';
 
 defineProps<{ pub: ReturnType<typeof usePublish> }>();
+const rootPath = ref('');
+const mode = ref<ImportMode>('keep');
 </script>
 
 <template>
@@ -49,7 +53,26 @@ defineProps<{ pub: ReturnType<typeof usePublish> }>();
         <button type="button" class="link" @click="pub.disconnect()">Disconnect</button>
       </p>
 
-      <p v-if="pub.loaded.value" class="publish__loaded">Loaded the project from the repository.</p>
+      <form v-if="pub.canImport.value" class="publish__import" @submit.prevent="pub.importExisting(rootPath, mode)">
+        <p>No FDPlight project here. Import an existing FAIR Data Point from this repository?</p>
+        <label>
+          <span>Root file</span>
+          <input v-model.trim="rootPath" list="fdplight-ttl-files" required spellcheck="false" placeholder="e.g. sites/my-fdp/fdp.ttl" />
+          <datalist id="fdplight-ttl-files">
+            <option v-for="f in pub.importCandidates.value" :key="f" :value="f" />
+          </datalist>
+        </label>
+        <label class="publish__radio">
+          <input v-model="mode" type="radio" value="keep" />
+          Keep the existing IRIs. Identifiers and the Index entry stay; new entities use FDPlight's layout.
+        </label>
+        <label class="publish__radio">
+          <input v-model="mode" type="radio" value="migrate" />
+          Move to FDPlight's layout. All IRIs change; the old files stay until you delete them.
+        </label>
+        <button type="submit" class="primary" :disabled="pub.busy.value">Import</button>
+      </form>
+      <p v-if="pub.loaded.value" class="publish__loaded">Loaded the project from the repository. Nothing is written until you publish.</p>
       <ul v-if="pub.loadReport.value.length" class="publish__report">
         <li v-for="r in pub.loadReport.value" :key="r">{{ r }}</li>
       </ul>
@@ -164,6 +187,23 @@ input {
 }
 .publish__connected p {
   margin: 0 0 8px;
+}
+.publish__import {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+}
+.publish__import p {
+  margin: 0;
+}
+.publish__radio {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-weight: 400;
 }
 .publish__loaded {
   color: var(--color-success);

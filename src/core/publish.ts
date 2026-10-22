@@ -81,6 +81,7 @@ export async function planPublish(input: PublishInput): Promise<PublishPlan> {
       ...(project.source ? { source: project.source } : {}),
       ...(folder ? { folder } : {}),
       ...(project.index ? { index: project.index } : {}),
+      ...(project.root ? { root: project.root } : {}),
     }),
   );
   for (const t of project.types) files.set(folder + t.shapes, input.shapes[t.key]);
