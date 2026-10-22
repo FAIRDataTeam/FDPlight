@@ -1,5 +1,5 @@
 import { pathOf, type Project } from '../project';
-import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, subtree } from '../tree';
+import { addChild, displayOrder, moveEntity, moveTargets, removeEntity, renameEntity, subtree, treeKeyTarget } from '../tree';
 import { defaultProject, FILE_MODE } from './fixtures/defaultTree';
 
 const paths = (p: Project) => p.entities.map((e) => pathOf(p, e));
@@ -77,5 +77,30 @@ describe('tree edits (TASKS Phase 3)', () => {
     expect(moveEntity(p, 'dataset/registry-2024.ttl', 'nope.ttl').ok).toBe(false);
     const same = moveEntity(p, 'dataset/empty-set.ttl', 'catalog/rare-diseases.ttl');
     expect(same.ok && same.entities).toBe(p.entities);
+  });
+
+  it('lists the nodes in the order the tree shows them', () => {
+    const p = defaultProject(FILE_MODE);
+    expect(displayOrder(p, 'fdp.ttl')).toEqual([
+      'fdp.ttl',
+      'catalog/rare-diseases.ttl',
+      'dataset/registry-2024.ttl',
+      'distribution/registry-csv.ttl',
+      'dataset/empty-set.ttl',
+    ]);
+  });
+
+  it('moves with the arrow keys, Home and End', () => {
+    const p = defaultProject(FILE_MODE);
+    const key = (path: string, k: string) => treeKeyTarget(p, 'fdp.ttl', path, k);
+    expect(key('dataset/registry-2024.ttl', 'ArrowDown')).toBe('distribution/registry-csv.ttl');
+    expect(key('dataset/registry-2024.ttl', 'ArrowUp')).toBe('catalog/rare-diseases.ttl');
+    expect(key('distribution/registry-csv.ttl', 'ArrowLeft')).toBe('dataset/registry-2024.ttl');
+    expect(key('dataset/registry-2024.ttl', 'ArrowRight')).toBe('distribution/registry-csv.ttl');
+    expect(key('dataset/empty-set.ttl', 'ArrowRight')).toBeNull(); // no children
+    expect(key('dataset/empty-set.ttl', 'Home')).toBe('fdp.ttl');
+    expect(key('fdp.ttl', 'End')).toBe('dataset/empty-set.ttl');
+    expect([key('fdp.ttl', 'ArrowUp'), key('fdp.ttl', 'ArrowLeft'), key('dataset/empty-set.ttl', 'ArrowDown')]).toEqual([null, null, null]);
+    expect(key('fdp.ttl', 'x')).toBeNull();
   });
 });

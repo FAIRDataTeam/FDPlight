@@ -27,6 +27,8 @@ const groups = computed(() =>
     <button
       type="button"
       class="tree__node"
+      :data-path="path"
+      :tabindex="state.selected.value === path ? 0 : -1"
       :class="{ 'is-selected': state.selected.value === path }"
       :aria-current="state.selected.value === path ? 'true' : undefined"
       @click="state.selected.value = path"
@@ -66,6 +68,10 @@ const groups = computed(() =>
 }
 .tree__node:hover {
   background: var(--color-primary-tint);
+}
+.tree__node:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 .tree__node.is-selected {
   background: var(--color-primary);

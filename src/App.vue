@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import icon from './assets/fdplight-icon.svg';
 import EntityForm from './components/EntityForm.vue';
 import EntityTree from './components/EntityTree.vue';
@@ -9,6 +9,7 @@ import PublishPanel from './components/PublishPanel.vue';
 import { usePublish } from './composables/usePublish';
 import { useProject } from './composables/useProject';
 import { iriOf } from './core/project';
+import { treeKeyTarget } from './core/tree';
 
 const state = useProject();
 const pub = usePublish(state);
@@ -21,6 +22,20 @@ const type = computed(() => state.typeOf(entity.value));
 // The id field edits a draft; the rename happens on change / Enter.
 const idDraft = ref(entity.value.id);
 watch(entity, (e) => (idDraft.value = e.id));
+
+// Arrow keys, Home and End move through the tree (TASKS Phase 8). Only the
+// selected node is in the Tab order.
+const treeNav = ref<HTMLElement | null>(null);
+async function onTreeKey(ev: KeyboardEvent) {
+  const from = (ev.target as HTMLElement).closest<HTMLElement>('.tree__node')?.dataset.path;
+  if (!from) return;
+  const to = treeKeyTarget(project, state.root.value, from, ev.key);
+  if (ev.key.startsWith('Arrow') || ev.key === 'Home' || ev.key === 'End') ev.preventDefault();
+  if (!to) return;
+  selected.value = to;
+  await nextTick();
+  treeNav.value?.querySelector<HTMLElement>(`.tree__node[data-path="${CSS.escape(to)}"]`)?.focus();
+}
 
 // Other places the selected entity may move to (its current parent excluded).
 const moveTo = computed(() => (isRoot.value ? [] : state.moveOptions(selected.value).filter((o) => o.path !== entity.value.parent)));
@@ -60,7 +75,7 @@ function removeSelected() {
     </div>
 
     <div class="columns">
-      <nav class="card tree" aria-label="Entities">
+      <nav ref="treeNav" class="card tree" aria-label="Entities (arrow keys move between entities)" @keydown="onTreeKey">
         <ul class="tree__root">
           <EntityTree :state="state" :path="state.root.value" />
         </ul>

@@ -71,6 +71,30 @@ describe('App', () => {
     }
   });
 
+  it('moves through the tree with the arrow keys; only the selected node is a Tab stop', async () => {
+    const w = mount(App, { attachTo: document.body });
+    try {
+      await w.findAll('button.tree__add').find((b) => b.text() === '+ Add catalog')!.trigger('click');
+      await w.findAll('button.tree__add').find((b) => b.text() === '+ Add dataset')!.trigger('click');
+      await flushPromises();
+      const nodes = () => w.findAll('.tree__node');
+      const dataset = w.find('.entity__file').text();
+      expect(nodes().map((n) => n.attributes('tabindex'))).toEqual(['-1', '-1', '0']);
+      await nodes()[2].trigger('keydown', { key: 'ArrowLeft' });
+      await flushPromises();
+      expect(w.find('.entity__file').text()).toMatch(/^catalog\//);
+      expect(document.activeElement).toBe(nodes()[1].element);
+      await nodes()[1].trigger('keydown', { key: 'Home' });
+      await flushPromises();
+      expect(w.find('.entity__file').text()).toBe('fdp.ttl');
+      await nodes()[0].trigger('keydown', { key: 'End' });
+      await flushPromises();
+      expect(w.find('.entity__file').text()).toBe(dataset);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('marks entities with missing required metadata', async () => {
     vi.useFakeTimers();
     const w = mount(App);
