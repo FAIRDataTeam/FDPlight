@@ -6,7 +6,7 @@ import { ConflictError, createClient, GitHubError, type GitHubClient, type RepoR
 import { DEFAULT_BASE, type ProjectState } from './useProject';
 import { pagesBase } from '../core/iri';
 import { importExistingFdp, type ImportMode } from '../core/import';
-import { loadProject } from '../core/load';
+import { loadProject, type LoadedProject } from '../core/load';
 import { parseProjectFile } from '../core/profile';
 import { entityForm } from '../core/forms';
 import { PING_WORKFLOW_PATH } from '../core/ping';
@@ -48,6 +48,8 @@ export function usePublish(
   const lastCommit = ref('');
   /** What loading the repository's project reported (SPEC §5.7: nothing dropped silently). */
   const loadReport = ref<string[]>([]);
+  /** Per entity file: triples mapped to the form, regenerated and kept (TASKS Phase 4). */
+  const loadCounts = ref<LoadedProject['counts']>({});
   const loaded = ref(false);
   /** The repository has no FDPlight project: an existing FDP can be imported. */
   const canImport = computed(
@@ -144,6 +146,7 @@ export function usePublish(
     const result = loadProject(settings, files, forms);
     state.load(result, shapes);
     loadReport.value = result.report;
+    loadCounts.value = result.counts;
     loaded.value = true;
     return true;
   }
@@ -153,6 +156,7 @@ export function usePublish(
     busy.value = true;
     plan.value = null;
     loadReport.value = [];
+    loadCounts.value = {};
     loaded.value = false;
     try {
       saveToken(token.value);
@@ -224,6 +228,7 @@ export function usePublish(
       if (state.hasLocalWork() && !confirmReplace()) return;
       state.load(r.loaded, state.shapes);
       loadReport.value = r.loaded.report;
+      loadCounts.value = r.loaded.counts;
       loaded.value = true;
       await refresh();
     } catch (e) {
@@ -241,5 +246,5 @@ export function usePublish(
     saveToken('');
   }
 
-  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, loadReport, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
+  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
 }

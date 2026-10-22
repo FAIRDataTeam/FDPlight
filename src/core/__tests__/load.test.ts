@@ -47,6 +47,8 @@ describe('loadProject (SPEC §4.1, §5.7)', () => {
     const loaded = loadProject(settings, files, forms);
     expect(loaded.report).toEqual([]);
     expect(loaded.project.entities).toEqual(plan.entities.slice().sort((a, b) => order(a) - order(b)));
+    // Everything FDPlight wrote is either form metadata or wiring.
+    for (const c of Object.values(loaded.counts)) expect([c.kept, c.mapped + c.regenerated]).toEqual([0, c.total]);
     const again = await publish(loaded.project, loaded.values, new Map(files), T2, loaded.extras);
     expect(again.changes).toEqual([]);
   });

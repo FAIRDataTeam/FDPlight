@@ -39,33 +39,13 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
   const add = (sub: Term, pred: string, obj: Term) => out.addQuad(quad(sub as never, namedNode(pred), obj as never));
   const userHas = (pred: string) => user.getQuads(e, namedNode(pred), null, null).length > 0;
 
-  // ---- user metadata, minus what is regenerated below ----
   const catalog = isCatalog(type);
-  const regenerated = new Set(generatedPaths(type));
   const childPrefixes = type.children.map((c) => typeByKey(project.types, c.type).urlPrefix);
-  const generatedSubjects = new Set<string>([
-    hashIri(E, 'identifier'),
-    ...childPrefixes.map((p) => containerIri(s, E, p)),
-    ...(userHas(DCT.accessRights) ? [] : [hashIri(E, 'accessRights')]),
-    // Identifier nodes of E at any IRI (e.g. a hand-written typo): wiring.
-    ...user
-      .getQuads(null, namedNode(DCT.identifier), literal(E), null)
-      .filter((q) => q.subject.termType === 'NamedNode' && user.has(quad(q.subject as never, namedNode(RDF_TYPE), namedNode(DATACITE_IDENTIFIER))))
-      .map((q) => q.subject.value),
-    // Any LDP container in the input is wiring (§5.5), e.g. a hand-written one
-    // at an IRI FDPlight would not generate.
-    ...user
-      .getQuads(null, namedNode(RDF_TYPE), null, null)
-      .filter((q) => q.subject.termType === 'NamedNode' && q.subject.value !== E && LDP_CONTAINER_TYPES.has(q.object.value))
-      .map((q) => q.subject.value),
-  ]);
   const metricsPrefix = `${E.endsWith('/') ? E.slice(0, -1) : E}/metrics/`;
-  for (const q of user) {
-    if (q.subject.equals(e) && regenerated.has(q.predicate.value)) continue;
-    if (q.subject.termType === 'NamedNode' && (generatedSubjects.has(q.subject.value) || q.subject.value.startsWith(metricsPrefix)))
-      continue;
-    out.addQuad(q.subject, q.predicate, q.object, DataFactory.defaultGraph());
-  }
+
+  // ---- user metadata, minus what is regenerated below ----
+  const regenerated = isRegenerated(project, entity, user);
+  for (const q of user) if (!regenerated(q)) out.addQuad(q.subject, q.predicate, q.object, DataFactory.defaultGraph());
 
   // ---- SPEC §5.2 system triples ----
   for (const c of type.targetClasses) add(e, RDF_TYPE, namedNode(c));
@@ -136,6 +116,43 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
   });
 
   return out;
+}
+
+/**
+ * SPEC §5.7. Which triples of an entity's input graph are wiring that
+ * FDPlight regenerates on save: generated predicates on E, its identifier
+ * nodes, LDP containers, metrics, and the default access-rights node.
+ */
+type TermLike = { termType: string; value: string };
+
+export function isRegenerated(project: Project, entity: Entity, user: Store): (q: { subject: TermLike; predicate: TermLike }) => boolean {
+  const type = entityType(project, entity);
+  const s = iriSettings(project);
+  const E = iriOf(project, entity);
+  const e = namedNode(E);
+  const userHas = (pred: string) => user.getQuads(e, namedNode(pred), null, null).length > 0;
+  const regenerated = new Set(generatedPaths(type));
+  const childPrefixes = type.children.map((c) => typeByKey(project.types, c.type).urlPrefix);
+  const generatedSubjects = new Set<string>([
+    hashIri(E, 'identifier'),
+    ...childPrefixes.map((p) => containerIri(s, E, p)),
+    ...(userHas(DCT.accessRights) ? [] : [hashIri(E, 'accessRights')]),
+    // Identifier nodes of E at any IRI (e.g. a hand-written typo): wiring.
+    ...user
+      .getQuads(null, namedNode(DCT.identifier), literal(E), null)
+      .filter((q) => q.subject.termType === 'NamedNode' && user.has(quad(q.subject as never, namedNode(RDF_TYPE), namedNode(DATACITE_IDENTIFIER))))
+      .map((q) => q.subject.value),
+    // Any LDP container in the input is wiring (§5.5), e.g. a hand-written one
+    // at an IRI FDPlight would not generate.
+    ...user
+      .getQuads(null, namedNode(RDF_TYPE), null, null)
+      .filter((q) => q.subject.termType === 'NamedNode' && q.subject.value !== E && LDP_CONTAINER_TYPES.has(q.object.value))
+      .map((q) => q.subject.value),
+  ]);
+  const metricsPrefix = `${E.endsWith('/') ? E.slice(0, -1) : E}/metrics/`;
+  return (q) =>
+    (q.subject.termType === 'NamedNode' && q.subject.value === E && regenerated.has(q.predicate.value)) ||
+    (q.subject.termType === 'NamedNode' && (generatedSubjects.has(q.subject.value) || q.subject.value.startsWith(metricsPrefix)));
 }
 
 /**
