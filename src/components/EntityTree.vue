@@ -5,12 +5,14 @@ import { computed } from 'vue';
 import type { ProjectState } from '../composables/useProject';
 import { findByPath, pathOf } from '../core/project';
 import { typeByKey } from '../core/profile';
+import { useI18n } from '../composables/useI18n';
 
 const props = defineProps<{ state: ProjectState; path: string }>();
+const { t, plural } = useI18n();
 
 const entity = computed(() => findByPath(props.state.project, props.path)!);
 const type = computed(() => props.state.typeOf(entity.value));
-const label = computed(() => props.state.titleOf(props.path) || (entity.value.parent === null ? 'FAIR Data Point' : entity.value.id));
+const label = computed(() => props.state.titleOf(props.path) || (entity.value.parent === null ? t('tree.root') : entity.value.id));
 const groups = computed(() =>
   type.value.children.map((c) => ({
     spec: c,
@@ -35,14 +37,14 @@ const groups = computed(() =>
     >
       <span class="tree__type">{{ type.name }}</span>
       <span class="tree__label">{{ label }}</span>
-      <span v-if="state.errorCount(path)" class="tree__errors" :title="`${state.errorCount(path)} problems to fix`">{{ state.errorCount(path) }}</span>
+      <span v-if="state.errorCount(path)" class="tree__errors" :title="plural('tree.problems', state.errorCount(path))">{{ state.errorCount(path) }}</span>
     </button>
     <div v-for="g in groups" :key="g.spec.type" class="tree__group">
       <div class="tree__group-title">{{ g.spec.title }}</div>
       <ul v-if="g.paths.length" class="tree__list">
         <EntityTree v-for="p in g.paths" :key="p" :state="state" :path="p" />
       </ul>
-      <button type="button" class="tree__add" @click="state.add(path, g.spec.type)">+ Add {{ g.childType.name.toLowerCase() }}</button>
+      <button type="button" class="tree__add" @click="state.add(path, g.spec.type)">{{ t('tree.add', { type: g.childType.name.toLowerCase() }) }}</button>
     </div>
   </li>
 </template>

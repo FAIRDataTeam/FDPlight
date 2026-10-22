@@ -6,7 +6,9 @@ import EntityTree from './components/EntityTree.vue';
 import IndexStatus from './components/IndexStatus.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
 import PublishPanel from './components/PublishPanel.vue';
+import { useI18n } from './composables/useI18n';
 import { usePublish } from './composables/usePublish';
+import { LOCALES } from './i18n';
 import { useProject } from './composables/useProject';
 import { iriOf } from './core/project';
 import { treeKeyTarget } from './core/tree';
@@ -14,6 +16,9 @@ import { treeKeyTarget } from './core/tree';
 const state = useProject();
 const pub = usePublish(state);
 const { project, selected, entity } = state;
+const { t, plural, locale, setLocale } = useI18n();
+// The page's language follows the chosen locale (screen readers, hyphenation).
+watch(locale, (l) => (document.documentElement.lang = l), { immediate: true });
 
 const isRoot = computed(() => entity.value.parent === null);
 const iri = computed(() => (state.settingsErrors.value.length ? '' : iriOf(project, entity.value)));
@@ -48,8 +53,8 @@ function moveSelected(ev: Event) {
 
 function removeSelected() {
   const below = project.entities.filter((e) => e.parent === selected.value).length;
-  const what = below ? ' and everything below it' : '';
-  if (window.confirm(`Delete this ${type.value.name.toLowerCase()}${what}?`)) state.remove(selected.value);
+  const question = t(below ? 'app.deleteConfirmBelow' : 'app.deleteConfirm', { type: type.value.name.toLowerCase() });
+  if (window.confirm(question)) state.remove(selected.value);
 }
 </script>
 
@@ -58,9 +63,14 @@ function removeSelected() {
     <img :src="icon" alt="" class="logo" width="40" height="40" />
     <div>
       <h1 class="name">FDPlight</h1>
-      <p class="tagline">a serverless FAIR Data Point</p>
+      <p class="tagline">{{ t('app.tagline') }}</p>
     </div>
-    <p class="wip">Work in progress: pilot version.</p>
+    <p class="wip">{{ t('app.wip') }}</p>
+    <label class="lang">
+      <select :value="locale" :aria-label="t('app.language')" @change="setLocale(($event.target as HTMLSelectElement).value as never)">
+        <option v-for="l in LOCALES" :key="l.code" :value="l.code">{{ l.label }}</option>
+      </select>
+    </label>
   </header>
 
   <main class="main">
@@ -75,36 +85,36 @@ function removeSelected() {
     </div>
 
     <div class="columns">
-      <nav ref="treeNav" class="card tree" aria-label="Entities (arrow keys move between entities)" @keydown="onTreeKey">
+      <nav ref="treeNav" class="card tree" :aria-label="t('app.entities')" @keydown="onTreeKey">
         <ul class="tree__root">
           <EntityTree :state="state" :path="state.root.value" />
         </ul>
       </nav>
 
-      <section class="card" aria-label="Metadata">
+      <section class="card" :aria-label="t('app.metadata')">
         <div class="entity">
           <div class="entity__type">{{ type.name }}</div>
           <div class="entity__file">{{ selected }}</div>
           <div v-if="!isRoot" class="entity__actions">
             <label class="entity__id">
-              <span>Id</span>
+              <span>{{ t('app.id') }}</span>
               <input
                 v-model="idDraft"
                 spellcheck="false"
                 :disabled="state.published.value.has(selected)"
-                :title="state.published.value.has(selected) ? 'Published: the id is part of the IRI' : ''"
+                :title="state.published.value.has(selected) ? t('app.idLocked') : ''"
                 @change="state.rename(selected, idDraft)"
                 @keyup.enter="state.rename(selected, idDraft)"
               />
             </label>
             <label v-if="moveTo.length" class="entity__move">
-              <span>Move to</span>
+              <span>{{ t('app.moveTo') }}</span>
               <select @change="moveSelected">
                 <option value="">…</option>
                 <option v-for="o in moveTo" :key="o.path" :value="o.path">{{ o.label }}</option>
               </select>
             </label>
-            <button type="button" class="danger" @click="removeSelected">Delete</button>
+            <button type="button" class="danger" @click="removeSelected">{{ t('app.delete') }}</button>
           </div>
           <p v-if="state.lastError.value" class="error" role="alert">{{ state.lastError.value }}</p>
         </div>
@@ -116,14 +126,13 @@ function removeSelected() {
         />
       </section>
 
-      <section class="card" aria-label="Generated file">
+      <section class="card" :aria-label="t('app.generatedFile')">
         <div class="checks" :class="{ 'is-ok': !state.issues.value.length && !state.totalErrors.value }">
           <div v-if="state.totalErrors.value" class="checks__shacl">
-            {{ state.totalErrors.value }} {{ state.totalErrors.value === 1 ? 'problem' : 'problems' }} to fix in the
-            metadata (see the red counts in the tree)
+            {{ plural('app.problems', state.totalErrors.value) }}
           </div>
-          <div v-else-if="!state.checking.value" class="checks__shacl">Metadata complete</div>
-          <template v-if="!state.issues.value.length">Structure OK</template>
+          <div v-else-if="!state.checking.value" class="checks__shacl">{{ t('app.metadataComplete') }}</div>
+          <template v-if="!state.issues.value.length">{{ t('app.structureOk') }}</template>
           <ul v-else>
             <li v-for="(i, n) in state.issues.value" :key="n" :class="`is-${i.severity}`">
               <strong v-if="i.entity">{{ i.entity }}:</strong> {{ i.message }}
@@ -164,6 +173,14 @@ function removeSelected() {
   margin: 0 0 0 auto;
   font-size: 0.8rem;
   color: var(--color-text-lighter);
+}
+.lang select {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 3px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface-card);
 }
 .main {
   max-width: 1600px;

@@ -1,5 +1,8 @@
 import { flushPromises, mount } from '@vue/test-utils';
+import { RECORD_I18N } from '@fairdatateam/record-core/i18n';
 import App from './App.vue';
+import { setLocale, useI18n } from './composables/useI18n';
+import { messages } from './i18n';
 import { recordedFdpFetch } from './test/recordedFdp';
 
 describe('App', () => {
@@ -92,6 +95,20 @@ describe('App', () => {
       expect(w.find('.entity__file').text()).toBe(dataset);
     } finally {
       w.unmount();
+    }
+  });
+
+  it('switches the language of the app and of the form renderer', async () => {
+    const w = mount(App, { global: { provide: { [RECORD_I18N as symbol]: { t: useI18n().t } } } });
+    try {
+      const nl = messages['nl-NL'] as { app: { tagline: string }; formPreview: { add: string } };
+      await w.find('.lang select').setValue('nl-NL');
+      await flushPromises();
+      expect(w.find('.tagline').text()).toBe(nl.app.tagline);
+      expect(document.documentElement.lang).toBe('nl-NL');
+      expect(w.findAll('.form-preview button').some((b) => b.text() === nl.formPreview.add)).toBe(true);
+    } finally {
+      setLocale('en');
     }
   });
 

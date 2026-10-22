@@ -21,6 +21,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
+    setupFiles: ['src/test/setup.ts'],
     globals: true,
     include: ['src/**/*.test.ts'],
     // src/core is DOM-free; its tests read fixtures from disk.
