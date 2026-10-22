@@ -14,20 +14,37 @@ function fakeRepo(initial: Record<string, string> = {}) {
   const files = new Map(Object.entries(initial));
   let head = 'c0';
   let n = 0;
-  const commits: { message: string; changes: FileChange[] }[] = [];
+  const commits: { branch: string; message: string; changes: FileChange[] }[] = [];
+  const branches = new Map<string, string>();
+  const pulls: { head: string; base: string; title: string; body: string }[] = [];
   const client: GitHubClient = {
     branchHead: async () => head,
     listFiles: async () => [...files.keys()],
     readFile: async (_r, p) => files.get(p) ?? null,
-    commitFiles: async (_r, expected, changes, message) => {
+    commitFiles: async (r, expected, changes, message) => {
+      if (r.branch !== 'main') {
+        // A proposal branch: the main branch's files stay as they are.
+        if (branches.get(r.branch) !== expected) throw new ConflictError(expected, branches.get(r.branch) ?? '');
+        commits.push({ branch: r.branch, message, changes });
+        branches.set(r.branch, `p${++n}`);
+        return branches.get(r.branch)!;
+      }
       if (expected !== head) throw new ConflictError(expected, head);
       for (const c of changes) c.content === null ? files.delete(c.path) : files.set(c.path, c.content);
-      commits.push({ message, changes });
+      commits.push({ branch: r.branch, message, changes });
       head = `c${++n}`;
       return head;
     },
+    createBranch: async (_r, name, sha) => {
+      if (branches.has(name)) throw new Error(`${name} exists`);
+      branches.set(name, sha);
+    },
+    openPullRequest: async (r, h, title, body) => {
+      pulls.push({ head: h, base: r.branch, title, body });
+      return { number: pulls.length, url: `https://github.com/${r.owner}/${r.repo}/pull/${pulls.length}` };
+    },
   };
-  return { client, files, commits, push: () => (head = `other${++n}`) };
+  return { client, files, commits, branches, pulls, push: () => (head = `other${++n}`) };
 }
 
 function fill(s: ReturnType<typeof useProject>, path: string) {
@@ -85,6 +102,39 @@ describe('usePublish (TASKS Phase 6)', () => {
     // Nothing changed: the next plan is empty.
     await pub.prepare();
     expect(pub.plan.value!.changes).toEqual([]);
+  });
+
+  it('proposes changes as a pull request without touching the branch (SPEC §7.1)', async () => {
+    const s = useProject();
+    const gh = fakeRepo({ 'README.md': '# my-fdp' });
+    const pub = usePublish(s, () => gh.client);
+    pub.repo.value = { owner: 'erdera', repo: 'my-fdp', branch: 'main' };
+    await pub.connect();
+    fill(s, 'fdp.ttl');
+    s.add('fdp.ttl', 'catalog');
+    const cat = s.selected.value;
+    fill(s, cat);
+    await ready(s);
+    pub.publishMode.value = 'propose';
+    await pub.prepare();
+    gh.push(); // someone commits meanwhile: a proposal does not care
+    await pub.publish();
+    expect(pub.error.value).toBe('');
+    expect([...gh.files.keys()]).toEqual(['README.md']);
+    expect(gh.commits).toHaveLength(1);
+    expect(gh.commits[0].branch).toMatch(/^fdplight\/\d{8}-\d{6}$/);
+    expect(gh.branches.get(gh.commits[0].branch)).toBe(pub.lastCommit.value);
+    expect(gh.pulls).toEqual([
+      {
+        head: gh.commits[0].branch,
+        base: 'main',
+        title: 'FDPlight: publish 2 entities',
+        body: expect.stringMatching(/^- add fdp\.ttl\n- add catalog\/.*Proposed with \[FDPlight\]/s),
+      },
+    ]);
+    expect(pub.lastPull.value).toEqual({ number: 1, url: 'https://github.com/erdera/my-fdp/pull/1' });
+    // Their files may be merged any time: ids are locked like published ones.
+    expect([...s.published.value].sort()).toEqual([cat, 'fdp.ttl'].sort());
   });
 
   it('reports a conflict instead of overwriting someone else’s commit', async () => {
