@@ -32,7 +32,8 @@ defineProps<{ pub: ReturnType<typeof usePublish> }>();
       <p class="publish__hint">
         A
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
-        with <em>Contents: read and write</em> on this repository only. It is kept for this browser tab and sent
+        with <em>Contents: read and write</em> on this repository only (plus <em>Workflows: read and write</em> when
+        the project pings an Index). It is kept for this browser tab and sent
         only to api.github.com.
       </p>
       <button type="submit" class="primary" :disabled="pub.busy.value">{{ pub.busy.value ? 'Connecting…' : 'Connect' }}</button>

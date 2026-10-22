@@ -14,11 +14,13 @@ import { addChild, removeEntity, renameEntity, type TreeResult } from '../core/t
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
 import { DCT } from '../core/vocab';
 import { serializeEntity, toTurtle } from '../core/wiring';
-import { FDP_DEFAULT } from '../profiles/fdp-default';
+import { validateIndex } from '../core/ping';
+import { validateFolder } from '../core/profile';
+import { PROFILES, type BundledProfile } from '../profiles';
 
 export const DEFAULT_BASE = 'https://example.github.io/my-fdp/';
 
-export function newProject(base = DEFAULT_BASE): Project {
+export function newProject(base = DEFAULT_BASE, profile: BundledProfile = PROFILES['fdp-default']): Project {
   return {
     fdplight: '0.1',
     name: 'My FAIR Data Point',
@@ -31,7 +33,7 @@ export function newProject(base = DEFAULT_BASE): Project {
       accessRightsDescription: null,
       metrics: [],
     },
-    types: FDP_DEFAULT.types,
+    types: profile.types,
     entities: [{ type: 'fdp', id: '', parent: null }],
   };
 }
@@ -39,12 +41,20 @@ export function newProject(base = DEFAULT_BASE): Project {
 /** How long the SHACL check waits after the last edit. */
 export const SHACL_DELAY_MS = 300;
 
-export function useProject(initial: Project = newProject(), shapes: Record<string, string> = FDP_DEFAULT.shapes) {
-  const project = reactive(initial) as Project;
-  const forms: Record<string, Schema> = Object.fromEntries(project.types.map((t) => [t.key, entityForm(t, shapes[t.key])]));
-  const shapeQuads = Object.fromEntries(project.types.map((t) => [t.key, shapesGraph(shapes[t.key])]));
+export function useProject(initial?: Project, profileKey = 'fdp-default') {
+  const profile = ref(profileKey);
+  let shapes = PROFILES[profileKey].shapes;
+  const project = reactive(initial ?? newProject(DEFAULT_BASE, PROFILES[profileKey])) as Project;
+  let forms: Record<string, Schema> = {};
+  let shapeQuads: Record<string, ReturnType<typeof shapesGraph>> = {};
   const values = reactive<Record<string, RecordNode>>({});
-  for (const e of project.entities) values[pathOf(project, e)] = normalizeRecord(forms[e.type], {});
+  function loadProfile(): void {
+    forms = Object.fromEntries(project.types.map((t) => [t.key, entityForm(t, shapes[t.key])]));
+    shapeQuads = Object.fromEntries(project.types.map((t) => [t.key, shapesGraph(shapes[t.key])]));
+    for (const k of Object.keys(values)) delete values[k];
+    for (const e of project.entities) values[pathOf(project, e)] = normalizeRecord(forms[e.type], {});
+  }
+  loadProfile();
 
   const selected = ref('fdp.ttl');
   const lastError = ref('');
@@ -114,7 +124,24 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
       return 'ask';
     }
   });
-  const settingsErrors = computed(() => validateIriSettings(project));
+  const settingsErrors = computed(() => [
+    ...validateIriSettings(project),
+    ...validateFolder(project.folder ?? ''),
+    ...(project.index ? validateIndex(project.index) : []),
+  ]);
+
+  /** Start over with another bundled profile, keeping base URI, folder and Index. */
+  function switchProfile(key: string): void {
+    const next = PROFILES[key];
+    if (!next || key === profile.value) return;
+    profile.value = key;
+    shapes = next.shapes;
+    project.types = next.types;
+    project.entities = [{ type: 'fdp', id: '', parent: null }];
+    published.value = new Set();
+    selected.value = 'fdp.ttl';
+    loadProfile();
+  }
 
   function setBase(base: string): void {
     project.base = base.trim();
@@ -189,7 +216,14 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
 
   return {
     project,
-    forms,
+    profile,
+    get forms() {
+      return forms;
+    },
+    get shapes() {
+      return shapes;
+    },
+    switchProfile,
     values,
     selected,
     entity,

@@ -30,6 +30,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # FDPlight's own FAIR Data Point (metadata about FDPlight, published with
+      # FDPlight) is served next to the app at /metadata/.
+      - name: Add the FDP files
+        run: if [ -d metadata ]; then cp -R metadata dist/metadata; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

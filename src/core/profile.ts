@@ -2,6 +2,7 @@
 // project settings file `fdplight.json`. SPEC §3.
 
 import { validateIriSettings, type IriMode } from './iri';
+import { validateIndex, type IndexSettings } from './ping';
 
 /** A child relation of a type, from the RI resource definition (SPEC §3). */
 export interface ChildSpec {
@@ -57,6 +58,19 @@ export interface ProjectFile {
   defaults: Defaults;
   types: EntityType[];
   source?: ProfileSource;
+  /** Repository folder holding the FDP, '' (root) or ending with '/' (SPEC §4). */
+  folder?: string;
+  /** The Index to ping after each Pages deployment (SPEC §7.2). */
+  index?: IndexSettings;
+}
+
+/** SPEC §4. Problems with a repository folder, empty when valid. */
+export function validateFolder(folder: string): string[] {
+  if (folder === '') return [];
+  if (!/^([a-z0-9][a-z0-9._-]*\/)+$/i.test(folder)) return ['folder must be empty or like "metadata/" (path segments ending with "/")'];
+  if (folder.split('/').some((s) => s === '..' || s === '.')) return ['folder must not contain "." or ".." segments'];
+  if (folder.startsWith('.github/')) return ['folder must not be inside .github/'];
+  return [];
 }
 
 export const FORMAT_VERSION = '0.1';
@@ -177,6 +191,13 @@ export function parseProjectFile(input: string | unknown): Result<ProjectFile> {
     errors.push('defaults.metrics must be a list of {metric, resource} IRIs');
 
   errors.push(...validateTypes(o.types));
+  const folder = o.folder ?? '';
+  if (typeof folder !== 'string') errors.push('folder must be a string');
+  else errors.push(...validateFolder(folder));
+  const index = o.index as IndexSettings | undefined;
+  if (index !== undefined && (typeof index !== 'object' || !index || !isStr(index.url) || !isStr(index.pagesWorkflow)))
+    errors.push('index must be {url, pagesWorkflow}');
+  else if (index) errors.push(...validateIndex(index));
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -189,6 +210,8 @@ export function parseProjectFile(input: string | unknown): Result<ProjectFile> {
       defaults,
       types: o.types as EntityType[],
       ...(o.source ? { source: o.source as ProfileSource } : {}),
+      ...(folder ? { folder: folder as string } : {}),
+      ...(index ? { index } : {}),
     },
   };
 }
@@ -204,6 +227,8 @@ export function stringifyProjectFile(p: ProjectFile): string {
     defaults: p.defaults,
     types: p.types,
     ...(p.source ? { source: p.source } : {}),
+    ...(p.folder ? { folder: p.folder } : {}),
+    ...(p.index ? { index: p.index } : {}),
   };
   return JSON.stringify(out, null, 2) + '\n';
 }

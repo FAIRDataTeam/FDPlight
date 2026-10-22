@@ -5,8 +5,8 @@ import { computed, ref, shallowRef } from 'vue';
 import { ConflictError, createClient, GitHubError, type GitHubClient, type RepoRef } from '../github/client';
 import { DEFAULT_BASE, type ProjectState } from './useProject';
 import { pagesBase } from '../core/iri';
+import { PING_WORKFLOW_PATH } from '../core/ping';
 import { planPublish, type PublishPlan } from '../core/publish';
-import { FDP_DEFAULT } from '../profiles/fdp-default';
 
 const TOKEN_KEY = 'fdplight.github.token';
 
@@ -63,14 +63,19 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
 
   /** The paths FDPlight would read back: its own files only (SPEC §4). */
   function ownedPaths(files: string[]): string[] {
+    const folder = state.project.folder ?? '';
     const prefixes = state.project.types.map((t) => t.urlPrefix).filter(Boolean);
-    return files.filter(
-      (p) =>
-        p === 'fdp.ttl' ||
-        p === 'fdplight.json' ||
-        p.startsWith('shapes/') ||
-        prefixes.some((x) => new RegExp(`^${x}/[^/]+\\.ttl$`).test(p)),
-    );
+    return files.filter((p) => {
+      if (p === PING_WORKFLOW_PATH) return true;
+      if (!p.startsWith(folder)) return false;
+      const rel = p.slice(folder.length);
+      return (
+        rel === 'fdp.ttl' ||
+        rel === 'fdplight.json' ||
+        rel.startsWith('shapes/') ||
+        prefixes.some((x) => new RegExp(`^${x}/[^/]+\\.ttl$`).test(rel))
+      );
+    });
   }
 
   async function refresh(): Promise<void> {
@@ -81,7 +86,8 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
     for (const p of ownedPaths(remoteFiles.value)) contents.set(p, await client.readFile(repo.value, p, head.value));
     remote.value = contents;
     // SPEC §2.3: ids of entities that are in the repository are locked.
-    state.published.value = new Set(state.project.entities.map((e) => state.pathOf(e)).filter((p) => contents.has(p)));
+    const folder = state.project.folder ?? '';
+    state.published.value = new Set(state.project.entities.map((e) => state.pathOf(e)).filter((p) => contents.has(folder + p)));
   }
 
   async function connect(): Promise<void> {
@@ -109,7 +115,7 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
       project: state.project,
       forms: state.forms,
       values: state.values,
-      shapes: FDP_DEFAULT.shapes,
+      shapes: state.shapes,
       remote: remote.value,
       remoteFiles: remoteFiles.value,
       now: new Date(),
