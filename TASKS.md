@@ -57,7 +57,7 @@ file tracks how we build it.
 
 ## Phase 0 — Shared core ⬜
 
-- [ ] Decide the packaging. Options, in order of preference
+- [x] Decide the packaging (2026-10-22: **option (a)**). Options were
   - (a) a `packages/record-core` workspace in the Contour repo, published to
     npm or consumed as a git dependency;
   - (b) a separate `fdp-forms-core` repository;
@@ -83,7 +83,11 @@ file tracks how we build it.
       `/{prefix}/spec` (`/spec` for the root), store the merged shapes under
       `shapes/`. Record the source for later refresh.
 - [ ] Bundled FDP default profile (taken from home.fairdatapoint.org).
-- [ ] Re-base action (SPEC §2.4). Silent before first publish, warning after.
+- [ ] IRI mode detection from the base URI (SPEC §2.2): `*.github.io` and
+      the repository's Pages CNAME give file mode, known redirectors (w3id,
+      purl) give redirect mode, anything else asks once. User can override.
+- [ ] Re-base action (SPEC §2.5), also used for mode switches. Silent before
+      first publish, warning after.
 - [ ] Unit tests for profile parsing, base validation and re-basing.
 
 ## Phase 2 — Multi-shape forms ⬜
@@ -106,7 +110,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 - [ ] Entity tree UI. Root at the top, children grouped by child type (using
       the list titles), add / rename / delete / move.
-- [ ] IRI minting (SPEC §2.2). Random id by default, editable slug until first
+- [ ] IRI minting (SPEC §2.3), both IRI modes. Random id by default, editable slug until first
       publish, locked afterwards.
 - [ ] `serializeEntity(project, entity)` producing the full graph for one file
   - [ ] user metadata from the record engine;
@@ -192,7 +196,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 9 — Optional ⬜
 
-- [ ] Redirect mode (SPEC §2.3) with generated w3id `.htaccess` rules.
+- [ ] Redirect mode UI and publishing (SPEC §2.4): storage base, generated
+      w3id `.htaccess` rules, check that `{base}` resolves before publishing.
+      The IRI rules themselves are in the Phase 1/3 core and tested in both
+      modes.
 - [ ] Profile documents at `{base}profile/{type}.ttl` (SPEC §8.1).
 - [ ] VP Index authorization in the ping workflow, once the mechanism is
       documented.
@@ -204,8 +211,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 See also SPEC §8.
 
-1. Packaging of the shared core (Phase 0).
-2. Licence of FDPlight (Contour is MIT).
+1. ~~Packaging of the shared core (Phase 0).~~ Decided 2026-10-22: option (a),
+   a `packages/record-core` workspace in the Contour repo.
+2. ~~Licence of FDPlight.~~ Decided 2026-10-22: MIT, like Contour.
 3. Where FDPlight itself is hosted (e.g. a `fdplight.fairdatapoint.org`
    subdomain like Contour).
 4. GitHub authentication beyond the pilot (Phase 6).

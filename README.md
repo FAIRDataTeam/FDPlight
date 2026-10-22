@@ -46,4 +46,4 @@ Phase 0).
 
 ## Licence
 
-To be decided.
+[MIT](LICENSE).

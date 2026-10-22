@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.1** (2026-10-22)
+Status: **draft v0.2** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -22,6 +22,8 @@ local checkout of 2026-09-28) or to an observation on a live system. See
 | **Profile** | The FDPlight equivalent of the RI's *resource definitions*. It says which entity types exist, their URL prefix, target classes, SHACL schemas and child relations. |
 | **Entity** | One metadata record (FDP root, a catalog, a dataset, …). One entity = one file. |
 | **Base URI** | The URI prefix all entity IRIs derive from. Supplied by the user per project. |
+| **IRI mode** | `file` (IRIs are the `.ttl` file URLs) or `redirect` (IRIs are extensionless and a redirector maps them to the files). Detected from the base URI, see 2.2. |
+| **Storage base** | In redirect mode, the URL where the `.ttl` files are actually served (the GitHub Pages URL). In file mode it equals the base URI. |
 | **System triples** | Triples the RI adds itself (types, identifiers, timestamps, links, LDP). FDPlight generates them and does not show them in the form. |
 
 ---
@@ -37,7 +39,7 @@ created. It must
 - be the place where the files will actually be served, because the FDP Index
   dereferences every entity IRI (HarvesterService `makeRequest`);
 - stay stable. Entity IRIs are identifiers, so changing the base after
-  publishing creates new identifiers (see 2.4).
+  publishing creates new identifiers (see 2.5).
 
 Typical values
 
@@ -50,20 +52,40 @@ Typical values
 FDPlight can propose the GitHub Pages base automatically from the target
 repository (`https://{owner}.github.io/{repo}/`) but the user confirms it.
 
-### 2.2 Entity IRIs (file mode, default)
+### 2.2 IRI mode, detected from the base URI
 
-```
-root entity        {base}fdp.ttl
-child entity       {base}{urlPrefix}/{id}.ttl
-```
+FDPlight picks the IRI mode from the host of the base URI.
+
+| Base URI host | Mode |
+|---|---|
+| `*.github.io` | file |
+| a custom domain equal to the target repository's Pages CNAME (GitHub API `GET /repos/{owner}/{repo}/pages`, field `cname`) | file |
+| `w3id.org`, `purl.org` and other known redirectors | redirect |
+| anything else | FDPlight asks the user once |
+
+- The user can override the detected mode.
+- The mode is stored in `fdplight.json` (`iriMode`, see 3.1).
+- Switching mode after the first publish changes every IRI, so it goes
+  through the warned re-base step (2.5).
+
+### 2.3 Entity IRIs
+
+| | file mode | redirect mode |
+|---|---|---|
+| root entity | `{base}fdp.ttl` | `{base}` |
+| child entity | `{base}{urlPrefix}/{id}.ttl` | `{base}{urlPrefix}/{id}` |
+| file in the repository | `fdp.ttl`, `{urlPrefix}/{id}.ttl` | the same |
+| file served at | the entity IRI | `{storage}fdp.ttl`, `{storage}{urlPrefix}/{id}.ttl` |
 
 - `{urlPrefix}` comes from the profile (`catalog`, `dataset`, `distribution`,
   or project specific ones such as `biobank`).
 - `{id}` is minted when the entity is created. Default is a short random id
-  (e.g. 8 base32 characters). The user may replace it with a slug before the
-  first publish. After the first publish it is locked.
-- The file path in the repository equals the IRI path relative to the base,
-  so the IRI is always resolvable once Pages has deployed.
+  (8 lowercase base32 characters, `a-z2-7`). The user may replace it with a
+  slug (`[a-z0-9][a-z0-9-]*`) before the first publish. After the first
+  publish it is locked.
+- Files keep their `.ttl` names in both modes. In file mode the file path
+  equals the IRI path relative to the base, so the IRI is always resolvable
+  once Pages has deployed.
 
 **Why the `.ttl` extension.** GitHub Pages picks the content type from the
 extension. A `.ttl` file is served as `text/turtle; charset=utf-8` (verified).
@@ -71,22 +93,38 @@ A file without an extension is served as `application/octet-stream`
 (verified). The Index currently parses everything as Turtle anyway (see the
 note in 9.3) but other clients would not.
 
-### 2.3 Entity IRIs (redirect mode, optional)
+### 2.4 Redirect mode
 
-When the base is a redirecting prefix such as w3id, IRIs can drop the
-extension (`{base}catalog/{id}`) and the redirect rules map them to the
-`.ttl` files. FDPlight then also generates the redirect rules (`.htaccess`
-for w3id). This is a later phase and not required for ERDERA pilots.
+Redirect mode needs a second URI, the **storage base** `{storage}` (absolute
+`https`, ending in `/`), normally `https://{owner}.github.io/{repo}/`.
 
-### 2.4 Changing the base URI
+- FDPlight generates the w3id `.htaccess` rules, roughly
+
+  ```apache
+  RewriteEngine on
+  RewriteRule ^$      {storage}fdp.ttl [R=302,L]
+  RewriteRule ^(.+)$  {storage}$1.ttl  [R=302,L]
+  ```
+
+  relative to the directory of `{base}` in the w3id repository.
+- Before publishing, FDPlight checks that `{base}` resolves to the root file.
+  w3id changes go through a reviewed pull request, so the IRIs work only
+  after it is merged. Until then publishing warns.
+- The Index follows w3id redirects at every level. home.fairdatapoint.org
+  has ACTIVE entries `https://w3id.org/duchenne-fdp` and
+  `https://w3id.org/simpathic/fdp` whose harvested data contains catalogs
+  and other children under their w3id IRIs (see 9.2).
+
+### 2.5 Changing the base URI
 
 - Before the first publish, FDPlight re-bases every IRI in the project
   silently.
 - After the first publish, re-basing is an explicit action with a warning. All
   IRIs are rewritten and the old root URL should keep being pinged until it is
   removed from the Index.
+- Changing the IRI mode is a re-base.
 
-### 2.5 Derived IRIs inside an entity file
+### 2.6 Derived IRIs inside an entity file
 
 All of these are hash IRIs on the entity IRI, so they can never collide with
 another file's IRIs.
@@ -95,9 +133,9 @@ another file's IRIs.
 |---|---|---|
 | Metadata identifier | `{entity}#identifier` | `MetadataEnhancer.createMetadataIdentifier` |
 | Access rights | `{entity}#accessRights` | `MetadataEnhancer.enhance` |
-| LDP container per child type | `{entity}#{childPrefix}` (file mode) or `{entity}/{childPrefix}/` (redirect mode) | `MetadataEnhancer.enhanceWithLinks` uses `{entity}/{childPrefix}/` |
-| Publisher (when entered inline) | `{entity}#publisher` | not in RI, see 5.3 |
-| Contact point (when entered inline) | `{entity}#contactPoint` | not in RI, see 5.3 |
+| LDP container per child type | file mode `{entity}#{childPrefix}`, redirect mode `{entity}/{childPrefix}/` | `MetadataEnhancer.enhanceWithLinks` uses `{entity}/{childPrefix}/` |
+| Publisher (when entered inline) | `{entity}#publisher` | not in RI, see 5.6 |
+| Contact point (when entered inline) | `{entity}#contactPoint` | not in RI, see 5.6 |
 | FAIR metrics | `{entity}/metrics/{md5(metricUri)}` | `MetricsMetadataService` |
 
 **Container IRIs are always per parent entity.** The WP13.3 example declares
@@ -108,8 +146,11 @@ the parent entity IRI makes that impossible.
 
 In file mode the RI pattern `{entity}/{childPrefix}/` would give
 `…/catalog/abc.ttl/dataset/`, which is legal but odd, hence the hash form.
-Containers are never dereferenced by the Index (it reads them from the
-parent's own graph), so either form works for harvesting.
+Redirect mode IRIs have no extension, so the RI form is used there. For the
+root in redirect mode (`E = {base}`) the container is `{base}{childPrefix}/`,
+exactly as the RI serves it. Containers are never dereferenced by the Index
+(it reads them from the parent's own graph), so either form works for
+harvesting.
 
 ---
 
@@ -133,6 +174,7 @@ home.fairdatapoint.org)
   "name": "ERDERA Level 1",
   "base": "https://erdera.github.io/my-fdp/",
   "iriMode": "file",
+  "storageBase": null,
   "defaults": {
     "language": "http://id.loc.gov/vocabulary/iso639-1/en",
     "license": null,
@@ -169,6 +211,8 @@ home.fairdatapoint.org)
 }
 ```
 
+- `iriMode` is `"file"` or `"redirect"` (2.2). `storageBase` is required in
+  redirect mode and must be `null` or absent in file mode.
 - Exactly one type has `urlPrefix: ""`. It is the root (RI `isRoot()`).
 - `shapes` points to the merged SHACL for the type, stored in the
   repository so a project is self-contained. It may also be a URL.
@@ -195,6 +239,7 @@ The values in the example are those currently served by home.fairdatapoint.org.
 /{urlPrefix}/{id}.ttl               one file per child entity
 /.github/workflows/fdp-ping.yml     ping workflow (section 7)
 /README.md                          generated, links to the root and the Index entry
+/w3id/.htaccess                     redirect mode only, to copy into the w3id PR
 ```
 
 - One entity per file. Each file is the complete graph the RI would serve for
@@ -232,7 +277,8 @@ Nested `sh:node` values follow 5.3.
 | `E dct:conformsTo {profileIRI(T)}` and `{profileIRI(T)} rdfs:label "{T.name} Profile"` | always | `enhanceWithResourceDefinition` |
 | `E sio:SIO_000628 M` and `M sio:SIO_000628 m ; sio:SIO_000332 m` for each configured metric `m` | only when `defaults.metrics` is non-empty | `enhance` → `setMetrics` |
 
-`profileIRI(T)` is `{base}profile/{T.key}.ttl`. Publishing a profile document
+`profileIRI(T)` is `{base}profile/{T.key}.ttl` in file mode and
+`{base}profile/{T.key}` in redirect mode. Publishing a profile document
 there is an open decision (see 8).
 
 ### 5.3 Catalog-only triples
@@ -372,14 +418,15 @@ jobs:
 1. **Profile document.** What, if anything, is served at `profileIRI(T)`.
    Options are nothing (as WP13.3), the merged SHACL, or a PROF description
    like the RI.
-2. **Container IRI form in file mode.** Hash (`E#dataset`, proposed) or RI
-   style (`E/dataset/`).
+2. ~~**Container IRI form in file mode.**~~ Decided 2026-10-22: hash
+   (`E#dataset`) in file mode, RI style (`E/dataset/`) in redirect mode (2.6).
 3. **Default metrics.** Emit none (proposed) or mirror the RI defaults.
 4. **ERDERA specifics.** `ejp:vpConnection ejp:VPDiscoverable` and
    `fdp:conformsToFdpSpec` appear in the WP13.3 files. Decide whether they are
    form fields (from the ERDERA shapes) or system triples of the ERDERA
    profile.
-5. **Redirect mode** scope and timing.
+5. **Redirect mode timing.** The rules are specified (2.2 to 2.4). The
+   implementation stays in Phase 9 unless a pilot needs it earlier.
 
 ---
 
@@ -411,6 +458,10 @@ jobs:
   answer 200 without authentication.
 - GitHub Pages serves `.ttl` as `text/turtle; charset=utf-8` and files
   without extension as `application/octet-stream`.
+- The Index follows w3id redirects. ACTIVE entries
+  `https://w3id.org/duchenne-fdp` and `https://w3id.org/simpathic/fdp` have
+  harvested data (`GET /index/entries/{uuid}/data`) with catalogs and other
+  children under their w3id IRIs.
 - Pinging the WP13.3 root returned 204, the entry went from INACTIVE to
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).

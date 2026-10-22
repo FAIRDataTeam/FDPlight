@@ -40,9 +40,12 @@ removes the hand-writing.
 | Wiring | Derived from the project tree on every save. Users never edit relations, `dct:isPartOf`, LDP containers, identifiers or timestamps |
 | Container IRIs | Always derived from the parent entity IRI, so two files can never declare the same container |
 | Unknown triples | Kept verbatim on import and written back |
+| Licence | MIT |
+| Shared core | `packages/record-core` workspace in the Contour repo (TASKS Phase 0 option (a)) |
+| Repository | github.com/FAIRDataTeam/FDPlight (public). Work lands through pull requests |
 | Test Index | **home.fairdatapoint.org** (FDP v1.22.1). The ERDERA VP Index requires authorization, do not target it yet |
 
-### 3.1 Pending SPEC change (agreed, not yet written into SPEC.md)
+### 3.1 Automatic IRI mode (written into SPEC §2.2 to 2.4 in v0.2)
 
 **Automatic IRI mode from the base URI.** Fold this into SPEC §2 (and the
 Phase 1 / Phase 9 tasks) as your first commit.
@@ -64,7 +67,7 @@ Phase 1 / Phase 9 tasks) as your first commit.
 - Container IRIs. File mode uses `{entity}#{childPrefix}`. Redirect mode uses
   the RI form `{entity}/{childPrefix}/`.
 - Switching mode after the first publish changes every IRI and goes through
-  the warned re-base step (SPEC §2.4).
+  the warned re-base step (SPEC §2.5).
 - Evidence that the Index follows w3id redirects at every level.
   home.fairdatapoint.org has ACTIVE entries `https://w3id.org/duchenne-fdp`
   and `https://w3id.org/simpathic/fdp` whose harvested data
@@ -172,8 +175,10 @@ Remote references
 
 ## 8. Open decisions (owner)
 
-1. Packaging of the shared core (TASKS Phase 0).
-2. Licence (Contour is MIT).
+1. ~~Packaging of the shared core.~~ Decided: option (a), a
+   `packages/record-core` workspace in Contour. Changes to Contour still go
+   through the owner.
+2. ~~Licence.~~ Decided: MIT.
 3. Hosting of FDPlight itself (e.g. a `fairdatapoint.org` subdomain).
 4. GitHub authentication beyond a fine-grained token for the pilot.
 5. SPEC §8 items (profile documents, container IRI form in file mode, default
