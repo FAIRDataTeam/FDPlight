@@ -1,0 +1,40 @@
+# Expectation, redirect mode (the file-mode expectation with redirect IRIs, reviewed by hand). Stale user wiring (old parent, old
+# dct:issued, old dataset link and container) is gone; dct:issued/modified
+# are system values for catalogs (SPEC 5.3).
+@base <https://w3id.org/example/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<catalog/rare-diseases> a dcat:Resource, dcat:Catalog ;
+    dct:title "Zeldzame ziekten"@nl, "Rare diseases"@en ;
+    dct:publisher <catalog/rare-diseases#publisher> ;
+    fdp:metadataIdentifier <catalog/rare-diseases#identifier> ;
+    rdfs:label "Rare diseases" ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dct:accessRights <catalog/rare-diseases#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:issued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    dct:modified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:isPartOf <> ;
+    dct:conformsTo <profile/catalog> ;
+    dcat:dataset <dataset/registry-2024>, <dataset/empty-set> .
+
+<catalog/rare-diseases#publisher> a foaf:Agent ; foaf:name "Example Organisation" .
+<catalog/rare-diseases#identifier> a datacite:Identifier ;
+    dct:identifier "https://w3id.org/example/my-fdp/catalog/rare-diseases" .
+<catalog/rare-diseases#accessRights> a dct:RightsStatement ;
+    dct:description "This resource has no access restriction" .
+<profile/catalog> rdfs:label "Catalog Profile" .
+
+<catalog/rare-diseases/dataset/> a ldp:DirectContainer ;
+    dct:title "Datasets" ;
+    ldp:membershipResource <catalog/rare-diseases> ;
+    ldp:hasMemberRelation dcat:dataset ;
+    ldp:contains <dataset/registry-2024>, <dataset/empty-set> .

@@ -1,0 +1,40 @@
+# Hand-written expectation, file mode. Stale user wiring (old parent, old
+# dct:issued, old dataset link and container) is gone; dct:issued/modified
+# are system values for catalogs (SPEC 5.3).
+@base <https://example.github.io/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<catalog/rare-diseases.ttl> a dcat:Resource, dcat:Catalog ;
+    dct:title "Zeldzame ziekten"@nl, "Rare diseases"@en ;
+    dct:publisher <catalog/rare-diseases.ttl#publisher> ;
+    fdp:metadataIdentifier <catalog/rare-diseases.ttl#identifier> ;
+    rdfs:label "Rare diseases" ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dct:accessRights <catalog/rare-diseases.ttl#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:issued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    dct:modified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:isPartOf <fdp.ttl> ;
+    dct:conformsTo <profile/catalog.ttl> ;
+    dcat:dataset <dataset/registry-2024.ttl>, <dataset/empty-set.ttl> .
+
+<catalog/rare-diseases.ttl#publisher> a foaf:Agent ; foaf:name "Example Organisation" .
+<catalog/rare-diseases.ttl#identifier> a datacite:Identifier ;
+    dct:identifier "https://example.github.io/my-fdp/catalog/rare-diseases.ttl" .
+<catalog/rare-diseases.ttl#accessRights> a dct:RightsStatement ;
+    dct:description "This resource has no access restriction" .
+<profile/catalog.ttl> rdfs:label "Catalog Profile" .
+
+<catalog/rare-diseases.ttl#dataset> a ldp:DirectContainer ;
+    dct:title "Datasets" ;
+    ldp:membershipResource <catalog/rare-diseases.ttl> ;
+    ldp:hasMemberRelation dcat:dataset ;
+    ldp:contains <dataset/registry-2024.ttl>, <dataset/empty-set.ttl> .

@@ -1,0 +1,29 @@
+# Hand-written expectation, file mode. No child types, so no container.
+@base <https://example.github.io/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<distribution/registry-csv.ttl> a dcat:Resource, dcat:Distribution ;
+    dct:title "Registry 2024 (CSV)"@en ;
+    dcat:downloadURL <https://example.org/registry-2024.csv> ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/text/csv> ;
+    fdp:metadataIdentifier <distribution/registry-csv.ttl#identifier> ;
+    rdfs:label "Registry 2024 (CSV)" ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dct:accessRights <distribution/registry-csv.ttl#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:isPartOf <dataset/registry-2024.ttl> ;
+    dct:conformsTo <profile/distribution.ttl> .
+
+<distribution/registry-csv.ttl#identifier> a datacite:Identifier ;
+    dct:identifier "https://example.github.io/my-fdp/distribution/registry-csv.ttl" .
+<distribution/registry-csv.ttl#accessRights> a dct:RightsStatement ;
+    dct:description "This resource has no access restriction" .
+<profile/distribution.ttl> rdfs:label "Distribution Profile" .

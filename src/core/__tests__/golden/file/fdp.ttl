@@ -1,0 +1,36 @@
+# Hand-written expectation, file mode. Base https://example.github.io/my-fdp/
+@base <https://example.github.io/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<fdp.ttl> a fdp:MetadataService, dcat:DataService, dcat:Resource, fdp:FAIRDataPoint ;
+    dct:title "Example FDP"@en ;
+    dct:description "A file-only FAIR Data Point."@en ;
+    dct:publisher <fdp.ttl#publisher> ;
+    fdp:metadataIdentifier <fdp.ttl#identifier> ;
+    rdfs:label "Example FDP" ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dct:accessRights <fdp.ttl#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:conformsTo <profile/fdp.ttl> ;
+    fdp:fdpSoftwareVersion "FDPlight:0.1.0" ;
+    dcat:endpointURL <fdp.ttl> ;
+    fdp:metadataCatalog <catalog/rare-diseases.ttl> .
+
+<fdp.ttl#publisher> a foaf:Agent ; foaf:name "Example Organisation" .
+<fdp.ttl#identifier> a datacite:Identifier ; dct:identifier "https://example.github.io/my-fdp/fdp.ttl" .
+<fdp.ttl#accessRights> a dct:RightsStatement ; dct:description "This resource has no access restriction" .
+<profile/fdp.ttl> rdfs:label "FAIR Data Point Profile" .
+
+<fdp.ttl#catalog> a ldp:DirectContainer ;
+    dct:title "Catalogs" ;
+    ldp:membershipResource <fdp.ttl> ;
+    ldp:hasMemberRelation fdp:metadataCatalog ;
+    ldp:contains <catalog/rare-diseases.ttl> .

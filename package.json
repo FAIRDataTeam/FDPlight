@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "FDPlight — publish a file-only FAIR Data Point on GitHub Pages",
+  "description": "FDPlight — a serverless FAIR Data Point",
   "license": "MIT",
   "scripts": {
     "dev": "vite",

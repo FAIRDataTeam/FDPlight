@@ -28,11 +28,11 @@ file tracks how we build it.
 | Phase | Theme | Status |
 |---|---|---|
 | 0 — Shared core | extract Contour's record engine into a package | 🟡 packaging decided, scaffold done |
-| 1 — Project model and profile | base URI, profile format, import from an FDP | ⬜ |
+| 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | ⬜ |
-| 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ⬜ |
+| 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 core and golden tests done, UI open |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ⬜ |
-| 5 — Validation | SHACL plus structural checks before publish | ⬜ |
+| 5 — Validation | SHACL plus structural checks before publish | 🟡 structural checks done |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | ⬜ |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ⬜ |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ⬜ |
@@ -45,6 +45,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 - 2026-10-22 — Repository published at github.com/FAIRDataTeam/FDPlight
   (public, MIT). SPEC v0.2 automatic IRI modes (#1). Scaffold and logo (#2).
   SPEC v0.3 timestamp correction (#3).
+- 2026-10-22 — Core modules `iri`, `profile`, `project`, `wiring`, `checks`
+  with golden tests in both IRI modes (#4). Tagline "a serverless FAIR Data
+  Point". Verified: type-check, 79 tests, build 231 kB (150 kB gzip).
 
 ## Key technical decisions
 
@@ -81,25 +84,29 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       Pages deploy is gated on the `DEPLOY_PAGES` repository variable.
 - [ ] Scaffold imports the shared package and renders one form.
 
-## Phase 1 — Project model and profile ⬜
+## Phase 1 — Project model and profile 🟡
 
-- [ ] `Project` type (base URI, IRI mode, defaults, profile, entities) and its
-      JSON form `fdplight.json` (SPEC §3.1).
+- [x] `Project` type (base URI, IRI mode, defaults, profile, entities) and its
+      JSON form `fdplight.json` (SPEC §3.1) — `src/core/profile.ts`,
+      `src/core/project.ts`. The entity tree is not yet persisted (open
+      decision 5).
 - [ ] New-project wizard
   - [ ] target repository (owner/name, branch);
   - [ ] **base URI**, proposed as `https://{owner}.github.io/{repo}/`,
         editable, validated (absolute https, ends with `/`);
   - [ ] profile source (bundled, import from an FDP URL, or a local file).
-- [ ] Profile import from a running FDP. Read `/resource-definitions`, fetch
+- [x] Profile import from a running FDP (`importProfileFromFdp`, tested on
+      recorded home.fairdatapoint.org responses). Read `/resource-definitions`, fetch
       `/{prefix}/spec` (`/spec` for the root), store the merged shapes under
       `shapes/`. Record the source for later refresh.
 - [ ] Bundled FDP default profile (taken from home.fairdatapoint.org).
-- [ ] IRI mode detection from the base URI (SPEC §2.2): `*.github.io` and
+- [x] IRI mode detection from the base URI (SPEC §2.2): `*.github.io` and
       the repository's Pages CNAME give file mode, known redirectors (w3id,
       purl) give redirect mode, anything else asks once. User can override.
-- [ ] Re-base action (SPEC §2.5), also used for mode switches. Silent before
+- [x] Re-base IRI mapping (`rebaser`) for the re-base action (SPEC §2.5),
+      also used for mode switches. UI still open. Silent before
       first publish, warning after.
-- [ ] Unit tests for profile parsing, base validation and re-basing.
+- [x] Unit tests for profile parsing, base validation and re-basing.
 
 ## Phase 2 — Multi-shape forms ⬜
 
@@ -120,23 +127,27 @@ Resource plus Dataset). Contour still treats the first shape as primary
       user fields.
 - [ ] Tests with the real merged shapes of the default and ERDERA profiles.
 
-## Phase 3 — Tree and wiring ⬜
+## Phase 3 — Tree and wiring 🟡
 
 - [ ] Entity tree UI. Root at the top, children grouped by child type (using
       the list titles), add / rename / delete / move.
-- [ ] IRI minting (SPEC §2.3), both IRI modes. Random id by default, editable slug until first
+- [x] IRI minting (SPEC §2.3), both IRI modes (`src/core/iri.ts`); slug
+      locking after first publish belongs to the UI. Random id by default, editable slug until first
       publish, locked afterwards.
-- [ ] `serializeEntity(project, entity)` producing the full graph for one file
-  - [ ] user metadata from the record engine;
-  - [ ] system triples (SPEC §5.2), catalog extras (§5.3), root extras (§5.4);
-  - [ ] child relations and one `ldp:DirectContainer` per child type, empty
+- [x] `serializeEntity(project, entity, userGraph)` producing the full graph
+      for one file (`src/core/wiring.ts`), plus `toTurtle` (clean Turtle,
+      used prefixes only)
+  - [ ] user metadata from the record engine (takes an N3 `Store` until then);
+  - [x] system triples (SPEC §5.2), catalog extras (§5.3), root extras (§5.4);
+  - [x] child relations and one `ldp:DirectContainer` per child type, empty
         ones included (§5.5);
-  - [ ] hash IRIs for publisher / contact point (§5.6).
+  - [ ] hash IRIs for publisher / contact point (§5.6) — kept when given;
+        minting them is the form engine's job.
 - [ ] Timestamp rules. `fdp:metadataIssued` set once, `fdp:metadataModified`
       on every save of that entity (plus `dct:issued` / `dct:modified` for
       catalogs). Parents whose containers change also get a new
       modification time.
-- [ ] Golden-file tests. Build the default-profile example tree and compare
+- [x] Golden-file tests (both IRI modes, `src/core/__tests__/golden/`). Build the default-profile example tree and compare
       each file with the expected Turtle, triple by triple.
 - [ ] Cross-check against the RI. Create the same tree in a local RI
       (`fdp-ri` compose), fetch each entity, diff the graphs ignoring
@@ -161,11 +172,11 @@ Resource plus Dataset). Contour still treats the first shape as primary
       check that the container clash and the identifier typo are gone and no
       user metadata was lost.
 
-## Phase 5 — Validation ⬜
+## Phase 5 — Validation 🟡
 
 - [ ] Per entity SHACL check (built-in checks plus shacl-engine) against the
       type's merged shapes.
-- [ ] Structural checks of SPEC §6 (base, dangling links, orphans, duplicate
+- [x] Structural checks of SPEC §6 rules 2 to 7 (`src/core/checks.ts`) (base, dangling links, orphans, duplicate
       IRIs, malformed IRIs, root type).
 - [ ] Publish button disabled while there are errors, with a list that jumps
       to the offending entity and field.
@@ -232,6 +243,8 @@ See also SPEC §8.
 3. Where FDPlight itself is hosted (e.g. a `fdplight.fairdatapoint.org`
    subdomain like Contour).
 4. GitHub authentication beyond the pilot (Phase 6).
+5. Where the entity tree is stored: in `fdplight.json` or rebuilt from the
+   files' `dct:isPartOf` on load.
 
 ## Related work
 

@@ -1,8 +1,10 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.3** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.4** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
+v0.4 pins metrics as metric/resource pairs and says which input triples the
+wiring replaces (§5.7).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -138,7 +140,7 @@ another file's IRIs.
 | LDP container per child type | file mode `{entity}#{childPrefix}`, redirect mode `{entity}/{childPrefix}/` | `MetadataEnhancer.enhanceWithLinks` uses `{entity}/{childPrefix}/` |
 | Publisher (when entered inline) | `{entity}#publisher` | not in RI, see 5.6 |
 | Contact point (when entered inline) | `{entity}#contactPoint` | not in RI, see 5.6 |
-| FAIR metrics | `{entity}/metrics/{md5(metricUri)}` | `MetricsMetadataService` |
+| FAIR metrics | `{entity}/metrics/{md5Hex(metricUri)}`; for a redirect-mode root (`E` ends with `/`) the slash is not doubled | `MetricsMetadataService` |
 
 **Container IRIs are always per parent entity.** The WP13.3 example declares
 `…/catalog/datasets/` in both the catalog and the dataset file and after
@@ -181,7 +183,9 @@ home.fairdatapoint.org)
     "language": "http://id.loc.gov/vocabulary/iso639-1/en",
     "license": null,
     "accessRightsDescription": "This resource has no access restriction",
-    "metrics": []
+    "metrics": [
+      { "metric": "https://purl.org/fair-metrics/FM_F1A", "resource": "https://www.ietf.org/rfc/rfc3986.txt" }
+    ]
   },
   "types": [
     {
@@ -277,7 +281,7 @@ Nested `sh:node` values follow 5.3.
 | `E fdp:metadataModified t` (`xsd:dateTime`) | `t` = every save | `enhance` → `setModified`, which writes `fdp:metadataModified` |
 | `E dct:isPartOf P` | every non-root entity | used by the RI to find the parent (`GenericController`, `MetadataSetter`) and in the Index navigation shapes |
 | `E dct:conformsTo {profileIRI(T)}` and `{profileIRI(T)} rdfs:label "{T.name} Profile"` | always | `enhanceWithResourceDefinition` |
-| `E sio:SIO_000628 M` and `M sio:SIO_000628 m ; sio:SIO_000332 m` for each configured metric `m` | only when `defaults.metrics` is non-empty | `enhance` → `setMetrics` |
+| `E sio:SIO_000628 M` and `M sio:SIO_000628 r ; sio:SIO_000332 r` for each configured metric `{metric, resource: r}`, with `M` named after `metric` (2.6) | only when `defaults.metrics` is non-empty | `enhance` → `setMetrics`; RI settings entries are `(metricUri, resourceUri)` |
 
 `profileIRI(T)` is `{base}profile/{T.key}.ttl` in file mode and
 `{base}profile/{T.key}` in redirect mode. Publishing a profile document
@@ -336,6 +340,9 @@ E  R  c1, … , cn .                                   # direct relation
   deleting a child rewrites the parent file.
 - `ldp:BasicContainer` on the entity itself (as in the WP13.3 files) is
   **not** emitted because the RI does not produce it.
+- Any LDP container node found in the input (other than `E` itself) is
+  wiring and is dropped, whatever its IRI, so hand-written containers such as
+  the shared one in 9.4 cannot survive a save.
 
 ### 5.6 Nested nodes from the form
 
@@ -355,6 +362,20 @@ When an existing file is imported (edit use case), triples that neither the
 form nor the system rules account for are **kept and written back
 unchanged** on the same subject. FDPlight reports how many there are. They are
 never dropped silently.
+
+What the wiring **replaces** in its input, and so never counts as unknown
+
+- on `E`: `rdf:type`, `fdp:metadataIdentifier`, `rdfs:label`,
+  `fdp:metadataIssued`, `fdp:metadataModified`, `dct:isPartOf`,
+  `sio:SIO_000628`, every child relation of `T`, for catalogs `dct:issued` and
+  `dct:modified`, for the root `fdp:fdpSoftwareVersion` and
+  `dcat:endpointURL`;
+- the nodes `E#identifier`, the generated containers, any other LDP
+  container (5.5), the metric nodes `E/metrics/…`, and `E#accessRights` when
+  the user gave no `dct:accessRights`.
+
+`dct:conformsTo`, `dct:language`, `dct:license` and `dct:accessRights` given
+by the user are kept; the defaults only fill gaps.
 
 ---
 
