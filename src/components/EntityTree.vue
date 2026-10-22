@@ -33,6 +33,7 @@ const groups = computed(() =>
     >
       <span class="tree__type">{{ type.name }}</span>
       <span class="tree__label">{{ label }}</span>
+      <span v-if="state.errorCount(path)" class="tree__errors" :title="`${state.errorCount(path)} problems to fix`">{{ state.errorCount(path) }}</span>
     </button>
     <div v-for="g in groups" :key="g.spec.type" class="tree__group">
       <div class="tree__group-title">{{ g.spec.title }}</div>
@@ -49,6 +50,7 @@ const groups = computed(() =>
   list-style: none;
 }
 .tree__node {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -78,6 +80,19 @@ const groups = computed(() =>
 .tree__label {
   font-weight: 600;
   overflow-wrap: anywhere;
+}
+.tree__errors {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 18px;
+  text-align: center;
 }
 .tree__group {
   margin: 2px 0 6px 14px;

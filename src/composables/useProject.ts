@@ -1,7 +1,7 @@
 // Editor state for one project: settings, entity tree, form values per
 // entity, and everything derived from them (graphs, checks, Turtle).
 
-import { computed, reactive, ref, shallowRef, watchEffect } from 'vue';
+import { computed, reactive, ref, shallowRef, watch, watchEffect } from 'vue';
 import { expandTerm, fieldKey, normalizeRecord, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
 import type { Schema } from '@fairdatateam/record-core/types';
 import type { Store } from 'n3';
@@ -11,6 +11,7 @@ import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { typeByKey, type EntityType } from '../core/profile';
 import { findByPath, iriOf, pathOf, stamp, type Entity, type Project } from '../core/project';
 import { addChild, removeEntity, renameEntity, type TreeResult } from '../core/tree';
+import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
 import { DCT } from '../core/vocab';
 import { serializeEntity, toTurtle } from '../core/wiring';
 import { FDP_DEFAULT } from '../profiles/fdp-default';
@@ -35,9 +36,13 @@ export function newProject(base = DEFAULT_BASE): Project {
   };
 }
 
+/** How long the SHACL check waits after the last edit. */
+export const SHACL_DELAY_MS = 300;
+
 export function useProject(initial: Project = newProject(), shapes: Record<string, string> = FDP_DEFAULT.shapes) {
   const project = reactive(initial) as Project;
   const forms: Record<string, Schema> = Object.fromEntries(project.types.map((t) => [t.key, entityForm(t, shapes[t.key])]));
+  const shapeQuads = Object.fromEntries(project.types.map((t) => [t.key, shapesGraph(shapes[t.key])]));
   const values = reactive<Record<string, RecordNode>>({});
   for (const e of project.entities) values[pathOf(project, e)] = normalizeRecord(forms[e.type], {});
 
@@ -139,6 +144,37 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
     issues.value = checkProject(project, out);
   });
 
+  // ---- SHACL check per entity (SPEC §6 rule 1), debounced ----
+  const findings = shallowRef(new Map<string, ShaclFinding[]>());
+  const checking = ref(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let run = 0;
+
+  async function checkAll(): Promise<void> {
+    const mine = ++run;
+    checking.value = true;
+    const out = new Map<string, ShaclFinding[]>();
+    await Promise.all(
+      project.entities.map(async (e) => {
+        const path = pathOf(project, e);
+        const g = graphs.value.get(path);
+        if (!g) return;
+        out.set(path, await checkEntity(forms[e.type], iriOf(project, e), values[path] ?? {}, g, shapeQuads[e.type]));
+      }),
+    );
+    if (mine !== run) return; // a newer edit started another run
+    findings.value = out;
+    checking.value = false;
+  }
+
+  watch(graphs, () => {
+    clearTimeout(timer);
+    timer = setTimeout(checkAll, SHACL_DELAY_MS);
+  }, { immediate: true });
+
+  const errorCount = (path: string): number => (findings.value.get(path) ?? []).filter((f) => f.severity === 'error').length;
+  const totalErrors = computed(() => [...findings.value.values()].flat().filter((f) => f.severity === 'error').length);
+
   watchEffect(async () => {
     const g = graphs.value.get(selected.value);
     const iri = settingsErrors.value.length ? '' : iriOf(project, entity.value);
@@ -164,6 +200,11 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
     graphs,
     issues,
     turtle,
+    findings,
+    checking,
+    checkAll,
+    errorCount,
+    totalErrors,
   };
 }
 

@@ -32,7 +32,7 @@ file tracks how we build it.
 | 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 core and golden tests done, UI open |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ⬜ |
-| 5 — Validation | SHACL plus structural checks before publish | 🟡 structural checks done |
+| 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | ⬜ |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ⬜ |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ⬜ |
@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — SHACL check per entity with findings on the fields and counts
+  in the tree; publisher / contact point as sub-forms with hash IRIs (#10).
+  Verified: 101 tests, build 620 kB (260 kB gzip; +77 kB shacl-engine).
 - 2026-10-22 — Project editor: settings bar (base URI, IRI-mode detection,
   storage base), entity tree with add / rename / delete, form per entity,
   live Turtle and structural checks (#9). Verified: 94 tests, build 543 kB.
@@ -167,8 +170,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
   - [x] system triples (SPEC §5.2), catalog extras (§5.3), root extras (§5.4);
   - [x] child relations and one `ldp:DirectContainer` per child type, empty
         ones included (§5.5);
-  - [ ] hash IRIs for publisher / contact point (§5.6) — kept when given;
-        minting them is the form engine's job.
+  - [x] hash IRIs for publisher / contact point (§5.6): minted when the
+        graph is built, never stored (`withHashNodes`, #10). Fields with
+        `sh:node` (the FDP's `dash:BlankNodeEditor`) render as sub-forms.
 - [ ] Timestamp rules. `fdp:metadataIssued` set once, `fdp:metadataModified`
       on every save of that entity (plus `dct:issued` / `dct:modified` for
       catalogs). Parents whose containers change also get a new
@@ -201,8 +205,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 5 — Validation 🟡
 
-- [ ] Per entity SHACL check (built-in checks plus shacl-engine) against the
-      type's merged shapes.
+- [x] Per entity SHACL check against the type's shapes, on the complete file
+      graph so system triples count (`src/core/validation.ts`, record-core
+      `checkRecordShacl` with the FDP's shapes graph). Findings on the form
+      fields, red counts in the tree (#10).
 - [x] Structural checks of SPEC §6 rules 2 to 7 (`src/core/checks.ts`) (base, dangling links, orphans, duplicate
       IRIs, malformed IRIs, root type).
 - [ ] Publish button disabled while there are errors, with a list that jumps

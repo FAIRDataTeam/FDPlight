@@ -68,4 +68,15 @@ describe('useProject', () => {
     expect(s.turtle.value).toContain('dct:title "My FDP"@en');
     expect(s.turtle.value).toContain('rdfs:label "My FDP"');
   });
+
+  it('runs the SHACL check per entity and counts errors', async () => {
+    const s = useProject();
+    await s.checkAll();
+    expect(s.errorCount('fdp.ttl')).toBe(3);
+    setTitle(s, 'fdp.ttl', 'My FDP');
+    await nextTick();
+    await s.checkAll();
+    expect(s.errorCount('fdp.ttl')).toBe(2);
+    expect(s.totalErrors.value).toBe(2);
+  });
 });

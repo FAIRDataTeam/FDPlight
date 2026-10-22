@@ -2,12 +2,35 @@
 // FDPlight generates (TASKS Phase 2, SPEC §5.7).
 
 import { formSchema } from '@fairdatateam/record-core/forms';
-import { expandTerm, recordToQuads, type RecordNode } from '@fairdatateam/record-core/record';
+import { expandTerm, fieldKey, nestedShapeOf, recordHasContent, recordToQuads, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
 import { parseShacl } from '@fairdatateam/record-core/shacl';
-import type { Schema } from '@fairdatateam/record-core/types';
+import type { Field, Schema } from '@fairdatateam/record-core/types';
 import { Store } from 'n3';
+import { hashIri } from './iri';
 import type { EntityType } from './profile';
+import { NS } from './vocab';
 import { generatedPaths } from './wiring';
+
+/**
+ * SPEC §5.6. Nested values with their own identity get a hash IRI on the
+ * entity, named after the path: `E#publisher`, `E#contactPoint`, then
+ * `E#publisher-2`, … Other nested values stay blank nodes.
+ */
+export const HASH_NODE_PATHS: Record<string, string> = {
+  [`${NS.dct}publisher`]: 'publisher',
+  [`${NS.dcat}contactPoint`]: 'contactPoint',
+};
+
+/**
+ * A field whose sh:node is a shape of the same graph, and that is not
+ * constrained to an IRI, is a sub-form. The FDP shapes mark such fields with
+ * `dash:BlankNodeEditor`, which the record engine does not know, so it would
+ * otherwise render them as a text field.
+ */
+function asSubForm(schema: Schema, f: Field): Field {
+  const nested = f.node && f.nodeKind !== 'sh:IRI' && schema.nestedShapes.some((ns) => ns.iri === f.node);
+  return nested && f.widgetId !== 'DetailsEditor' ? { ...f, widgetId: 'DetailsEditor' } : f;
+}
 
 /**
  * One form for an entity type: every NodeShape in `shapesTtl` that targets
@@ -20,12 +43,36 @@ export function entityForm(type: EntityType, shapesTtl: string): Schema {
   const form = formSchema(parsed.schema, type.targetClasses);
   const hidden = new Set(generatedPaths(type));
   const groups = form.groups
-    .map((g) => ({ ...g, fields: g.fields.filter((f) => f.inversePath || !hidden.has(expandTerm(f.path, form.prefixes) ?? '')) }))
+    .map((g) => ({
+      ...g,
+      fields: g.fields
+        .filter((f) => f.inversePath || !hidden.has(expandTerm(f.path, form.prefixes) ?? ''))
+        .map((f) => asSubForm(form, f)),
+    }))
     .filter((g) => g.fields.length);
-  return { ...form, groups };
+  const nestedShapes = form.nestedShapes.map((ns) => ({ ...ns, fields: ns.fields.map((f) => asSubForm(form, f)) }));
+  return { ...form, groups, nestedShapes };
+}
+
+/**
+ * SPEC §5.6. A copy of the form values in which nested publisher / contact
+ * point values that have content but no IRI get their hash IRI. Applied on a
+ * copy so the stored values never hold an IRI a rename would make stale.
+ */
+export function withHashNodes(form: Schema, entityIri: string, values: RecordNode): RecordNode {
+  const node: RecordNode = { ...values };
+  for (const f of shapeFields(form)) {
+    const name = HASH_NODE_PATHS[expandTerm(f.path, form.prefixes) ?? ''];
+    const key = fieldKey(f);
+    if (!name || f.inversePath || !nestedShapeOf(form, f) || !node[key]) continue;
+    node[key] = node[key].map((v, i) =>
+      v.value || !recordHasContent(v.node ?? {}) ? v : { ...v, value: hashIri(entityIri, i ? `${name}-${i + 1}` : name) },
+    );
+  }
+  return node;
 }
 
 /** SPEC §5.1. The user graph of an entity from its form values. */
 export function userGraphFromForm(form: Schema, entityIri: string, values: RecordNode): Store {
-  return new Store(recordToQuads(form, entityIri, values));
+  return new Store(recordToQuads(form, entityIri, withHashNodes(form, entityIri, values)));
 }

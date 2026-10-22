@@ -1,4 +1,4 @@
-import { expandTerm, fieldKey, normalizeRecord, shapeFields } from '@fairdatateam/record-core/record';
+import { expandTerm, fieldKey, nestedShapeOf, normalizeRecord, shapeFields } from '@fairdatateam/record-core/record';
 import { FDP_DEFAULT } from '../../profiles/fdp-default';
 import { entityForm, userGraphFromForm } from '../forms';
 import { typesFromResourceDefinitions, typeByKey } from '../profile';
@@ -40,5 +40,20 @@ describe('entityForm (TASKS Phase 2)', () => {
     const g = userGraphFromForm(f, 'https://example.github.io/my-fdp/dataset/x.ttl', values);
     const t = g.getQuads('https://example.github.io/my-fdp/dataset/x.ttl', DCT.title, null, null)[0].object;
     expect([t.value, (t as { language?: string }).language]).toEqual(['My dataset', 'en']);
+  });
+
+  it('renders a publisher (sh:node AgentShape) as a sub-form and names its node E#publisher (SPEC §5.6)', () => {
+    const f = form('dataset');
+    const pub = shapeFields(f).find((x) => expandTerm(x.path, f.prefixes) === `${NS.dct}publisher`)!;
+    expect(pub.widgetId).toBe('DetailsEditor');
+    expect(nestedShapeOf(f, pub)?.targetClass).toBe('foaf:Agent');
+    const values = normalizeRecord(f, {});
+    const node = values[fieldKey(pub)][0].node!;
+    node[Object.keys(node)[0]][0].value = 'University of Twente';
+    const E = 'https://example.github.io/my-fdp/dataset/x.ttl';
+    const g = userGraphFromForm(f, E, values);
+    expect(g.getQuads(E, `${NS.dct}publisher`, null, null).map((q) => q.object.value)).toEqual([`${E}#publisher`]);
+    expect(g.getQuads(`${E}#publisher`, `${NS.foaf}name`, null, null).map((q) => q.object.value)).toEqual(['University of Twente']);
+    expect(values[fieldKey(pub)][0].value).toBe(''); // the stored value keeps no IRI
   });
 });
