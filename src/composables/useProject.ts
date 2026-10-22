@@ -10,7 +10,7 @@ import { checkProject, type Issue } from '../core/checks';
 import type { LoadedProject } from '../core/load';
 import { entityForm, userGraphFromForm } from '../core/forms';
 import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
-import { typeByKey, type EntityType } from '../core/profile';
+import { rootType, typeByKey, type EntityType, type ImportedProfile } from '../core/profile';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
@@ -176,10 +176,23 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
   function switchProfile(key: string): void {
     const next = PROFILES[key];
     if (!next || key === profile.value) return;
+    startOver(key, next.types, next.shapes);
+    delete project.source;
+  }
+
+  /** Start over with a profile imported from a running FDP (SPEC §3, TASKS Phase 1). */
+  function useImportedProfile(imported: ImportedProfile): void {
+    startOver('imported', imported.types, imported.shapes);
+    project.source = imported.source;
+  }
+
+  function startOver(key: string, types: EntityType[], newShapes: Record<string, string>): void {
     profile.value = key;
-    shapes = next.shapes;
-    project.types = next.types;
-    project.entities = [{ type: 'fdp', id: '', parent: null }];
+    shapes = newShapes;
+    project.types = types;
+    delete project.root;
+    project.entities = [{ type: rootType(types).key, id: '', parent: null }];
+    extras.value = {};
     published.value = new Set();
     selected.value = rootPath(project);
     loadProfile();
@@ -266,6 +279,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
       return shapes;
     },
     switchProfile,
+    useImportedProfile,
     load,
     hasLocalWork,
     extras,

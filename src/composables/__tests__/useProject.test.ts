@@ -2,6 +2,8 @@ import { flushPromises } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { expandTerm, fieldKey, shapeFields } from '@fairdatateam/record-core/record';
 import { DCT } from '../../core/vocab';
+import { importProfileFromFdp } from '../../core/profile';
+import { recordedFdpFetch } from '../../test/recordedFdp';
 import { useProject } from '../useProject';
 
 function setTitle(s: ReturnType<typeof useProject>, path: string, title: string) {
@@ -118,5 +120,22 @@ describe('useProject', () => {
     expect(s.forms.software).toBeDefined();
     s.project.folder = 'bad';
     expect(s.settingsErrors.value[0]).toMatch(/folder/);
+  });
+
+  it('starts over with a profile imported from an FDP, and back to a bundled one', async () => {
+    const s = useProject(undefined, 'software');
+    s.add('fdp.ttl', 'catalog');
+    const imported = await importProfileFromFdp('https://fdp.test', recordedFdpFetch());
+    s.useImportedProfile(imported);
+    expect(s.profile.value).toBe('imported');
+    expect(s.project.source).toEqual(imported.source);
+    expect(s.project.types.map((t) => t.key)).toEqual(['fdp', 'catalog', 'dataset', 'distribution']);
+    expect(s.project.entities).toEqual([{ type: 'fdp', id: '', parent: null }]);
+    expect(Object.keys(s.forms).sort()).toEqual(['catalog', 'dataset', 'distribution', 'fdp']);
+    expect(s.shapes.catalog).toBe(imported.shapes.catalog);
+    s.add('fdp.ttl', 'catalog');
+    expect(s.lastError.value).toBe('');
+    s.switchProfile('fdp-default');
+    expect([s.profile.value, s.project.source]).toEqual(['fdp-default', undefined]);
   });
 });

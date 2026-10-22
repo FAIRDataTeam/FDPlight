@@ -5,19 +5,50 @@ import { recordHasContent } from '@fairdatateam/record-core/record';
 import type { ProjectState } from '../composables/useProject';
 import type { IriMode } from '../core/iri';
 import { BRANCH_PAGES_WORKFLOW } from '../core/ping';
+import { importProfileFromFdp } from '../core/profile';
 import { PROFILES } from '../profiles';
 
 const props = defineProps<{ state: ProjectState }>();
 const p = props.state.project;
 
+const IMPORT = '__import';
+const importing = ref(false);
+const fdpUrl = ref('');
+const importError = ref('');
+const busy = ref(false);
+
+const hasContent = () => p.entities.length > 1 || Object.values(props.state.values).some(recordHasContent);
+const confirmStartOver = () => !hasContent() || window.confirm('Switching the profile starts a new, empty project. Continue?');
+
 function chooseProfile(e: Event) {
   const select = e.target as HTMLSelectElement;
-  const hasContent = p.entities.length > 1 || Object.values(props.state.values).some(recordHasContent);
-  if (hasContent && !window.confirm('Switching the profile starts a new, empty project. Continue?')) {
+  if (select.value === IMPORT) {
+    importing.value = true;
     select.value = props.state.profile.value;
     return;
   }
+  if (!confirmStartOver()) {
+    select.value = props.state.profile.value;
+    return;
+  }
+  importing.value = false;
   props.state.switchProfile(select.value);
+}
+
+/** SPEC §3: the types and shapes of a running FDP (public endpoints, CORS allowed by the RI). */
+async function importProfile() {
+  importError.value = '';
+  busy.value = true;
+  try {
+    const imported = await importProfileFromFdp(fdpUrl.value.trim());
+    if (!confirmStartOver()) return;
+    props.state.useImportedProfile(imported);
+    importing.value = false;
+  } catch (err) {
+    importError.value = `Could not import the profile: ${err instanceof Error ? err.message : String(err)}`;
+  } finally {
+    busy.value = false;
+  }
 }
 
 function toggleIndex(on: boolean) {
@@ -41,8 +72,21 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = {
       <select :value="state.profile.value" @change="chooseProfile">
         <option v-for="(prof, key) in PROFILES" :key="key" :value="key">{{ prof.name }}</option>
         <option v-if="state.profile.value === 'repository'" value="repository">From the repository</option>
+        <option v-if="state.profile.value === 'imported'" value="imported">From {{ p.source?.fdp }}</option>
+        <option :value="IMPORT">Import from a FAIR Data Point…</option>
       </select>
     </label>
+    <form v-if="importing" class="settings__import" @submit.prevent="importProfile">
+      <label class="settings__field">
+        <span>FAIR Data Point URL (its resource definitions and shapes become this project's profile)</span>
+        <input v-model="fdpUrl" type="url" required spellcheck="false" placeholder="https://home.fairdatapoint.org" />
+      </label>
+      <div class="settings__import-actions">
+        <button type="submit" class="primary" :disabled="busy">{{ busy ? 'Importing…' : 'Import profile' }}</button>
+        <button type="button" class="link" @click="importing = false">Cancel</button>
+      </div>
+      <p v-if="importError" class="settings__error" role="alert">{{ importError }}</p>
+    </form>
     <label class="settings__field">
       <span>Base URI</span>
       <input v-model="base" type="url" spellcheck="false" @change="state.setBase(base)" @keyup.enter="state.setBase(base)" />
@@ -131,6 +175,45 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = {
   display: inline-flex;
   gap: 12px;
   color: var(--color-text-default);
+}
+.settings__import {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+.settings__import-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.settings__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+.primary {
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+}
+.primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.link {
+  font: inherit;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 0 4px;
 }
 .settings__errors {
   margin: 0;
