@@ -48,12 +48,13 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 - 2026-10-22 — Core modules `iri`, `profile`, `project`, `wiring`, `checks`
   with golden tests in both IRI modes (#4). Tagline "a serverless FAIR Data
   Point". Verified: type-check, 79 tests, build 231 kB (150 kB gzip).
+- 2026-10-22 — Shared-core extraction plan (#5).
 
 ## Key technical decisions
 
 1. **Stack = Contour's stack.** Vue 3, TypeScript, Vite, single-file build,
    N3.js, shacl-engine, Vitest. No new runtime framework.
-2. **Shared code via a package, not a copy.** Contour's `record.ts`,
+2. **Shared code via a package, not a copy.** Contour's `record.ts`, `shacl.ts`,
    `validation.ts`, `shaclCheck.ts`, `lookup.ts`, `remote.ts`, the parsers
    (`rdf.ts`, `jsonldParse.ts`, `rdfxml.ts`) and the renderer components
    (`PreviewField.vue`, `FieldInput.vue`, `LookupInput.vue`) move into a
@@ -68,6 +69,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ## Phase 0 — Shared core 🟡
 
+- [x] Extraction plan written: [docs/shared-core.md](docs/shared-core.md)
+      (modules, Contour-only assumptions, order of work). Awaiting owner
+      approval before touching Contour.
 - [x] Decide the packaging (2026-10-22: **option (a)**). Options were
   - (a) a `packages/record-core` workspace in the Contour repo, published to
     npm or consumed as a git dependency;
