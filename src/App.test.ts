@@ -24,7 +24,19 @@ describe('App', () => {
     expect(ttl).toContain('dct:title "Rare diseases"');
     expect(ttl).toContain('dct:isPartOf <https://example.github.io/my-fdp/fdp.ttl>');
     expect(w.find('.tree__node.is-selected .tree__label').text()).toBe('Rare diseases');
-    expect(w.find('.checks').text()).toBe('Structure OK');
+    expect(w.find('.checks').text()).toContain('Structure OK');
+  });
+
+  it('marks entities with missing required metadata', async () => {
+    vi.useFakeTimers();
+    const w = mount(App);
+    await vi.runAllTimersAsync();
+    vi.useRealTimers();
+    await flushPromises();
+    // Empty root: title, publisher and version are required by the FDP shapes.
+    expect(w.find('.tree__errors').text()).toBe('3');
+    expect(w.find('.checks').text()).toContain('3 problems to fix');
+    expect(w.findAll('.form-preview .record-issue').map((p) => p.text())).toContain('Required');
   });
 
   it('shows settings errors for a bad base URI', async () => {

@@ -60,11 +60,21 @@ function removeSelected() {
           </div>
           <p v-if="state.lastError.value" class="error" role="alert">{{ state.lastError.value }}</p>
         </div>
-        <EntityForm :key="selected" :schema="state.forms[entity.type]" :values="state.values[selected]" />
+        <EntityForm
+          :key="selected"
+          :schema="state.forms[entity.type]"
+          :values="state.values[selected]"
+          :findings="state.findings.value.get(selected)"
+        />
       </section>
 
       <section class="card" aria-label="Generated file">
-        <div class="checks" :class="{ 'is-ok': !state.issues.value.length }">
+        <div class="checks" :class="{ 'is-ok': !state.issues.value.length && !state.totalErrors.value }">
+          <div v-if="state.totalErrors.value" class="checks__shacl">
+            {{ state.totalErrors.value }} {{ state.totalErrors.value === 1 ? 'problem' : 'problems' }} to fix in the
+            metadata (see the red counts in the tree)
+          </div>
+          <div v-else-if="!state.checking.value" class="checks__shacl">Metadata complete</div>
           <template v-if="!state.issues.value.length">Structure OK</template>
           <ul v-else>
             <li v-for="(i, n) in state.issues.value" :key="n" :class="`is-${i.severity}`">
