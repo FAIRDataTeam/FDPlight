@@ -49,6 +49,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   with golden tests in both IRI modes (#4). Tagline "a serverless FAIR Data
   Point". Verified: type-check, 79 tests, build 231 kB (150 kB gzip).
 - 2026-10-22 — Shared-core extraction plan (#5).
+- 2026-10-22 — Decisions: tree derived from the files, shared-core plan
+  approved, app hosted on this repository's Pages (#6).
 
 ## Key technical decisions
 
@@ -69,9 +71,12 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ## Phase 0 — Shared core 🟡
 
-- [x] Extraction plan written: [docs/shared-core.md](docs/shared-core.md)
-      (modules, Contour-only assumptions, order of work). Awaiting owner
-      approval before touching Contour.
+- [x] Extraction plan written and approved 2026-10-22:
+      [docs/shared-core.md](docs/shared-core.md). Package
+      `@fairdatateam/record-core` on public npm; Contour stays at
+      `luizbonino/Contour`.
+- [ ] Create the npm organisation `fairdatateam` (owner, needs an npm
+      account).
 - [x] Decide the packaging (2026-10-22: **option (a)**). Options were
   - (a) a `packages/record-core` workspace in the Contour repo, published to
     npm or consumed as a git dependency;
@@ -159,7 +164,8 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 4 — Import and edit ⬜
 
-- [ ] Open a project from a repository with `fdplight.json`.
+- [ ] Open a project from a repository with `fdplight.json`; the tree is
+      rebuilt from the files (SPEC §4.1), the same crawl as below.
 - [ ] Open a file-only FDP **without** `fdplight.json` by its root URL (or a
       repository). Crawl the same links the Index follows (LDP containers,
       else the navigation relations), infer each entity's type from its
@@ -244,11 +250,13 @@ See also SPEC §8.
 1. ~~Packaging of the shared core (Phase 0).~~ Decided 2026-10-22: option (a),
    a `packages/record-core` workspace in the Contour repo.
 2. ~~Licence of FDPlight.~~ Decided 2026-10-22: MIT, like Contour.
-3. Where FDPlight itself is hosted (e.g. a `fdplight.fairdatapoint.org`
-   subdomain like Contour).
+3. ~~Where FDPlight itself is hosted.~~ Decided 2026-10-22: GitHub Pages of
+   this repository now, `fdplight.fairdatapoint.org` once DNS is set (item 6).
 4. GitHub authentication beyond the pilot (Phase 6).
-5. Where the entity tree is stored: in `fdplight.json` or rebuilt from the
-   files' `dct:isPartOf` on load.
+5. ~~Where the entity tree is stored.~~ Decided 2026-10-22: not stored,
+   derived from the files on open (SPEC §4.1).
+6. Custom domain for the app: `fdplight.fairdatapoint.org` once the DNS
+   CNAME to `fairdatateam.github.io` exists.
 
 ## Related work
 

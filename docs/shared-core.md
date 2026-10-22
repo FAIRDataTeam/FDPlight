@@ -1,9 +1,9 @@
 # Shared core — extraction plan (TASKS Phase 0)
 
-Status: **proposal**, 2026-10-22. The packaging is decided: option (a), a
-`packages/record-core` workspace in the Contour repository. This note says
-what moves, what has to change on the way, and in what order. Nothing in
-Contour changes until the owner approves this plan.
+Status: **approved** 2026-10-22. Option (a), a `packages/record-core`
+workspace in the Contour repository, published as `@fairdatateam/record-core`
+on public npm. Contour stays at `luizbonino/Contour`. This note says what
+moves, what has to change on the way, and in what order.
 
 Survey of Contour at `~/GitHub/Contour` (main, 205 tests green on
 2026-10-22; TASKS.md there still says 202).
@@ -11,7 +11,7 @@ Survey of Contour at `~/GitHub/Contour` (main, 205 tests green on
 ## 1. Packaging
 
 - Contour becomes an npm workspace root: `packages/record-core/` with its own
-  `package.json` (`@fairdatapoint/record-core`, private for now), the app stays
+  `package.json` (`@fairdatateam/record-core`), the app stays
   at the repository root so its build and Pages deploy do not move.
 - The package ships **TypeScript and `.vue` sources**, not a build. Both apps
   use Vite with `@vitejs/plugin-vue`, so they compile it directly, and the
@@ -97,9 +97,9 @@ build comparable apart from module order.
 5. FDPlight depends on the tag and renders one form for the default profile
    (closes Phase 0).
 
-## 5. Questions for the owner
+## 5. Decisions
 
-- Package name and scope (`@fairdatapoint/record-core` proposed).
-- npm (public) vs GitHub Packages vs git dependency for FDPlight's consumption.
-- Whether Contour moves to the FAIRDataTeam organisation too, so the package
-  and both apps live together.
+Answered 2026-10-22: `@fairdatateam/record-core` (unused on npm when
+checked), public npm (GitHub Packages would need a token for every install),
+Contour stays where it is. Open: the npm organisation `fairdatateam` must be
+created by the owner before the first publish.

@@ -1,10 +1,11 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.4** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.5** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
-wiring replaces (§5.7).
+wiring replaces (§5.7). v0.5: the entity tree is derived from the files
+(§4.1).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -253,6 +254,32 @@ The values in the example are those currently served by home.fairdatapoint.org.
 - Files are written as clean Turtle with the prefixes actually used.
 - FDPlight never writes outside these paths, so the repository can also hold
   other content.
+
+### 4.1 The entity tree is derived from the files
+
+The tree is **not stored** in `fdplight.json`. It is rebuilt every time a
+project is opened (decided 2026-10-22), because every file carries both
+directions of the tree:
+
+- **down**: the parent's LDP containers (`ldp:contains`) and direct relations
+  (5.5);
+- **up**: the child's `dct:isPartOf` (5.2).
+
+Rules
+
+- Starting from any entity file, FDPlight follows `dct:isPartOf` up to the
+  root, then the containers down. Without containers it falls back to the
+  child relations of the profile, as the Index harvester does (9.1).
+- Each entity's type is the profile type whose `targetClasses` all appear in
+  its `rdf:type`, choosing the type with most matching classes. An entity
+  whose types match no profile type is reported.
+- Children are listed by `dct:title` (English first, as for `rdfs:label`),
+  then by id. RDF has no order, so no manual order is kept.
+- When the two directions disagree (only possible in hand-edited files), the
+  **containers win**, because the Index follows them. The disagreement is
+  reported and the next save writes both directions consistently.
+- `fdp:metadataIssued` is read back from each file, so `issued` survives
+  re-opening (5.2).
 
 ---
 
