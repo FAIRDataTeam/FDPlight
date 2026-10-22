@@ -102,8 +102,11 @@ Resource plus Dataset). Contour still treats the first shape as primary
       paths.
 - [ ] Nested shapes (`sh:node`) keep working as sub-forms.
 - [ ] Hide the paths FDPlight generates (SPEC §5.2 to 5.5) from the form even
-      when a schema declares them, e.g. `dct:isPartOf`, `dct:issued`,
-      `dct:modified`, `fdp:metadataIdentifier`.
+      when a schema declares them, e.g. `dct:isPartOf`,
+      `fdp:metadataIdentifier`, `fdp:metadataIssued`, `fdp:metadataModified`,
+      and for catalogs only `dct:issued` / `dct:modified` (SPEC §5.3).
+      Datasets and distributions keep `dct:issued` / `dct:modified` as
+      user fields.
 - [ ] Tests with the real merged shapes of the default and ERDERA profiles.
 
 ## Phase 3 — Tree and wiring ⬜
@@ -118,9 +121,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
   - [ ] child relations and one `ldp:DirectContainer` per child type, empty
         ones included (§5.5);
   - [ ] hash IRIs for publisher / contact point (§5.6).
-- [ ] Timestamp rules. `dct:issued` set once, `dct:modified` on every save of
-      that entity. Parents whose containers change also get a new
-      `dct:modified`.
+- [ ] Timestamp rules. `fdp:metadataIssued` set once, `fdp:metadataModified`
+      on every save of that entity (plus `dct:issued` / `dct:modified` for
+      catalogs). Parents whose containers change also get a new
+      modification time.
 - [ ] Golden-file tests. Build the default-profile example tree and compare
       each file with the expected Turtle, triple by triple.
 - [ ] Cross-check against the RI. Create the same tree in a local RI
