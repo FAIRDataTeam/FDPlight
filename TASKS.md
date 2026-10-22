@@ -27,7 +27,7 @@ file tracks how we build it.
 
 | Phase | Theme | Status |
 |---|---|---|
-| 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, used by FDPlight (vendored until npm) |
+| 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, on npm, used by FDPlight |
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 tree editing done; RI cross-check open |
@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Owner's browser pilot run (e1484bb). record-core published on
+  npm (0.2.0, Contour #30 release workflow); FDPlight uses it, `vendor/`
+  removed (#21). Verified: 154 tests.
 - 2026-10-22 — Import a profile from a running FDP in the app (#20).
   Verified: 154 tests.
 - 2026-10-22 — "Propose changes" publish mode: branch, commit, pull request
@@ -110,8 +113,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       [docs/shared-core.md](docs/shared-core.md). Package
       `@fairdatateam/record-core` on public npm; Contour stays at
       `luizbonino/Contour`.
-- [ ] Create the npm organisation `fairdatateam` (owner, needs an npm
-      account), publish `@fairdatateam/record-core`, drop `vendor/`.
+- [x] Create the npm organisation `fairdatateam` (owner), publish
+      `@fairdatateam/record-core` (0.2.0 on 2026-10-22; later versions by
+      Contour's tag workflow, Contour #30), drop `vendor/` (#21).
 - [x] Decide the packaging (2026-10-22: **option (a)**). Options were
   - (a) a `packages/record-core` workspace in the Contour repo, published to
     npm or consumed as a git dependency;
@@ -287,7 +291,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
       `GET /index/entries/all` (state ACTIVE) and
       `GET /index/entries/{uuid}/data` (all entities harvested). Done
       2026-10-22 by script: ACTIVE, 4 of 4 harvested (SPEC §9.2). The
-      owner's browser run is still to do.
+      owner's browser run worked the same day: connect, load, edit the
+      software description, review (one file), publish as e1484bb; Pages
+      serves the new version.
 - [x] Check whether `GET /index/entries/{uuid}` works for the pilot entry:
       200 (WP13.3 still 500, SPEC §9.4).
 - [x] Show the Index status of the project in FDPlight (read-only, public

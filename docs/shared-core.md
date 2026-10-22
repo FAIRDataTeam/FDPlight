@@ -119,13 +119,20 @@ Differences from the plan
 - **Styles** were not in the plan: the components had none of their own.
   Contour still uses its own copies of those rules. Follow-up: make Contour
   import `renderer.css` and delete the duplicates, with a visual check.
-- **Consumption** is a vendored `npm pack` tarball in FDPlight's `vendor/`
-  until the npm organisation exists (then switch to the registry version).
+- **Consumption**: FDPlight first used a vendored `npm pack` tarball. Since
+  2026-10-22 it depends on `@fairdatateam/record-core@^0.2.0` from npm
+  (sources identical to the tarball).
+- **Releases** (Contour #30): pushing a tag `record-core-v{version}` runs
+  `publish-record-core.yml`, which checks the tag against the version, runs
+  the package's tests and publishes with npm trusted publishing (OIDC, no
+  stored token, provenance). The trusted publisher may publish directly; it
+  does not manage dist-tags. 0.2.0 itself was published by hand by the
+  owner, so it has no provenance; the workflow publishes from 0.2.1 on.
 - Contour's TASKS.md still says 202 tests; it has 216 now.
 
 ## 5. Decisions
 
 Answered 2026-10-22: `@fairdatateam/record-core` (unused on npm when
 checked), public npm (GitHub Packages would need a token for every install),
-Contour stays where it is. Open: the npm organisation `fairdatateam` must be
-created by the owner before the first publish.
+Contour stays where it is. The npm organisation `fairdatateam` was created
+by the owner on 2026-10-22.
