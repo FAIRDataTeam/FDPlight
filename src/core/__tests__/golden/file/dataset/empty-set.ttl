@@ -1,0 +1,33 @@
+# Hand-written expectation, file mode. Empty container still emitted; the
+# user's language suppresses the default.
+@base <https://example.github.io/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<dataset/empty-set.ttl> a dcat:Resource, dcat:Dataset ;
+    dct:title "Empty set"@en ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/nl> ;
+    fdp:metadataIdentifier <dataset/empty-set.ttl#identifier> ;
+    rdfs:label "Empty set" ;
+    dct:accessRights <dataset/empty-set.ttl#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:isPartOf <catalog/rare-diseases.ttl> ;
+    dct:conformsTo <profile/dataset.ttl> .
+
+<dataset/empty-set.ttl#identifier> a datacite:Identifier ;
+    dct:identifier "https://example.github.io/my-fdp/dataset/empty-set.ttl" .
+<dataset/empty-set.ttl#accessRights> a dct:RightsStatement ;
+    dct:description "This resource has no access restriction" .
+<profile/dataset.ttl> rdfs:label "Dataset Profile" .
+
+<dataset/empty-set.ttl#distribution> a ldp:DirectContainer ;
+    dct:title "Distributions" ;
+    ldp:membershipResource <dataset/empty-set.ttl> ;
+    ldp:hasMemberRelation dcat:distribution .

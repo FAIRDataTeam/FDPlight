@@ -1,0 +1,35 @@
+# Expectation, redirect mode (the file-mode expectation with redirect IRIs, reviewed by hand). The user's dct:issued describes the
+# data and stays; the user's access rights suppress the default statement.
+@base <https://w3id.org/example/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<dataset/registry-2024> a dcat:Resource, dcat:Dataset ;
+    dct:title "Registry 2024"@en ;
+    dct:issued "2024-02-04T00:00:00Z"^^xsd:dateTime ;
+    dcat:keyword "registry"@en ;
+    dct:accessRights <https://example.org/rights/restricted> ;
+    fdp:metadataIdentifier <dataset/registry-2024#identifier> ;
+    rdfs:label "Registry 2024" ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:isPartOf <catalog/rare-diseases> ;
+    dct:conformsTo <profile/dataset> ;
+    dcat:distribution <distribution/registry-csv> .
+
+<dataset/registry-2024#identifier> a datacite:Identifier ;
+    dct:identifier "https://w3id.org/example/my-fdp/dataset/registry-2024" .
+<profile/dataset> rdfs:label "Dataset Profile" .
+
+<dataset/registry-2024/distribution/> a ldp:DirectContainer ;
+    dct:title "Distributions" ;
+    ldp:membershipResource <dataset/registry-2024> ;
+    ldp:hasMemberRelation dcat:distribution ;
+    ldp:contains <distribution/registry-csv> .

@@ -1,0 +1,33 @@
+# Expectation, redirect mode (the file-mode expectation with redirect IRIs, reviewed by hand). Empty container still emitted; the
+# user's language suppresses the default.
+@base <https://w3id.org/example/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<dataset/empty-set> a dcat:Resource, dcat:Dataset ;
+    dct:title "Empty set"@en ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/nl> ;
+    fdp:metadataIdentifier <dataset/empty-set#identifier> ;
+    rdfs:label "Empty set" ;
+    dct:accessRights <dataset/empty-set#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:isPartOf <catalog/rare-diseases> ;
+    dct:conformsTo <profile/dataset> .
+
+<dataset/empty-set#identifier> a datacite:Identifier ;
+    dct:identifier "https://w3id.org/example/my-fdp/dataset/empty-set" .
+<dataset/empty-set#accessRights> a dct:RightsStatement ;
+    dct:description "This resource has no access restriction" .
+<profile/dataset> rdfs:label "Dataset Profile" .
+
+<dataset/empty-set/distribution/> a ldp:DirectContainer ;
+    dct:title "Distributions" ;
+    ldp:membershipResource <dataset/empty-set> ;
+    ldp:hasMemberRelation dcat:distribution .

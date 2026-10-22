@@ -1,0 +1,36 @@
+# Expectation, redirect mode (the file-mode expectation with redirect IRIs, reviewed by hand). Base https://w3id.org/example/my-fdp/, storage https://example.github.io/my-fdp/
+@base <https://w3id.org/example/my-fdp/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix datacite: <http://purl.org/spar/datacite/> .
+
+<> a fdp:MetadataService, dcat:DataService, dcat:Resource, fdp:FAIRDataPoint ;
+    dct:title "Example FDP"@en ;
+    dct:description "A file-only FAIR Data Point."@en ;
+    dct:publisher <#publisher> ;
+    fdp:metadataIdentifier <#identifier> ;
+    rdfs:label "Example FDP" ;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dct:accessRights <#accessRights> ;
+    fdp:metadataIssued "2026-10-01T10:00:00.000Z"^^xsd:dateTime ;
+    fdp:metadataModified "2026-10-22T12:00:00.000Z"^^xsd:dateTime ;
+    dct:conformsTo <profile/fdp> ;
+    fdp:fdpSoftwareVersion "FDPlight:0.1.0" ;
+    dcat:endpointURL <> ;
+    fdp:metadataCatalog <catalog/rare-diseases> .
+
+<#publisher> a foaf:Agent ; foaf:name "Example Organisation" .
+<#identifier> a datacite:Identifier ; dct:identifier "https://w3id.org/example/my-fdp/" .
+<#accessRights> a dct:RightsStatement ; dct:description "This resource has no access restriction" .
+<profile/fdp> rdfs:label "FAIR Data Point Profile" .
+
+<catalog/> a ldp:DirectContainer ;
+    dct:title "Catalogs" ;
+    ldp:membershipResource <> ;
+    ldp:hasMemberRelation fdp:metadataCatalog ;
+    ldp:contains <catalog/rare-diseases> .
