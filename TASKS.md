@@ -55,7 +55,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   `deploy-pages.yml` on every merge to main) (#7).
 - 2026-10-22 — GitHub publish: token, connect, review, one commit, conflict
   check, timestamps restamped only when a file changes, published ids
-  locked (#11). Verified: 114 tests, build 633 kB.
+  locked (#12). Verified: 114 tests, build 633 kB.
 - 2026-10-22 — SHACL check per entity with findings on the fields and counts
   in the tree; publisher / contact point as sub-forms with hash IRIs (#10).
   Verified: 101 tests, build 620 kB (260 kB gzip; +77 kB shacl-engine).
@@ -214,24 +214,24 @@ Resource plus Dataset). Contour still treats the first shape as primary
       fields, red counts in the tree (#10).
 - [x] Structural checks of SPEC §6 rules 2 to 7 (`src/core/checks.ts`) (base, dangling links, orphans, duplicate
       IRIs, malformed IRIs, root type).
-- [x] Publish button disabled while there are errors (#11), with a list that jumps
+- [x] Publish button disabled while there are errors (#12), with a list that jumps
       to the offending entity and field.
 
 ## Phase 6 — GitHub publish 🟡
 
 - [x] Authentication for the pilot: fine-grained personal access token
-      (contents read/write on one repository) kept in `sessionStorage` (#11).
+      (contents read/write on one repository) kept in `sessionStorage` (#12).
       CORS of api.github.com verified (SPEC §9.2).
 - [ ] Then evaluate a GitHub App. Whether its device flow works from a browser
       without a proxy (CORS) must be verified first.
-- [x] Read the repository tree and the files FDPlight owns (#11). Loading a
+- [x] Read the repository tree and the files FDPlight owns (#12). Loading a
       project back from them is Phase 4.
 - [x] Publish as **one commit** with all changed files (Git data API: blobs,
       tree, commit, update ref). Commit message lists the entities changed.
-      A review step shows added / updated / removed files first (#11).
+      A review step shows added / updated / removed files first (#12).
 - [x] Conflict check. Compare the remote head with the head the project was
       loaded from; the ref update is also non-forced. On mismatch nothing is
-      written and the user is told to reconnect (#11). Showing what changed
+      written and the user is told to reconnect (#12). Showing what changed
       comes with Phase 4 loading.
 - [ ] "Propose changes" mode. Same commit on a new branch plus a pull request.
 - [ ] First-publish helper. Create the repository if needed and explain how
