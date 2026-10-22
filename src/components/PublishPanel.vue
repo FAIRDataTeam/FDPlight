@@ -4,87 +4,87 @@
 import { ref } from 'vue';
 import type { usePublish } from '../composables/usePublish';
 import type { ImportMode } from '../core/import';
+import { useI18n } from '../composables/useI18n';
 
 defineProps<{ pub: ReturnType<typeof usePublish> }>();
+const { t, plural } = useI18n();
 const rootPath = ref('');
 const mode = ref<ImportMode>('keep');
 </script>
 
 <template>
-  <section class="publish" aria-label="Publish to GitHub">
-    <h2 class="publish__title">Publish to GitHub</h2>
+  <section class="publish" :aria-label="t('publish.title')">
+    <h2 class="publish__title">{{ t('publish.title') }}</h2>
 
     <form v-if="!pub.connected.value" class="publish__connect" @submit.prevent="pub.connect()">
       <div class="publish__row">
         <label>
-          <span>Owner</span>
+          <span>{{ t('publish.owner') }}</span>
           <input v-model.trim="pub.repo.value.owner" required spellcheck="false" placeholder="erdera" />
         </label>
         <label>
-          <span>Repository</span>
+          <span>{{ t('publish.repository') }}</span>
           <input v-model.trim="pub.repo.value.repo" required spellcheck="false" placeholder="my-fdp" />
         </label>
         <label class="publish__branch">
-          <span>Branch</span>
+          <span>{{ t('publish.branch') }}</span>
           <input v-model.trim="pub.repo.value.branch" required spellcheck="false" />
         </label>
       </div>
       <label>
-        <span>Token</span>
+        <span>{{ t('publish.token') }}</span>
         <input v-model.trim="pub.token.value" type="password" required autocomplete="off" />
       </label>
       <p class="publish__hint">
-        A
-        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
-        with <em>Contents: read and write</em> on this repository only (plus <em>Workflows: read and write</em> when
-        the project pings an Index, and <em>Pull requests: read and write</em> to propose changes). It is kept for
-        this browser tab and sent only to api.github.com.
+        {{ t('publish.tokenHintBefore') }}
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">{{ t('publish.tokenLink') }}</a>
+        {{ t('publish.tokenHintAfter') }}
       </p>
-      <button type="submit" class="primary" :disabled="pub.busy.value">{{ pub.busy.value ? 'Connecting…' : 'Connect' }}</button>
+      <button type="submit" class="primary" :disabled="pub.busy.value">{{ pub.busy.value ? t('publish.connecting') : t('publish.connect') }}</button>
     </form>
 
     <div v-else class="publish__connected">
       <p>
-        Connected to
+        {{ t('publish.connectedTo') }}
         <a :href="`https://github.com/${pub.repo.value.owner}/${pub.repo.value.repo}/tree/${pub.repo.value.branch}`" target="_blank" rel="noopener">
           {{ pub.repo.value.owner }}/{{ pub.repo.value.repo }}
         </a>
-        ({{ pub.repo.value.branch }} at <code>{{ pub.head.value.slice(0, 7) }}</code>)
-        <button type="button" class="link" @click="pub.disconnect()">Disconnect</button>
+        ({{ t('publish.at', { branch: pub.repo.value.branch, sha: pub.head.value.slice(0, 7) }) }})
+        <button type="button" class="link" @click="pub.disconnect()">{{ t('publish.disconnect') }}</button>
       </p>
 
       <form v-if="pub.canImport.value" class="publish__import" @submit.prevent="pub.importExisting(rootPath, mode)">
-        <p>No FDPlight project here. Import an existing FAIR Data Point from this repository?</p>
+        <p>{{ t('publish.noProject') }}</p>
         <label>
-          <span>Root file</span>
-          <input v-model.trim="rootPath" list="fdplight-ttl-files" required spellcheck="false" placeholder="e.g. sites/my-fdp/fdp.ttl" />
+          <span>{{ t('publish.rootFile') }}</span>
+          <input v-model.trim="rootPath" list="fdplight-ttl-files" required spellcheck="false" :placeholder="t('publish.rootFilePlaceholder')" />
           <datalist id="fdplight-ttl-files">
             <option v-for="f in pub.importCandidates.value" :key="f" :value="f" />
           </datalist>
         </label>
         <label class="publish__radio">
           <input v-model="mode" type="radio" value="keep" />
-          Keep the existing IRIs. Identifiers and the Index entry stay; new entities use FDPlight's layout.
+          {{ t('publish.keepIris') }}
         </label>
         <label class="publish__radio">
           <input v-model="mode" type="radio" value="migrate" />
-          Move to FDPlight's layout. All IRIs change; the old files stay until you delete them.
+          {{ t('publish.migrateIris') }}
         </label>
-        <button type="submit" class="primary" :disabled="pub.busy.value">Import</button>
+        <button type="submit" class="primary" :disabled="pub.busy.value">{{ t('publish.import') }}</button>
       </form>
-      <p v-if="pub.loaded.value" class="publish__loaded">Loaded the project from the repository. Nothing is written until you publish.</p>
+      <p v-if="pub.loaded.value" class="publish__loaded">{{ t('publish.loaded') }}</p>
       <ul v-if="pub.loadReport.value.length" class="publish__report">
         <li v-for="r in pub.loadReport.value" :key="r">{{ r }}</li>
       </ul>
       <details v-if="Object.keys(pub.loadCounts.value).length" class="publish__counts">
-        <summary>What was read from each file</summary>
+        <summary>{{ t('publish.countsSummary') }}</summary>
         <table>
           <thead>
             <tr>
-              <th scope="col">File</th>
-              <th scope="col" title="Read into the form">In the form</th>
-              <th scope="col" title="Links, containers, identifiers and timestamps FDPlight writes anew on publish">Regenerated</th>
-              <th scope="col" title="No place in the form: written back as they are">Kept as is</th>
+              <th scope="col">{{ t('publish.countsFile') }}</th>
+              <th scope="col" :title="t('publish.countsMappedTitle')">{{ t('publish.countsMapped') }}</th>
+              <th scope="col" :title="t('publish.countsRegeneratedTitle')">{{ t('publish.countsRegenerated') }}</th>
+              <th scope="col" :title="t('publish.countsKeptTitle')">{{ t('publish.countsKept') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -103,28 +103,28 @@ const mode = ref<ImportMode>('keep');
 
       <template v-if="!pub.plan.value">
         <button type="button" class="primary" :disabled="pub.busy.value || pub.blockers.value.length > 0" @click="pub.prepare()">
-          Review changes
+          {{ t('publish.review') }}
         </button>
       </template>
       <div v-else class="publish__plan">
-        <p v-if="!pub.plan.value.changes.length">Nothing to publish: the repository is up to date.</p>
+        <p v-if="!pub.plan.value.changes.length">{{ t('publish.upToDate') }}</p>
         <template v-else>
-          <p>{{ pub.plan.value.changes.length }} file(s) will change in one commit:</p>
+          <p>{{ plural('publish.willChange', pub.plan.value.changes.length) }}</p>
           <ul>
-            <li v-for="p in pub.plan.value.added" :key="`a${p}`"><span class="tag add">add</span> {{ p }}</li>
-            <li v-for="p in pub.plan.value.updated" :key="`u${p}`"><span class="tag upd">update</span> {{ p }}</li>
-            <li v-for="p in pub.plan.value.removed" :key="`r${p}`"><span class="tag del">remove</span> {{ p }}</li>
+            <li v-for="p in pub.plan.value.added" :key="`a${p}`"><span class="tag add">{{ t('publish.add') }}</span> {{ p }}</li>
+            <li v-for="p in pub.plan.value.updated" :key="`u${p}`"><span class="tag upd">{{ t('publish.update') }}</span> {{ p }}</li>
+            <li v-for="p in pub.plan.value.removed" :key="`r${p}`"><span class="tag del">{{ t('publish.remove') }}</span> {{ p }}</li>
           </ul>
         </template>
         <fieldset v-if="pub.plan.value.changes.length" class="publish__mode">
-          <legend>How</legend>
+          <legend>{{ t('publish.how') }}</legend>
           <label class="publish__radio">
             <input v-model="pub.publishMode.value" type="radio" value="commit" />
-            Commit to <code>{{ pub.repo.value.branch }}</code>
+            {{ t('publish.commitTo', { branch: pub.repo.value.branch }) }}
           </label>
           <label class="publish__radio">
             <input v-model="pub.publishMode.value" type="radio" value="propose" />
-            Propose changes: a pull request into <code>{{ pub.repo.value.branch }}</code> for someone to review and merge
+            {{ t('publish.propose', { branch: pub.repo.value.branch }) }}
           </label>
         </fieldset>
         <div class="publish__actions">
@@ -135,19 +135,21 @@ const mode = ref<ImportMode>('keep');
             :disabled="pub.busy.value || pub.blockers.value.length > 0"
             @click="pub.publish()"
           >
-            {{ pub.busy.value ? 'Publishing…' : pub.publishMode.value === 'propose' ? 'Open pull request' : 'Publish' }}
+            {{ pub.busy.value ? t('publish.publishing') : pub.publishMode.value === 'propose' ? t('publish.openPull') : t('publish.publish') }}
           </button>
-          <button type="button" class="link" @click="pub.plan.value = null">Cancel</button>
+          <button type="button" class="link" @click="pub.plan.value = null">{{ t('publish.cancel') }}</button>
         </div>
       </div>
 
       <p v-if="pub.lastPull.value" class="publish__done">
-        Proposed: <a :href="pub.lastPull.value.url" target="_blank" rel="noopener">pull request #{{ pub.lastPull.value.number }}</a>.
-        Merging it publishes the changes.
+        {{ t('publish.proposed') }}
+        <a :href="pub.lastPull.value.url" target="_blank" rel="noopener">{{ t('publish.pullRequest', { n: pub.lastPull.value.number }) }}</a>.
+        {{ t('publish.mergeToPublish') }}
       </p>
       <p v-else-if="pub.commitUrl.value" class="publish__done">
-        Published: <a :href="pub.commitUrl.value" target="_blank" rel="noopener">{{ pub.lastCommit.value.slice(0, 7) }}</a>.
-        GitHub Pages serves it once its deployment has run (Settings → Pages must be enabled for the repository).
+        {{ t('publish.published') }}
+        <a :href="pub.commitUrl.value" target="_blank" rel="noopener">{{ pub.lastCommit.value.slice(0, 7) }}</a>.
+        {{ t('publish.pagesNote') }}
       </p>
     </div>
 

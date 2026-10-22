@@ -4,8 +4,10 @@ import { ref } from 'vue';
 import type { ProjectState } from '../composables/useProject';
 import { fetchIndexStatus, type IndexStatus } from '../core/indexStatus';
 import { iriOf, rootOf } from '../core/project';
+import { useI18n } from '../composables/useI18n';
 
 const props = defineProps<{ state: ProjectState }>();
+const { t, locale } = useI18n();
 const status = ref<IndexStatus | null>(null);
 const error = ref('');
 const busy = ref(false);
@@ -25,25 +27,25 @@ async function check() {
   }
 }
 
-const when = (iso: string) => (iso ? new Date(iso).toLocaleString() : '');
+const when = (iso: string) => (iso ? new Date(iso).toLocaleString(locale.value) : '');
 </script>
 
 <template>
-  <section v-if="state.project.index" class="index" aria-label="Index status">
+  <section v-if="state.project.index" class="index" :aria-label="t('index.title')">
     <button type="button" class="index__check" :disabled="busy || state.settingsErrors.value.length > 0" @click="check">
-      {{ busy ? 'Checking…' : 'Check the Index' }}
+      {{ busy ? t('index.checking') : t('index.check') }}
     </button>
     <template v-if="status">
-      <p v-if="!status.entry">Not in {{ state.project.index.url }} yet: it is added at the first ping.</p>
+      <p v-if="!status.entry">{{ t('index.notYet', { url: state.project.index.url }) }}</p>
       <template v-else>
         <p>
           <span class="index__state" :class="`is-${status.entry.state.toLowerCase()}`">{{ status.entry.state }}</span>
-          last updated {{ when(status.entry.modificationTime) }}.
-          {{ status.harvested.length }} of {{ state.project.entities.length }} entities harvested
-          (<a :href="status.dataUrl!" target="_blank" rel="noopener">data</a>).
+          {{ t('index.lastUpdated', { when: when(status.entry.modificationTime) }) }}
+          {{ t('index.harvested', { n: status.harvested.length, total: state.project.entities.length }) }}
+          (<a :href="status.dataUrl!" target="_blank" rel="noopener">{{ t('index.data') }}</a>).
         </p>
         <ul v-if="status.missing.length" class="index__missing">
-          <li v-for="m in status.missing" :key="m">Not harvested: {{ m }}</li>
+          <li v-for="m in status.missing" :key="m">{{ t('index.notHarvested', { iri: m }) }}</li>
         </ul>
       </template>
     </template>

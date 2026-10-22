@@ -7,8 +7,10 @@ import type { IriMode } from '../core/iri';
 import { BRANCH_PAGES_WORKFLOW } from '../core/ping';
 import { importProfileFromFdp } from '../core/profile';
 import { PROFILES } from '../profiles';
+import { useI18n } from '../composables/useI18n';
 
 const props = defineProps<{ state: ProjectState }>();
+const { t } = useI18n();
 const p = props.state.project;
 
 const IMPORT = '__import';
@@ -18,7 +20,7 @@ const importError = ref('');
 const busy = ref(false);
 
 const hasContent = () => p.entities.length > 1 || Object.values(props.state.values).some(recordHasContent);
-const confirmStartOver = () => !hasContent() || window.confirm('Switching the profile starts a new, empty project. Continue?');
+const confirmStartOver = () => !hasContent() || window.confirm(t('settings.switchConfirm'));
 
 function chooseProfile(e: Event) {
   const select = e.target as HTMLSelectElement;
@@ -45,7 +47,7 @@ async function importProfile() {
     props.state.useImportedProfile(imported);
     importing.value = false;
   } catch (err) {
-    importError.value = `Could not import the profile: ${err instanceof Error ? err.message : String(err)}`;
+    importError.value = t('settings.importFailed', { error: err instanceof Error ? err.message : String(err) });
   } finally {
     busy.value = false;
   }
@@ -58,70 +60,66 @@ function toggleIndex(on: boolean) {
 const base = ref(p.base);
 watch(() => p.base, (b) => (base.value = b));
 
-const MODE_TEXT: Record<IriMode | 'ask', string> = {
-  file: 'File mode: the IRIs are the .ttl file URLs.',
-  redirect: 'Redirect mode: extensionless IRIs that redirect to the files at the storage base.',
-  ask: 'FDPlight cannot tell how this host serves files. Choose a mode.',
-};
+const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', redirect: 'settings.modeRedirect', ask: 'settings.modeAsk' };
 </script>
 
 <template>
-  <section class="settings" aria-label="Project settings">
+  <section class="settings" :aria-label="t('settings.title')">
     <label class="settings__field">
-      <span>Profile</span>
+      <span>{{ t('settings.profile') }}</span>
       <select :value="state.profile.value" @change="chooseProfile">
         <option v-for="(prof, key) in PROFILES" :key="key" :value="key">{{ prof.name }}</option>
-        <option v-if="state.profile.value === 'repository'" value="repository">From the repository</option>
-        <option v-if="state.profile.value === 'imported'" value="imported">From {{ p.source?.fdp }}</option>
-        <option :value="IMPORT">Import from a FAIR Data Point…</option>
+        <option v-if="state.profile.value === 'repository'" value="repository">{{ t('settings.fromRepository') }}</option>
+        <option v-if="state.profile.value === 'imported'" value="imported">{{ t('settings.fromFdp', { url: p.source?.fdp ?? '' }) }}</option>
+        <option :value="IMPORT">{{ t('settings.importFromFdp') }}</option>
       </select>
     </label>
     <form v-if="importing" class="settings__import" @submit.prevent="importProfile">
       <label class="settings__field">
-        <span>FAIR Data Point URL (its resource definitions and shapes become this project's profile)</span>
+        <span>{{ t('settings.fdpUrl') }}</span>
         <input v-model="fdpUrl" type="url" required spellcheck="false" placeholder="https://home.fairdatapoint.org" />
       </label>
       <div class="settings__import-actions">
-        <button type="submit" class="primary" :disabled="busy">{{ busy ? 'Importing…' : 'Import profile' }}</button>
-        <button type="button" class="link" @click="importing = false">Cancel</button>
+        <button type="submit" class="primary" :disabled="busy">{{ busy ? t('settings.importing') : t('settings.importProfile') }}</button>
+        <button type="button" class="link" @click="importing = false">{{ t('settings.cancel') }}</button>
       </div>
       <p v-if="importError" class="settings__error" role="alert">{{ importError }}</p>
     </form>
     <label class="settings__field">
-      <span>Base URI</span>
+      <span>{{ t('settings.baseUri') }}</span>
       <input v-model="base" type="url" spellcheck="false" @change="state.setBase(base)" @keyup.enter="state.setBase(base)" />
     </label>
     <div class="settings__mode">
-      <span>{{ MODE_TEXT[state.detectedMode.value] }}</span>
+      <span>{{ t(MODE_TEXT[state.detectedMode.value]) }}</span>
       <span v-if="state.detectedMode.value === 'ask'" class="settings__choice">
         <label><input type="radio" :checked="p.iriMode === 'file'" @change="state.setMode('file')" /> file</label>
         <label><input type="radio" :checked="p.iriMode === 'redirect'" @change="state.setMode('redirect')" /> redirect</label>
       </span>
     </div>
     <label v-if="p.iriMode === 'redirect'" class="settings__field">
-      <span>Storage base (where the .ttl files are served)</span>
+      <span>{{ t('settings.storageBase') }}</span>
       <input v-model="p.storageBase" type="url" spellcheck="false" placeholder="https://owner.github.io/repo/" />
     </label>
     <label class="settings__field">
-      <span>Folder in the repository (empty for the root, or e.g. metadata/)</span>
+      <span>{{ t('settings.folder') }}</span>
       <input
         :value="p.folder ?? ''"
         spellcheck="false"
-        placeholder="(repository root)"
+        :placeholder="t('settings.folderPlaceholder')"
         @change="p.folder = ($event.target as HTMLInputElement).value.trim() || undefined"
       />
     </label>
     <label class="settings__check">
       <input type="checkbox" :checked="!!p.index" @change="toggleIndex(($event.target as HTMLInputElement).checked)" />
-      Ping an FDP Index after each Pages deployment (writes .github/workflows/fdp-ping.yml)
+      {{ t('settings.ping') }}
     </label>
     <div v-if="p.index" class="settings__row">
       <label class="settings__field">
-        <span>Index URL</span>
+        <span>{{ t('settings.indexUrl') }}</span>
         <input v-model.trim="p.index.url" type="url" spellcheck="false" />
       </label>
       <label class="settings__field">
-        <span>Pages workflow name</span>
+        <span>{{ t('settings.pagesWorkflow') }}</span>
         <input v-model.trim="p.index.pagesWorkflow" spellcheck="false" />
       </label>
     </div>

@@ -10,6 +10,7 @@ import { checkProject, type Issue } from '../core/checks';
 import type { LoadedProject } from '../core/load';
 import { entityForm, userGraphFromForm } from '../core/forms';
 import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
+import { useI18n } from './useI18n';
 import { rootType, typeByKey, type EntityType, type ImportedProfile } from '../core/profile';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
@@ -131,7 +132,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
   function moveOptions(path: string): { path: string; label: string }[] {
     return moveTargets(project, path).map((p) => {
       const e = findByPath(project, p)!;
-      return { path: p, label: `${typeOf(e).name}: ${titleOf(p) || (e.parent === null ? 'FAIR Data Point' : e.id)}` };
+      return { path: p, label: `${typeOf(e).name}: ${titleOf(p) || (e.parent === null ? useI18n().t('tree.root') : e.id)}` };
     });
   }
 

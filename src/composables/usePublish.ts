@@ -4,6 +4,7 @@
 import { computed, ref, shallowRef } from 'vue';
 import { ConflictError, createClient, GitHubError, type GitHubClient, type RepoRef } from '../github/client';
 import { DEFAULT_BASE, type ProjectState } from './useProject';
+import { useI18n } from './useI18n';
 import { pagesBase } from '../core/iri';
 import { importExistingFdp, type ImportMode } from '../core/import';
 import { loadProject, type LoadedProject } from '../core/load';
@@ -13,6 +14,7 @@ import { PING_WORKFLOW_PATH } from '../core/ping';
 import { planPublish, type PublishPlan } from '../core/publish';
 
 const TOKEN_KEY = 'fdplight.github.token';
+const { t, plural } = useI18n();
 
 const PROPOSAL_NOTE =
   'Proposed with [FDPlight](https://fdplight.fairdatapoint.org/). Merging publishes these files; GitHub Pages serves them after its next deployment.';
@@ -42,7 +44,7 @@ function saveToken(token: string): void {
 export function usePublish(
   state: ProjectState,
   makeClient: (token: string) => GitHubClient = (t) => createClient(t),
-  confirmReplace: () => boolean = () => window.confirm('The repository has an FDPlight project. Load it and replace what you entered here?'),
+  confirmReplace: () => boolean = () => window.confirm(t('publish.replaceConfirm')),
 ) {
   const repo = ref<RepoRef>({ owner: '', repo: '', branch: 'main' });
   const token = ref(loadToken());
@@ -75,10 +77,10 @@ export function usePublish(
 
   const blockers = computed(() => {
     const out: string[] = [];
-    if (state.settingsErrors.value.length) out.push('Fix the project settings first.');
-    if (state.issues.value.some((i) => i.severity === 'error')) out.push('Fix the structural problems first.');
-    if (state.totalErrors.value) out.push(`Fix the ${state.totalErrors.value} metadata problems first.`);
-    if (state.checking.value) out.push('Checking the metadata…');
+    if (state.settingsErrors.value.length) out.push(t('publish.fixSettings'));
+    if (state.issues.value.some((i) => i.severity === 'error')) out.push(t('publish.fixStructure'));
+    if (state.totalErrors.value) out.push(plural('publish.fixMetadata', state.totalErrors.value));
+    if (state.checking.value) out.push(t('publish.checkingMetadata'));
     return out;
   });
 
@@ -87,9 +89,9 @@ export function usePublish(
   );
 
   function fail(e: unknown): void {
-    if (e instanceof GitHubError && e.status === 401) error.value = 'GitHub rejected the token (401).';
+    if (e instanceof GitHubError && e.status === 401) error.value = t('publish.tokenRejected');
     else if (e instanceof GitHubError && e.status === 404)
-      error.value = 'Repository or branch not found, or the token cannot access it (404).';
+      error.value = t('publish.notFound');
     else error.value = e instanceof Error ? e.message : String(e);
   }
 
@@ -229,7 +231,7 @@ export function usePublish(
       plan.value = null;
       await refresh();
     } catch (e) {
-      if (e instanceof ConflictError) error.value = `${e.message}. Someone else published meanwhile; reconnect to load their changes.`;
+      if (e instanceof ConflictError) error.value = t('publish.conflict', { error: e.message });
       else fail(e);
     } finally {
       busy.value = false;

@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Interface in six languages, Contour's i18n mechanism (#25).
 - 2026-10-22 — Keyboard navigation in the entity tree (#24). Verified:
   157 tests.
 - 2026-10-22 — RI cross-check: 128 triples identical, two documented
@@ -318,7 +319,12 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 8 — Polish and docs ⬜
 
-- [ ] i18n with Contour's mechanism and the same six locales.
+- [ ] i18n with Contour's mechanism and the same six locales. The interface
+      and the form renderer are translated (EN, PT-BR, NL, DE, ES, FR; the
+      renderer keys reuse Contour's translations), with a language picker in
+      the header (#25). Still English: messages built by the core (import
+      report, structural checks, SHACL finding texts, settings errors). The
+      translations were written without a native-speaker review.
 - [ ] User guide for data stewards (create, fill in, publish, edit), with
       screenshots, in the style of Contour's data-steward guide.
 - [ ] Bundled ERDERA profile, verified against the current ERDERA schemas and
