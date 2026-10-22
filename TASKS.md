@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Project editor: settings bar (base URI, IRI-mode detection,
+  storage base), entity tree with add / rename / delete, form per entity,
+  live Turtle and structural checks (#9). Verified: 94 tests, build 543 kB.
 - 2026-10-22 — Phase 0 done: record-core extracted in Contour (#25 to #29
   there); FDPlight renders the default-profile forms with the shared renderer
   and previews the Turtle it would publish (#8). Verified: type-check,
@@ -110,7 +113,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 - [ ] New-project wizard
   - [ ] target repository (owner/name, branch);
   - [ ] **base URI**, proposed as `https://{owner}.github.io/{repo}/`,
-        editable, validated (absolute https, ends with `/`);
+        editable, validated (absolute https, ends with `/`). Editing,
+        validation and mode detection are in the settings bar (#9); the
+        proposal from the repository comes with the wizard;
   - [ ] profile source (bundled, import from an FDP URL, or a local file).
 - [x] Profile import from a running FDP (`importProfileFromFdp`, tested on
       recorded home.fairdatapoint.org responses). Read `/resource-definitions`, fetch
@@ -149,11 +154,12 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 3 — Tree and wiring 🟡
 
-- [ ] Entity tree UI. Root at the top, children grouped by child type (using
-      the list titles), add / rename / delete / move.
-- [x] IRI minting (SPEC §2.3), both IRI modes (`src/core/iri.ts`); slug
-      locking after first publish belongs to the UI. Random id by default, editable slug until first
-      publish, locked afterwards.
+- [x] Entity tree UI. Root at the top, children grouped by child type (using
+      the list titles), add / rename / delete (#9). Move is still open.
+- [ ] Move an entity to another parent.
+- [x] IRI minting (SPEC §2.3), both IRI modes (`src/core/iri.ts`). Random id
+      by default, slug editable in the editor (#9); locking after the first
+      publish comes with publishing.
 - [x] `serializeEntity(project, entity, userGraph)` producing the full graph
       for one file (`src/core/wiring.ts`), plus `toTurtle` (clean Turtle,
       used prefixes only)
