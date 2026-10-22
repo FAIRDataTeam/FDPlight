@@ -1,6 +1,8 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.2** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.3** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
+the label and identifier, after checking the RI code and live RI output.
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -266,13 +268,13 @@ Nested `sh:node` values follow 5.3.
 |---|---|---|
 | `E rdf:type C` for every `C` in `T.targetClasses` | always | `enhance` → `setRdfTypes` |
 | `E fdp:metadataIdentifier E#identifier` | always | `enhance` → `setMetadataIdentifier` |
-| `E#identifier a datacite:Identifier ; dct:identifier "E"` | always | `createMetadataIdentifier` |
-| `E rdfs:label (dct:title of E)` | when a title exists | `enhance` → `setLabel` |
+| `E#identifier a datacite:Identifier ; dct:identifier "E"` (plain string literal) | always | `createMetadataIdentifier` (`l(uri)`) |
+| `E rdfs:label "…"`, one plain literal (no language tag) with the lexical form of a `dct:title` of `E`. With several titles FDPlight takes the first English one, else the first in code-point order | when a title exists | `enhance` → `setLabel(getTitle)`, `l(Value)` drops the tag. The RI takes the first title in model order |
 | `E dct:language defaults.language` | only when the user gave none and a default is set | `enhance` |
 | `E dct:license defaults.license` | only when the user gave none and a default is set | `enhance` |
 | `E dct:accessRights E#accessRights` and `E#accessRights a dct:RightsStatement ; dct:description "…"` | only when the user gave none | `enhance` → `setAccessRights` |
-| `E dct:issued t0` | `t0` = first save, never changed | `enhance(…, oldMetadata)` keeps the old value |
-| `E dct:modified t` | `t` = every save | `enhance` |
+| `E fdp:metadataIssued t0` (`xsd:dateTime`) | `t0` = first save, never changed | `enhance` → `setIssued`, which writes `fdp:metadataIssued`. `enhance(…, oldMetadata)` keeps the old value |
+| `E fdp:metadataModified t` (`xsd:dateTime`) | `t` = every save | `enhance` → `setModified`, which writes `fdp:metadataModified` |
 | `E dct:isPartOf P` | every non-root entity | used by the RI to find the parent (`GenericController`, `MetadataSetter`) and in the Index navigation shapes |
 | `E dct:conformsTo {profileIRI(T)}` and `{profileIRI(T)} rdfs:label "{T.name} Profile"` | always | `enhanceWithResourceDefinition` |
 | `E sio:SIO_000628 M` and `M sio:SIO_000628 m ; sio:SIO_000332 m` for each configured metric `m` | only when `defaults.metrics` is non-empty | `enhance` → `setMetrics` |
@@ -284,8 +286,20 @@ there is an open decision (see 8).
 ### 5.3 Catalog-only triples
 
 For the type with `urlPrefix: "catalog"` (RI `isCatalog()`), also
-`fdp:metadataIssued` and `fdp:metadataModified`, with the same rules as
-`dct:issued` and `dct:modified`.
+`dct:issued t0` and `dct:modified t`, with the same values and rules as
+`fdp:metadataIssued` and `fdp:metadataModified`. The RI overwrites any value
+the user entered (`setMetadataIssued` / `setMetadataModified`, which write
+`dct:issued` / `dct:modified`), so FDPlight hides these two fields in the
+catalog form.
+
+For every other type `dct:issued` and `dct:modified` are **user metadata**:
+the default shapes declare them as form fields for datasets and
+distributions, where they describe the data, not the metadata record
+(see 9.2).
+
+Note the RI's method names are the reverse of the predicates they write
+(`MetadataSetter.setIssued` → `fdp:metadataIssued`,
+`setMetadataIssued` → `dct:issued`).
 
 ### 5.4 Root-only triples
 
@@ -462,6 +476,15 @@ jobs:
   `https://w3id.org/duchenne-fdp` and `https://w3id.org/simpathic/fdp` have
   harvested data (`GET /index/entries/{uuid}/data`) with catalogs and other
   children under their w3id IRIs.
+- Timestamps as served by RIs. The home.fairdatapoint.org root has
+  `fdp:metadataIssued` / `fdp:metadataModified` and no `dct:issued`. A
+  catalog on fdp.lumc.nl has `dct:issued` = `fdp:metadataIssued`; a dataset
+  there has `fdp:metadataIssued` 2025-04-08 and a user entered
+  `dct:issued` 2024-02-04.
+- The default shapes (`/catalog/spec`, `/dataset/spec`,
+  `/distribution/spec`) all declare `dct:issued` and `dct:modified`; the
+  root spec declares `fdp:metadataIssued`, `fdp:metadataModified` and
+  `fdp:metadataIdentifier`.
 - Pinging the WP13.3 root returned 204, the entry went from INACTIVE to
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).
