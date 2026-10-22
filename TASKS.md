@@ -27,7 +27,7 @@ file tracks how we build it.
 
 | Phase | Theme | Status |
 |---|---|---|
-| 0 — Shared core | extract Contour's record engine into a package | ⬜ |
+| 0 — Shared core | extract Contour's record engine into a package | 🟡 packaging decided, scaffold done |
 | 1 — Project model and profile | base URI, profile format, import from an FDP | ⬜ |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | ⬜ |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ⬜ |
@@ -37,6 +37,14 @@ file tracks how we build it.
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ⬜ |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ⬜ |
 | 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | ⬜ |
+
+Legend: ⬜ not started · 🟡 in progress · ✅ done.
+
+### Log
+
+- 2026-10-22 — Repository published at github.com/FAIRDataTeam/FDPlight
+  (public, MIT). SPEC v0.2 automatic IRI modes (#1). Scaffold and logo (#2).
+  SPEC v0.3 timestamp correction (#3).
 
 ## Key technical decisions
 
@@ -55,7 +63,7 @@ file tracks how we build it.
 
 ---
 
-## Phase 0 — Shared core ⬜
+## Phase 0 — Shared core 🟡
 
 - [x] Decide the packaging (2026-10-22: **option (a)**). Options were
   - (a) a `packages/record-core` workspace in the Contour repo, published to
@@ -67,8 +75,11 @@ file tracks how we build it.
       comparable apart from module order.
 - [ ] Remove Contour-only assumptions from the moved code (the `Schema` type
       with an implicit primary shape, `localStorage` keys).
-- [ ] FDPlight scaffold (Vite, Vue 3, TS, Vitest, single-file build, GitHub
-      Pages deploy workflow) that imports the package and renders one form.
+- [x] FDPlight scaffold (Vite, Vue 3, TS, Vitest, single-file build, GitHub
+      Pages deploy workflow, CI on PRs, logo and favicons) — #2.
+      Verified 2026-10-22: type-check, 1 test, build 231 kB (150 kB gzip).
+      Pages deploy is gated on the `DEPLOY_PAGES` repository variable.
+- [ ] Scaffold imports the shared package and renders one form.
 
 ## Phase 1 — Project model and profile ⬜
 
