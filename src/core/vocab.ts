@@ -14,6 +14,7 @@ export const NS = {
   r3d: 'http://www.re3data.org/schema/3-0#',
   vcard: 'http://www.w3.org/2006/vcard/ns#',
   schema: 'https://schema.org/',
+  ejp: 'https://w3id.org/ejp-rd/vocabulary#',
 } as const;
 
 export const RDF_TYPE = `${NS.rdf}type`;

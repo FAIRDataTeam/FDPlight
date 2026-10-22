@@ -277,7 +277,9 @@ The values in the example are those currently served by home.fairdatapoint.org.
   entity files inside the folder.
 - One entity per file. Each file is the complete graph the RI would serve for
   that entity (its metadata, its system triples, its LDP containers).
-- Files are written as clean Turtle with the prefixes actually used.
+- Files are written as clean Turtle with the prefixes actually used, from a
+  fixed list (`NS` in `src/core/vocab.ts`; `ejp:` for the EJP RD / ERDERA
+  vocabulary since 2026-10-22). Other IRIs are written in full.
 - FDPlight never writes outside these paths, so the repository can also hold
   other content.
 
