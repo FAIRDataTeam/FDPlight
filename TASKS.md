@@ -53,6 +53,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Keyboard navigation in the entity tree (#24). Verified:
+  157 tests.
 - 2026-10-22 — RI cross-check: 128 triples identical, two documented
   differences; SPEC v0.8 corrects the RI's container IRIs (#23). GitHub's
   device flow has no CORS (#22).
@@ -306,7 +308,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
       2026-10-22 by script: ACTIVE, 4 of 4 harvested (SPEC §9.2). The
       owner's browser run worked the same day: connect, load, edit the
       software description, review (one file), publish as e1484bb; Pages
-      serves the new version.
+      serves the new version and the Index harvested it (its
+      `fdp:metadataModified` is in the entry's data). That deploy run hung
+      on GitHub's side, so its ping fired only with the next deploy.
 - [x] Check whether `GET /index/entries/{uuid}` works for the pilot entry:
       200 (WP13.3 still 500, SPEC §9.4).
 - [x] Show the Index status of the project in FDPlight (read-only, public
@@ -319,7 +323,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
       screenshots, in the style of Contour's data-steward guide.
 - [ ] Bundled ERDERA profile, verified against the current ERDERA schemas and
       the VP Level 1 / Level 2 queries in WP13.3.
-- [ ] Accessibility pass (keyboard tree navigation).
+- [ ] Accessibility pass. Keyboard tree navigation done (#24): arrow keys,
+      Home and End, Left to the parent, Right to the first child; only the
+      selected node is a Tab stop; visible focus ring. A full pass (screen
+      reader labels, contrast, the form renderer) is still to do.
 
 ## Phase 9 — Optional ⬜
 

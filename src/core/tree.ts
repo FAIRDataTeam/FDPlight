@@ -95,3 +95,48 @@ export function moveEntity(p: Project, path: string, newParent: string): TreeRes
   if (e.parent === newParent) return { ok: true, entities: p.entities, path };
   return { ok: true, entities: p.entities.map((x) => (x === e ? { ...x, parent: newParent } : x)), path };
 }
+
+/**
+ * Paths in the order the tree shows them: an entity, then its children per
+ * child type of its profile type, each in project order (TASKS Phase 8).
+ */
+export function displayOrder(p: Project, root: string): string[] {
+  const out: string[] = [];
+  const visit = (path: string) => {
+    const e = findByPath(p, path);
+    if (!e) return;
+    out.push(path);
+    for (const c of typeByKey(p.types, e.type).children)
+      for (const x of p.entities) if (x.parent === path && x.type === c.type) visit(pathOf(p, x));
+  };
+  visit(root);
+  return out;
+}
+
+export type TreeKey = 'ArrowUp' | 'ArrowDown' | 'Home' | 'End' | 'ArrowLeft' | 'ArrowRight';
+
+/** The node a key moves to from `path`, or null when it does not move. */
+export function treeKeyTarget(p: Project, root: string, path: string, key: string): string | null {
+  const order = displayOrder(p, root);
+  const i = order.indexOf(path);
+  if (i < 0) return null;
+  const to = (() => {
+    switch (key) {
+      case 'ArrowUp':
+        return order[i - 1];
+      case 'ArrowDown':
+        return order[i + 1];
+      case 'Home':
+        return order[0];
+      case 'End':
+        return order.at(-1);
+      case 'ArrowLeft':
+        return findByPath(p, path)?.parent ?? undefined;
+      case 'ArrowRight':
+        return order[i + 1] && findByPath(p, order[i + 1])?.parent === path ? order[i + 1] : undefined;
+      default:
+        return undefined;
+    }
+  })();
+  return to && to !== path ? to : null;
+}
