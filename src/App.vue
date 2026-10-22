@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import icon from './assets/fdplight-icon.svg';
 import EntityForm from './components/EntityForm.vue';
 import EntityTree from './components/EntityTree.vue';
+import IndexStatus from './components/IndexStatus.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
 import PublishPanel from './components/PublishPanel.vue';
 import { usePublish } from './composables/usePublish';
@@ -42,6 +43,7 @@ function removeSelected() {
     <div class="top">
       <section class="card">
         <ProjectSettings :state="state" />
+        <IndexStatus :state="state" />
       </section>
       <section class="card">
         <PublishPanel :pub="pub" />
