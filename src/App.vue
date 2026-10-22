@@ -4,10 +4,13 @@ import icon from './assets/fdplight-icon.svg';
 import EntityForm from './components/EntityForm.vue';
 import EntityTree from './components/EntityTree.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
+import PublishPanel from './components/PublishPanel.vue';
+import { usePublish } from './composables/usePublish';
 import { useProject } from './composables/useProject';
 import { iriOf } from './core/project';
 
 const state = useProject();
+const pub = usePublish(state);
 const { project, selected, entity } = state;
 
 const isRoot = computed(() => entity.value.parent === null);
@@ -32,13 +35,18 @@ function removeSelected() {
       <h1 class="name">FDPlight</h1>
       <p class="tagline">a serverless FAIR Data Point</p>
     </div>
-    <p class="wip">Work in progress: publishing to GitHub is not available yet.</p>
+    <p class="wip">Work in progress: pilot version.</p>
   </header>
 
   <main class="main">
-    <section class="card">
-      <ProjectSettings :state="state" />
-    </section>
+    <div class="top">
+      <section class="card">
+        <ProjectSettings :state="state" />
+      </section>
+      <section class="card">
+        <PublishPanel :pub="pub" />
+      </section>
+    </div>
 
     <div class="columns">
       <nav class="card tree" aria-label="Entities">
@@ -54,7 +62,14 @@ function removeSelected() {
           <div v-if="!isRoot" class="entity__actions">
             <label class="entity__id">
               <span>Id</span>
-              <input v-model="idDraft" spellcheck="false" @change="state.rename(selected, idDraft)" @keyup.enter="state.rename(selected, idDraft)" />
+              <input
+                v-model="idDraft"
+                spellcheck="false"
+                :disabled="state.published.value.has(selected)"
+                :title="state.published.value.has(selected) ? 'Published: the id is part of the IRI' : ''"
+                @change="state.rename(selected, idDraft)"
+                @keyup.enter="state.rename(selected, idDraft)"
+              />
             </label>
             <button type="button" class="danger" @click="removeSelected">Delete</button>
           </div>
@@ -123,6 +138,17 @@ function removeSelected() {
   padding: 0 16px;
   display: grid;
   gap: 16px;
+}
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .top {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .columns {
   display: grid;
