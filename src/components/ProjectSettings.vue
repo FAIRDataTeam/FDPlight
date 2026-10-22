@@ -40,6 +40,7 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = {
       <span>Profile</span>
       <select :value="state.profile.value" @change="chooseProfile">
         <option v-for="(prof, key) in PROFILES" :key="key" :value="key">{{ prof.name }}</option>
+        <option v-if="state.profile.value === 'repository'" value="repository">From the repository</option>
       </select>
     </label>
     <label class="settings__field">

@@ -49,6 +49,10 @@ defineProps<{ pub: ReturnType<typeof usePublish> }>();
         <button type="button" class="link" @click="pub.disconnect()">Disconnect</button>
       </p>
 
+      <p v-if="pub.loaded.value" class="publish__loaded">Loaded the project from the repository.</p>
+      <ul v-if="pub.loadReport.value.length" class="publish__report">
+        <li v-for="r in pub.loadReport.value" :key="r">{{ r }}</li>
+      </ul>
       <ul v-if="pub.blockers.value.length" class="publish__blockers">
         <li v-for="b in pub.blockers.value" :key="b">{{ b }}</li>
       </ul>
@@ -160,6 +164,14 @@ input {
 }
 .publish__connected p {
   margin: 0 0 8px;
+}
+.publish__loaded {
+  color: var(--color-success);
+}
+.publish__report {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--color-text-lighter);
 }
 .publish__blockers {
   margin: 0 0 8px;

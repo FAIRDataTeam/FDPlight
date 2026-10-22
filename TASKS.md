@@ -31,7 +31,7 @@ file tracks how we build it.
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 core and golden tests done, UI open |
-| 4 — Import and edit | open an existing file-only FDP, lossless round trip | ⬜ |
+| 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 FDPlight projects load back losslessly; foreign FDPs open |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish and conflict check done |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | 🟡 workflow generated; pilot next |
@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Load a project back from its repository on Connect (tree,
+  timestamps, metadata, unmapped triples kept); exact round trip (#14).
+  Verified: 131 tests.
 - 2026-10-22 — Ping workflow generation, repository folder, bundled
   Software profile (FDP → Catalog → Software → Source code, schema.org) and
   profile choice in the editor (#13). Verified: 124 tests.
@@ -190,20 +193,24 @@ Resource plus Dataset). Contour still treats the first shape as primary
       (`fdp-ri` compose), fetch each entity, diff the graphs ignoring
       IRIs and the documented differences.
 
-## Phase 4 — Import and edit ⬜
+## Phase 4 — Import and edit 🟡
 
-- [ ] Open a project from a repository with `fdplight.json`; the tree is
-      rebuilt from the files (SPEC §4.1), the same crawl as below.
+- [x] Open a project from a repository with `fdplight.json`; the tree is
+      rebuilt from the files (SPEC §4.1): containers win, `dct:isPartOf` as
+      fallback, siblings by title. Loads on Connect, with the repository's own
+      shapes; asks before replacing local work (#14). Round trip verified:
+      load → publish again changes nothing.
 - [ ] Open a file-only FDP **without** `fdplight.json` by its root URL (or a
       repository). Crawl the same links the Index follows (LDP containers,
       else the navigation relations), infer each entity's type from its
       `rdf:type` and the chosen profile, rebuild the tree, then save a
       `fdplight.json`.
-- [ ] Split each fetched graph into user metadata (mapped to the form), system
-      triples (regenerated) and **unmapped triples (kept verbatim)**. Contour
-      today counts unmapped triples but does not write them back. This is the
-      main change needed in the shared record engine.
-- [ ] Report on import. Per entity, how many triples were mapped, regenerated
+- [x] Split each fetched graph into user metadata (mapped to the form), system
+      triples (regenerated) and **unmapped triples (kept verbatim)**, using
+      record-core's `unmappedQuads` (Contour #28) (#14).
+- [ ] Report on import. A first report lists unreadable files, missing
+      types, parent disagreements and orphans (#14). Still to add: per entity,
+      how many triples were mapped, regenerated
       and kept, plus wiring problems found (shared container IRIs, dangling
       links, identifier IRIs that do not match the entity).
 - [ ] Test case. Import ERDERA/WP13.3_document_based_fdp (proqolid), save, and

@@ -5,6 +5,9 @@ import { computed, ref, shallowRef } from 'vue';
 import { ConflictError, createClient, GitHubError, type GitHubClient, type RepoRef } from '../github/client';
 import { DEFAULT_BASE, type ProjectState } from './useProject';
 import { pagesBase } from '../core/iri';
+import { loadProject } from '../core/load';
+import { parseProjectFile } from '../core/profile';
+import { entityForm } from '../core/forms';
 import { PING_WORKFLOW_PATH } from '../core/ping';
 import { planPublish, type PublishPlan } from '../core/publish';
 
@@ -27,7 +30,11 @@ function saveToken(token: string): void {
   }
 }
 
-export function usePublish(state: ProjectState, makeClient: (token: string) => GitHubClient = (t) => createClient(t)) {
+export function usePublish(
+  state: ProjectState,
+  makeClient: (token: string) => GitHubClient = (t) => createClient(t),
+  confirmReplace: () => boolean = () => window.confirm('The repository has an FDPlight project. Load it and replace what you entered here?'),
+) {
   const repo = ref<RepoRef>({ owner: '', repo: '', branch: 'main' });
   const token = ref(loadToken());
   const connected = ref(false);
@@ -38,6 +45,9 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
   const remoteFiles = shallowRef<string[]>([]);
   const plan = shallowRef<PublishPlan | null>(null);
   const lastCommit = ref('');
+  /** What loading the repository's project reported (SPEC §5.7: nothing dropped silently). */
+  const loadReport = ref<string[]>([]);
+  const loaded = ref(false);
 
   let client: GitHubClient | null = null;
 
@@ -90,16 +100,60 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
     state.published.value = new Set(state.project.entities.map((e) => state.pathOf(e)).filter((p) => contents.has(folder + p)));
   }
 
+  /**
+   * SPEC §4.1. Load the FDPlight project in the repository, if there is one:
+   * its settings, its own shapes, and the tree and metadata from its files.
+   */
+  async function loadFromRepository(): Promise<boolean> {
+    if (!client) return false;
+    const candidates = remoteFiles.value.filter((p) => p === 'fdplight.json' || p.endsWith('/fdplight.json'));
+    const wanted = `${state.project.folder ?? ''}fdplight.json`;
+    const settingsPath = candidates.includes(wanted) ? wanted : candidates.length === 1 ? candidates[0] : null;
+    if (!settingsPath) return false;
+    const text = await client.readFile(repo.value, settingsPath, head.value);
+    const parsed = text === null ? null : parseProjectFile(text);
+    if (!parsed || !parsed.ok) {
+      loadReport.value = [`${settingsPath}: ${parsed && !parsed.ok ? parsed.errors.join('; ') : 'unreadable'}`];
+      return false;
+    }
+    if (state.hasLocalWork() && !confirmReplace()) return false;
+    const settings = parsed.value;
+    const folder = settings.folder ?? '';
+    const shapes: Record<string, string> = {};
+    for (const t of settings.types) {
+      const s = await client.readFile(repo.value, folder + t.shapes, head.value);
+      if (s === null) throw new Error(`${folder}${t.shapes} is missing from the repository`);
+      shapes[t.key] = s;
+    }
+    const files = new Map<string, string>();
+    for (const p of remoteFiles.value) {
+      if (!p.startsWith(folder) || !p.endsWith('.ttl') || p.startsWith(`${folder}shapes/`)) continue;
+      const content = await client.readFile(repo.value, p, head.value);
+      if (content !== null) files.set(p.slice(folder.length), content);
+    }
+    const forms = Object.fromEntries(settings.types.map((t) => [t.key, entityForm(t, shapes[t.key])]));
+    const result = loadProject(settings, files, forms);
+    state.load(result, shapes);
+    loadReport.value = result.report;
+    loaded.value = true;
+    return true;
+  }
+
   async function connect(): Promise<void> {
     error.value = '';
     busy.value = true;
     plan.value = null;
+    loadReport.value = [];
+    loaded.value = false;
     try {
       saveToken(token.value);
       client = makeClient(token.value);
+      head.value = await client.branchHead(repo.value);
+      remoteFiles.value = await client.listFiles(repo.value, head.value);
+      await loadFromRepository();
       await refresh();
       connected.value = true;
-      if (state.project.base === DEFAULT_BASE) state.setBase(pagesBase(repo.value.owner, repo.value.repo));
+      if (!loaded.value && state.project.base === DEFAULT_BASE) state.setBase(pagesBase(repo.value.owner, repo.value.repo));
     } catch (e) {
       connected.value = false;
       fail(e);
@@ -115,6 +169,7 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
       project: state.project,
       forms: state.forms,
       values: state.values,
+      extras: state.extras.value,
       shapes: state.shapes,
       remote: remote.value,
       remoteFiles: remoteFiles.value,
@@ -147,5 +202,5 @@ export function usePublish(state: ProjectState, makeClient: (token: string) => G
     saveToken('');
   }
 
-  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, connect, prepare, publish, disconnect };
+  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, loadReport, loaded, connect, prepare, publish, disconnect };
 }

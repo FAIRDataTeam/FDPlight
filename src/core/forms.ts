@@ -3,6 +3,7 @@
 
 import { formSchema } from '@fairdatateam/record-core/forms';
 import { expandTerm, fieldKey, nestedShapeOf, recordHasContent, recordToQuads, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
+import type { Quad } from '@fairdatateam/record-core/rdf';
 import { parseShacl } from '@fairdatateam/record-core/shacl';
 import type { Field, Schema } from '@fairdatateam/record-core/types';
 import { DataFactory, Store } from 'n3';
@@ -77,8 +78,10 @@ export function withHashNodes(form: Schema, entityIri: string, values: RecordNod
  * filled-in nested node is also typed with its shape's target class (e.g.
  * `E#publisher a foaf:Agent`), as the FDP itself does and as import expects.
  */
-export function userGraphFromForm(form: Schema, entityIri: string, values: RecordNode): Store {
+export function userGraphFromForm(form: Schema, entityIri: string, values: RecordNode, extras: Quad[] = []): Store {
   const store = new Store(recordToQuads(form, entityIri, withHashNodes(form, entityIri, values)));
+  // SPEC §5.7: triples the form has no place for, kept from an imported file.
+  store.addQuads(extras as never);
   const subject = DataFactory.namedNode(entityIri);
   for (const f of shapeFields(form)) {
     const ns = nestedShapeOf(form, f);

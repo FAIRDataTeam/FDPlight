@@ -97,4 +97,58 @@ describe('usePublish (TASKS Phase 6)', () => {
     expect(pub.error.value).toMatch(/new commits.*reconnect/s);
     expect(gh.commits).toHaveLength(0);
   });
+
+  it('loads the project back from the repository on connect, with nothing left to publish', async () => {
+    const first = useProject();
+    const gh = fakeRepo();
+    const pub = usePublish(first, () => gh.client);
+    pub.repo.value = { owner: 'erdera', repo: 'my-fdp', branch: 'main' };
+    first.project.folder = 'metadata/';
+    await pub.connect();
+    first.add('fdp.ttl', 'catalog');
+    first.rename(first.selected.value, 'rare-diseases');
+    fill(first, 'fdp.ttl');
+    fill(first, 'catalog/rare-diseases.ttl');
+    await ready(first);
+    await pub.prepare();
+    await pub.publish();
+    expect(gh.files.has('metadata/catalog/rare-diseases.ttl')).toBe(true);
+
+    // A new browser session: empty editor, same repository.
+    const second = useProject();
+    const pub2 = usePublish(second, () => gh.client, () => true);
+    pub2.repo.value = { owner: 'erdera', repo: 'my-fdp', branch: 'main' };
+    await pub2.connect();
+    expect(pub2.loaded.value).toBe(true);
+    expect(pub2.loadReport.value).toEqual([]);
+    expect(second.project.folder).toBe('metadata/');
+    expect(second.project.entities.map((e) => second.pathOf(e))).toEqual(['fdp.ttl', 'catalog/rare-diseases.ttl']);
+    expect(second.titleOf('fdp.ttl')).toBe('My FDP');
+    expect(second.published.value.has('catalog/rare-diseases.ttl')).toBe(true);
+    await ready(second);
+    await pub2.prepare();
+    expect(pub2.plan.value!.changes).toEqual([]);
+  });
+
+  it('asks before replacing local work, and keeps it when declined', async () => {
+    const gh = fakeRepo();
+    const a = useProject();
+    const pubA = usePublish(a, () => gh.client);
+    pubA.repo.value = { owner: 'erdera', repo: 'my-fdp', branch: 'main' };
+    await pubA.connect();
+    fill(a, 'fdp.ttl');
+    await ready(a);
+    await pubA.prepare();
+    await pubA.publish();
+
+    const b = useProject();
+    b.add('fdp.ttl', 'catalog');
+    let asked = 0;
+    const pubB = usePublish(b, () => gh.client, () => (asked++, false));
+    pubB.repo.value = { owner: 'erdera', repo: 'my-fdp', branch: 'main' };
+    await pubB.connect();
+    expect(asked).toBe(1);
+    expect(pubB.loaded.value).toBe(false);
+    expect(b.project.entities).toHaveLength(2);
+  });
 });
