@@ -124,6 +124,20 @@ const deDE = {
   },
 
   // record-core renderer (Contour's translations)
+  // SHACL findings per constraint component (core/validation.ts)
+  finding: {
+    MinCount: 'Erforderlich',
+    MaxCount: 'Zu viele Werte',
+    Datatype: 'Falsche Art von Wert',
+    NodeKind: 'Falsche Art von Wert (Literal oder IRI)',
+    Class: 'Muss auf eine Ressource des erwarteten Typs verweisen',
+    Pattern: 'Entspricht nicht dem erwarteten Format',
+    MinLength: 'Zu kurz',
+    MaxLength: 'Zu lang',
+    In: 'Keiner der zulässigen Werte',
+    LanguageIn: 'Sprache nicht zulässig',
+    UniqueLang: 'Nur ein Wert pro Sprache',
+  },
   formPreview: {
     add: '+ Hinzufügen',
     removeValue: 'Diesen Wert entfernen',

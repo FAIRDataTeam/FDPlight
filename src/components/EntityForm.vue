@@ -6,15 +6,18 @@ import { newEntryFor, type RecordIssue, type RecordNode } from '@fairdatateam/re
 import type { Schema } from '@fairdatateam/record-core/types';
 import { FILL_CONTEXT } from '@fairdatateam/record-core/useFillContext';
 import { findingText, type ShaclFinding } from '../core/validation';
+import { useI18n } from '../composables/useI18n';
 
 const props = defineProps<{ schema: Schema; values: RecordNode; findings?: ShaclFinding[] }>();
+const { t } = useI18n();
+const text = (f: ShaclFinding) => findingText(f, (component) => t(`finding.${component}`));
 
 const issues = computed<RecordIssue[]>(() =>
   (props.findings ?? []).map((f) => ({
     loc: f.loc ?? '',
     severity: f.severity,
     code: f.component,
-    message: findingText(f),
+    message: text(f),
     fieldName: f.fieldName,
   })),
 );
@@ -37,7 +40,7 @@ const groups = computed(() => props.schema.groups.slice().sort((a, b) => a.order
 <template>
   <div class="form-preview">
     <p v-for="(f, i) in unplaced" :key="i" class="record-issue" :class="`is-${f.severity}`">
-      <strong v-if="f.fieldName">{{ f.fieldName }}:</strong> {{ findingText(f) }}
+      <strong v-if="f.fieldName">{{ f.fieldName }}:</strong> {{ text(f) }}
     </p>
     <section v-for="g in groups" :key="g.id">
       <div class="form-preview__group-title">{{ g.label }}</div>
