@@ -107,6 +107,11 @@ describe('App', () => {
       expect(w.find('.tagline').text()).toBe(nl.app.tagline);
       expect(document.documentElement.lang).toBe('nl-NL');
       expect(w.findAll('.form-preview button').some((b) => b.text() === nl.formPreview.add)).toBe(true);
+      // SHACL findings under the fields too ("Required" → "Verplicht").
+      await vi.waitFor(async () => {
+        await flushPromises();
+        expect(w.findAll('.form-preview .record-issue').map((m) => m.text())).toContain('Verplicht');
+      }, { timeout: 5000 });
     } finally {
       setLocale('en');
     }

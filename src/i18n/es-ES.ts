@@ -121,6 +121,20 @@ const esES = {
   },
 
   // record-core renderer (Contour's translations)
+  // SHACL findings per constraint component (core/validation.ts)
+  finding: {
+    MinCount: 'Obligatorio',
+    MaxCount: 'Demasiados valores',
+    Datatype: 'Tipo de valor incorrecto',
+    NodeKind: 'Tipo de valor incorrecto (literal o IRI)',
+    Class: 'Debe referirse a un recurso del tipo esperado',
+    Pattern: 'No coincide con el formato esperado',
+    MinLength: 'Demasiado corto',
+    MaxLength: 'Demasiado largo',
+    In: 'No es uno de los valores permitidos',
+    LanguageIn: 'Idioma no permitido',
+    UniqueLang: 'Solo un valor por idioma',
+  },
   formPreview: {
     add: '+ Añadir',
     removeValue: 'Quitar este valor',

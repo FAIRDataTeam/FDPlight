@@ -45,7 +45,14 @@ const TEXT: Record<string, string> = {
   UniqueLang: 'Only one value per language',
 };
 
-/** A short message for a finding: the shape's sh:message, else a plain text per constraint. */
-export function findingText(f: ShaclFinding): string {
-  return f.message || TEXT[f.component] || f.engineMessage || f.component;
+/** Constraint components with a plain text (and an i18n key `finding.{component}`). */
+export const FINDING_COMPONENTS = Object.keys(TEXT);
+
+/**
+ * A short message for a finding: the shape's sh:message, else a plain text per
+ * constraint, translated by `translate` when the app passes one.
+ */
+export function findingText(f: ShaclFinding, translate?: (component: string) => string | undefined): string {
+  const known = f.component in TEXT;
+  return f.message || (known && translate?.(f.component)) || TEXT[f.component] || f.engineMessage || f.component;
 }

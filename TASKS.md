@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — SHACL finding texts translated (#28).
 - 2026-10-22 — Data-steward guide with screenshots, linked from the app
   (#26).
 - 2026-10-22 — Interface in six languages, Contour's i18n mechanism (#25).
@@ -324,9 +325,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [ ] i18n with Contour's mechanism and the same six locales. The interface
       and the form renderer are translated (EN, PT-BR, NL, DE, ES, FR; the
       renderer keys reuse Contour's translations), with a language picker in
-      the header (#25). Still English: messages built by the core (import
-      report, structural checks, SHACL finding texts, settings errors). The
-      translations were written without a native-speaker review.
+      the header (#25). SHACL finding texts under the fields are translated
+      too (#28). Still English: messages built by the core (import report,
+      structural checks, settings errors), and labels from the profile's
+      shapes. The translations were written without a native-speaker review.
 - [x] User guide for data stewards (create, fill in, publish, edit), with
       screenshots, in the style of Contour's data-steward guide
       ([docs/data-steward-guide.md](docs/data-steward-guide.md), #26; English

@@ -61,7 +61,7 @@ describe('Software profile', () => {
     const iri = iriOf(project, e);
     const g = serializeEntity(project, e, userGraphFromForm(f, iri, v));
     const findings = await checkEntity(f, iri, v, g, shapesGraph(SOFTWARE.shapes.software));
-    expect(findings.map(findingText)).toEqual([]);
+    expect(findings.map((f) => findingText(f))).toEqual([]);
     const ttl = await toTurtle(g, iri);
     expect(ttl).toContain('a dcat:Resource, schema:SoftwareApplication');
     expect(ttl).toContain('schema:hasPart <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl>');

@@ -121,6 +121,20 @@ const nlNL = {
   },
 
   // record-core renderer (Contour's translations)
+  // SHACL findings per constraint component (core/validation.ts)
+  finding: {
+    MinCount: 'Verplicht',
+    MaxCount: 'Te veel waarden',
+    Datatype: 'Verkeerd soort waarde',
+    NodeKind: 'Verkeerd soort waarde (literal of IRI)',
+    Class: 'Moet verwijzen naar een resource van het verwachte type',
+    Pattern: 'Komt niet overeen met het verwachte formaat',
+    MinLength: 'Te kort',
+    MaxLength: 'Te lang',
+    In: 'Geen van de toegestane waarden',
+    LanguageIn: 'Taal niet toegestaan',
+    UniqueLang: 'Slechts één waarde per taal',
+  },
   formPreview: {
     add: '+ Toevoegen',
     removeValue: 'Deze waarde verwijderen',

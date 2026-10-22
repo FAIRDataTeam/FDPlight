@@ -121,6 +121,20 @@ const ptBR = {
   },
 
   // record-core renderer (Contour's translations)
+  // SHACL findings per constraint component (core/validation.ts)
+  finding: {
+    MinCount: 'Obrigatório',
+    MaxCount: 'Valores demais',
+    Datatype: 'Tipo de valor incorreto',
+    NodeKind: 'Tipo de valor incorreto (literal ou IRI)',
+    Class: 'Deve se referir a um recurso do tipo esperado',
+    Pattern: 'Não corresponde ao formato esperado',
+    MinLength: 'Curto demais',
+    MaxLength: 'Longo demais',
+    In: 'Não é um dos valores permitidos',
+    LanguageIn: 'Idioma não permitido',
+    UniqueLang: 'Apenas um valor por idioma',
+  },
   formPreview: {
     add: '+ Adicionar',
     removeValue: 'Remover este valor',

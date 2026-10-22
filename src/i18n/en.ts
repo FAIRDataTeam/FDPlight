@@ -123,6 +123,21 @@ const en = {
     conflict: '{error}. Someone else published meanwhile; reconnect to load their changes.',
   },
 
+  // SHACL findings per constraint component (core/validation.ts)
+  finding: {
+    MinCount: 'Required',
+    MaxCount: 'Too many values',
+    Datatype: 'Wrong kind of value',
+    NodeKind: 'Wrong kind of value (literal or IRI)',
+    Class: 'Must refer to a resource of the expected type',
+    Pattern: 'Does not match the expected format',
+    MinLength: 'Too short',
+    MaxLength: 'Too long',
+    In: 'Not one of the allowed values',
+    LanguageIn: 'Language not allowed',
+    UniqueLang: 'Only one value per language',
+  },
+
   // record-core renderer (RECORD_MESSAGES_EN)
   formPreview: {
     add: '+ Add',

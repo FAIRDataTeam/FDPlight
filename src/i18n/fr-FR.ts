@@ -124,6 +124,20 @@ const frFR = {
   },
 
   // record-core renderer (Contour's translations)
+  // SHACL findings per constraint component (core/validation.ts)
+  finding: {
+    MinCount: 'Obligatoire',
+    MaxCount: 'Trop de valeurs',
+    Datatype: 'Type de valeur incorrect',
+    NodeKind: 'Type de valeur incorrect (littéral ou IRI)',
+    Class: 'Doit faire référence à une ressource du type attendu',
+    Pattern: 'Ne correspond pas au format attendu',
+    MinLength: 'Trop court',
+    MaxLength: 'Trop long',
+    In: 'Ne fait pas partie des valeurs autorisées',
+    LanguageIn: 'Langue non autorisée',
+    UniqueLang: 'Une seule valeur par langue',
+  },
   formPreview: {
     add: '+ Ajouter',
     removeValue: 'Supprimer cette valeur',
