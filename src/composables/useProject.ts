@@ -48,6 +48,8 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
 
   const selected = ref('fdp.ttl');
   const lastError = ref('');
+  /** Paths already in the repository: their ids are locked (SPEC §2.3). */
+  const published = shallowRef(new Set<string>());
   // Preview timestamps for entities never saved; saving stamps them for real.
   const previewTime = new Date();
 
@@ -96,6 +98,10 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
   }
 
   function rename(path: string, newId: string): void {
+    if (published.value.has(path)) {
+      lastError.value = 'This entity is published: its id is part of its IRI and can no longer change.';
+      return;
+    }
     const r = renameEntity(project, path, newId.trim());
     if (apply(r, path) && r.ok) selected.value = r.path;
   }
@@ -190,6 +196,8 @@ export function useProject(initial: Project = newProject(), shapes: Record<strin
     lastError,
     typeOf,
     titleOf,
+    pathOf: (e: Entity) => pathOf(project, e),
+    published,
     add,
     remove,
     rename,

@@ -33,7 +33,7 @@ file tracks how we build it.
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 core and golden tests done, UI open |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ⬜ |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
-| 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | ⬜ |
+| 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish and conflict check done |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ⬜ |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ⬜ |
 | 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | ⬜ |
@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — GitHub publish: token, connect, review, one commit, conflict
+  check, timestamps restamped only when a file changes, published ids
+  locked (#11). Verified: 114 tests, build 633 kB.
 - 2026-10-22 — SHACL check per entity with findings on the fields and counts
   in the tree; publisher / contact point as sub-forms with hash IRIs (#10).
   Verified: 101 tests, build 620 kB (260 kB gzip; +77 kB shacl-engine).
@@ -173,10 +176,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
   - [x] hash IRIs for publisher / contact point (§5.6): minted when the
         graph is built, never stored (`withHashNodes`, #10). Fields with
         `sh:node` (the FDP's `dash:BlankNodeEditor`) render as sub-forms.
-- [ ] Timestamp rules. `fdp:metadataIssued` set once, `fdp:metadataModified`
-      on every save of that entity (plus `dct:issued` / `dct:modified` for
-      catalogs). Parents whose containers change also get a new
-      modification time.
+- [x] Timestamp rules. `fdp:metadataIssued` set once, `fdp:metadataModified`
+      when the entity's file changes (plus `dct:issued` / `dct:modified` for
+      catalogs), which also covers parents whose containers change
+      (`planPublish`, #11).
 - [x] Golden-file tests (both IRI modes, `src/core/__tests__/golden/`). Build the default-profile example tree and compare
       each file with the expected Turtle, triple by triple.
 - [ ] Cross-check against the RI. Create the same tree in a local RI
@@ -211,20 +214,25 @@ Resource plus Dataset). Contour still treats the first shape as primary
       fields, red counts in the tree (#10).
 - [x] Structural checks of SPEC §6 rules 2 to 7 (`src/core/checks.ts`) (base, dangling links, orphans, duplicate
       IRIs, malformed IRIs, root type).
-- [ ] Publish button disabled while there are errors, with a list that jumps
+- [x] Publish button disabled while there are errors (#11), with a list that jumps
       to the offending entity and field.
 
-## Phase 6 — GitHub publish ⬜
+## Phase 6 — GitHub publish 🟡
 
-- [ ] Authentication. Pilot with a fine-grained personal access token
-      (contents read/write on one repository) kept in `sessionStorage`. Then
-      evaluate a GitHub App. Whether its device flow works from a browser
+- [x] Authentication for the pilot: fine-grained personal access token
+      (contents read/write on one repository) kept in `sessionStorage` (#11).
+      CORS of api.github.com verified (SPEC §9.2).
+- [ ] Then evaluate a GitHub App. Whether its device flow works from a browser
       without a proxy (CORS) must be verified first.
-- [ ] Read the repository tree and `fdplight.json`.
-- [ ] Publish as **one commit** with all changed files (Git data API: blobs,
+- [x] Read the repository tree and the files FDPlight owns (#11). Loading a
+      project back from them is Phase 4.
+- [x] Publish as **one commit** with all changed files (Git data API: blobs,
       tree, commit, update ref). Commit message lists the entities changed.
-- [ ] Conflict check. Compare the remote head with the head the project was
-      loaded from. On mismatch, reload and show what changed, never force.
+      A review step shows added / updated / removed files first (#11).
+- [x] Conflict check. Compare the remote head with the head the project was
+      loaded from; the ref update is also non-forced. On mismatch nothing is
+      written and the user is told to reconnect (#11). Showing what changed
+      comes with Phase 4 loading.
 - [ ] "Propose changes" mode. Same commit on a new branch plus a pull request.
 - [ ] First-publish helper. Create the repository if needed and explain how
       to enable Pages (or enable it through the API when the token allows).

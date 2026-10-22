@@ -428,11 +428,16 @@ Rules 3 to 6 are the classes of hand-written errors seen in the WP13.3 files
 
 ### 7.1 Save to GitHub
 
-- Each publish is **one commit** containing every changed file (Git data API
-  tree + commit, or the contents API per file for small changes), with a
-  generated message listing the entities changed.
+- Each publish is **one commit** containing every changed file (Git data API:
+  blobs, tree, commit, non-forced ref update), with a generated message
+  listing the entities added, updated and removed.
+- `fdp:metadataModified` changes only for entities whose file content
+  changes; this includes parents whose children were added or removed.
+- Entity files that are no longer in the project are deleted, but only
+  `fdp.ttl` and `{urlPrefix}/*.ttl` for the profile's prefixes.
 - Optional "propose changes" mode opens a pull request instead.
-- FDPlight checks the remote file SHA before writing so a concurrent edit is
+- FDPlight checks that the branch head is still the commit it read before
+  writing (and updates the ref without force), so a concurrent edit is
   detected, never overwritten.
 
 ### 7.2 Ping workflow
@@ -533,6 +538,10 @@ jobs:
   `/distribution/spec`) all declare `dct:issued` and `dct:modified`; the
   root spec declares `fdp:metadataIssued`, `fdp:metadataModified` and
   `fdp:metadataIdentifier`.
+- api.github.com allows browser publishing: a CORS preflight from
+  `https://fdplight.fairdatapoint.org` for `PATCH` with `Authorization`,
+  `Content-Type` and `X-GitHub-Api-Version` returns 204 with
+  `access-control-allow-origin: *` and those headers allowed.
 - Pinging the WP13.3 root returned 204, the entry went from INACTIVE to
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).
