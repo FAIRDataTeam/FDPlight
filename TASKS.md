@@ -257,8 +257,12 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] Authentication for the pilot: fine-grained personal access token
       (contents read/write on one repository) kept in `sessionStorage` (#12).
       CORS of api.github.com verified (SPEC §9.2).
-- [ ] Then evaluate a GitHub App. Whether its device flow works from a browser
-      without a proxy (CORS) must be verified first.
+- [ ] Then evaluate a GitHub App. Checked 2026-10-22: its device flow does
+      **not** work from a browser without a proxy. `github.com/login/device/code`
+      answers 200 without `Access-Control-Allow-Origin`, and the preflight
+      returns 404 (SPEC §9.2). A GitHub App therefore needs a small token
+      proxy, which a serverless FDPlight does not have. Fine-grained tokens
+      stay until the owner decides otherwise (open decision 4).
 - [x] Read the repository tree and the files FDPlight owns (#12). Loading a
       project back from them is Phase 4.
 - [x] Publish as **one commit** with all changed files (Git data API: blobs,
@@ -330,7 +334,9 @@ See also SPEC §8.
 2. ~~Licence of FDPlight.~~ Decided 2026-10-22: MIT, like Contour.
 3. ~~Where FDPlight itself is hosted.~~ Decided 2026-10-22: GitHub Pages of
    this repository at https://fdplight.fairdatapoint.org/ (item 6).
-4. GitHub authentication beyond the pilot (Phase 6).
+4. GitHub authentication beyond the pilot (Phase 6). Evidence 2026-10-22:
+   the GitHub App device flow needs a proxy (no CORS); recommendation is to
+   keep fine-grained tokens.
 5. ~~Where the entity tree is stored.~~ Decided 2026-10-22: not stored,
    derived from the files on open (SPEC §4.1).
 6. ~~Custom domain for the app.~~ Done 2026-10-22: https://fdplight.fairdatapoint.org/

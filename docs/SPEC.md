@@ -631,6 +631,13 @@ jobs:
   (from the `E#publisher` hash node), description and version.
 - home.fairdatapoint.org allows browser access to `/index/entries/all`
   (`access-control-allow-origin: *`).
+- GitHub sign-in through an OAuth or GitHub App **device flow does not work
+  from the browser** (checked 2026-10-22 with `Origin:
+  https://fdplight.fairdatapoint.org`). `POST
+  https://github.com/login/device/code` returns 200 with a device code but no
+  `Access-Control-Allow-Origin`, and the `OPTIONS` preflight returns 404, so
+  the page cannot read the response. The same holds for
+  `/login/oauth/access_token`. A GitHub App would need a token proxy.
 - Importing a profile works from the browser (checked 2026-10-22 on
   home.fairdatapoint.org with `Origin: https://fdplight.fairdatapoint.org`):
   `/resource-definitions` (JSON) and `/spec`, `/catalog/spec` (with
