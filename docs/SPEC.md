@@ -1,13 +1,14 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.7** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.8** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
 wiring replaces (§5.7). v0.5: the entity tree is derived from the files
 (§4.1). v0.6: repository folder, Index settings and the inline ping workflow
 (§3.1, §4, §7.2); the bundled Software profile (§3.2). v0.7: opening FDPs
-FDPlight did not make, keeping or migrating their IRIs (§4.2).
+FDPlight did not make, keeping or migrating their IRIs (§4.2). v0.8: the RI
+cross-check (9.5) and a correction of the RI's container IRIs (2.6).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -140,20 +141,23 @@ another file's IRIs.
 |---|---|---|
 | Metadata identifier | `{entity}#identifier` | `MetadataEnhancer.createMetadataIdentifier` |
 | Access rights | `{entity}#accessRights` | `MetadataEnhancer.enhance` |
-| LDP container per child type | file mode `{entity}#{childPrefix}`, redirect mode `{entity}/{childPrefix}/` | `MetadataEnhancer.enhanceWithLinks` uses `{entity}/{childPrefix}/` |
-| Publisher (when entered inline) | `{entity}#publisher` | not in RI, see 5.6 |
+| LDP container per child type | file mode `{entity}#{childPrefix}`, redirect mode `{entity}/{childPrefix}/` | `MetadataEnhancer.enhanceWithLinks`, called with `persistentUrl`: `{persistentUrl}/{childPrefix}/`, the same IRI for every parent (9.5) |
+| Publisher (when entered inline) | `{entity}#publisher` | the RI keeps a posted blank node; its factory-default root uses `#publisher` (9.5, 5.6) |
 | Contact point (when entered inline) | `{entity}#contactPoint` | not in RI, see 5.6 |
 | FAIR metrics | `{entity}/metrics/{md5Hex(metricUri)}`; for a redirect-mode root (`E` ends with `/`) the slash is not doubled | `MetricsMetadataService` |
 
 **Container IRIs are always per parent entity.** The WP13.3 example declares
 `…/catalog/datasets/` in both the catalog and the dataset file and after
 harvesting the two merge into one container with two member relations and
-two membership resources (observed, see 9.4). Deriving the container IRI from
-the parent entity IRI makes that impossible.
+two membership resources (observed, see 9.4). The RI does the same whenever an
+FDP has two catalogs: it names every catalog's dataset container
+`{persistentUrl}/dataset/` (verified, 9.5). Deriving the container IRI from
+the parent entity IRI makes that impossible, and is a deliberate difference
+from the RI.
 
-In file mode the RI pattern `{entity}/{childPrefix}/` would give
+In file mode `{entity}/{childPrefix}/` would give
 `…/catalog/abc.ttl/dataset/`, which is legal but odd, hence the hash form.
-Redirect mode IRIs have no extension, so the RI form is used there. For the
+Redirect mode IRIs have no extension, so that form is used there. For the
 root in redirect mode (`E = {base}`) the container is `{base}{childPrefix}/`,
 exactly as the RI serves it. Containers are never dereferenced by the Index
 (it reads them from the parent's own graph), so either form works for
@@ -665,3 +669,29 @@ only writes Turtle, so it is unaffected.
   entries return 200. Still 500 on 2026-10-22, while FDPlight's pilot entry,
   with a hash-IRI publisher, returns 200: consistent with the blank-node
   publisher being the cause, not proof.
+
+### 9.5 Cross-check against the RI (2026-10-22)
+
+`scripts/ri-crosscheck.ts` builds the same tree (root, catalog, dataset,
+distribution) from the same user metadata in a local RI 1.22.0
+(`fairdata/fairdatapoint:1.22`, GraphDB, pinging disabled,
+`scripts/ri-check/`) through its API, and in FDPlight through `planPublish`
+with the RI's default metrics. It compares each entity's graph after
+replacing entity IRIs, container IRIs (named by membership resource and
+relation), profile IRIs, timestamps and the software version.
+
+Result: **128 triples identical** (34 root, 34 catalog, 34 dataset, 26
+distribution): types, label, identifier node, access rights, licence and
+language as given, `dct:conformsTo` and profile label, metric nodes, parent
+and child links, containers with `ldp:contains`, catalog `dct:issued` /
+`dct:modified`, the user's dataset `dct:issued`, the root's
+`fdp:fdpSoftwareVersion` and `dcat:endpointURL`. The only differences:
+
+- **Publisher.** Posted as a blank node, the RI keeps the blank node;
+  FDPlight writes `E#publisher` (5.6, by design). The RI's own factory-default
+  root also uses `#publisher`.
+- **`dcat:endpointDescription`** on the RI root (its OpenAPI and Swagger
+  pages). FDPlight has no API, so it writes none.
+
+Container IRIs differ by design (2.6): the RI served `http://localhost:8190/dataset/`
+as the dataset container of the catalog, an IRI every catalog would share.

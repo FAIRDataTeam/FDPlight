@@ -1,0 +1,22 @@
+# FDP reference implementation for the FDPlight cross-check
+# (scripts/ri-crosscheck.ts). Local only.
+
+instance:
+  clientUrl: http://localhost:8190
+  persistentUrl: http://localhost:8190
+
+# Never ping a public FDP Index from this instance.
+ping:
+  enabled: false
+
+security:
+  jwt:
+    token:
+      # From the environment: RI_CHECK_JWT_SECRET=$(openssl rand -hex 64)
+      secret-key: ${RI_CHECK_JWT_SECRET}
+
+repository:
+  type: 4
+  graphDb:
+    url: http://graphdb:7200
+    repository: fdp
