@@ -30,7 +30,7 @@ file tracks how we build it.
 | 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, used by FDPlight (vendored until npm) |
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
-| 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 core and golden tests done, UI open |
+| 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 tree editing done; RI cross-check open |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 FDPlight projects load back losslessly; foreign FDPs open |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish and conflict check done |
@@ -53,6 +53,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Move an entity to another parent; the tree starts at an
+  imported root's own file instead of `fdp.ttl` (#17). Verified: 148 tests.
 - 2026-10-22 — Import of FDPs FDPlight did not make, keep or migrate IRIs;
   WP13.3 test case passes; canonical blank-node labels (#16). Verified:
   142 tests.
@@ -174,8 +176,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
 ## Phase 3 — Tree and wiring 🟡
 
 - [x] Entity tree UI. Root at the top, children grouped by child type (using
-      the list titles), add / rename / delete (#9). Move is still open.
-- [ ] Move an entity to another parent.
+      the list titles), add / rename / delete (#9), move (#17).
+- [x] Move an entity to another parent (#17). "Move to" lists the parents the
+      profile allows, outside the entity's own subtree; file and IRI stay, so
+      published entities can move (SPEC §5.5).
 - [x] IRI minting (SPEC §2.3), both IRI modes (`src/core/iri.ts`). Random id
       by default, slug editable in the editor (#9); locking after the first
       publish comes with publishing.

@@ -27,6 +27,24 @@ describe('App', () => {
     expect(w.find('.checks').text()).toContain('Structure OK');
   });
 
+  it('moves a dataset to another catalog with the picker', async () => {
+    const w = mount(App);
+    const addCatalog = () => w.findAll('button.tree__add').find((b) => b.text() === '+ Add catalog')!.trigger('click');
+    await addCatalog();
+    await addCatalog();
+    await flushPromises();
+    const second = w.find('.entity__file').text();
+    expect(w.find('.entity__move').exists()).toBe(false); // the root is the only place a catalog fits
+    await w.findAll('.tree__node')[1].trigger('click');
+    await w.findAll('button.tree__add').find((b) => b.text() === '+ Add dataset')!.trigger('click');
+    await flushPromises();
+    const select = w.find('.entity__move select');
+    expect(select.findAll('option').map((o) => o.attributes('value'))).toEqual(['', second]);
+    await select.setValue(second);
+    await flushPromises();
+    expect(w.find('pre.turtle').text()).toContain(`dct:isPartOf <https://example.github.io/my-fdp/${second}>`);
+  });
+
   it('marks entities with missing required metadata', async () => {
     vi.useFakeTimers();
     const w = mount(App);
