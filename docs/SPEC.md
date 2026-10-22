@@ -631,6 +631,11 @@ jobs:
   (from the `E#publisher` hash node), description and version.
 - home.fairdatapoint.org allows browser access to `/index/entries/all`
   (`access-control-allow-origin: *`).
+- Importing a profile works from the browser (checked 2026-10-22 on
+  home.fairdatapoint.org with `Origin: https://fdplight.fairdatapoint.org`):
+  `/resource-definitions` (JSON) and `/spec`, `/catalog/spec` (with
+  `Accept: text/turtle`) return 200 with `access-control-allow-origin: *`.
+  Without that `Accept` header `/spec` returns 406.
 - Pinging the WP13.3 root returned 204, the entry went from INACTIVE to
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).

@@ -53,6 +53,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Import a profile from a running FDP in the app (#20).
+  Verified: 154 tests.
 - 2026-10-22 — "Propose changes" publish mode: branch, commit, pull request
   (#19). Verified: 152 tests.
 - 2026-10-22 — Import report: wiring problems and per-file counts of
@@ -141,11 +143,14 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
         validation and mode detection are in the settings bar (#9); the
         proposal from the repository comes with the wizard;
   - [ ] profile source (bundled, import from an FDP URL, or a local file).
-        Choosing between the bundled profiles is in the settings bar (#13).
+        Choosing between the bundled profiles (#13) and importing from an
+        FDP URL (#20) are in the settings bar; a local file is still open.
 - [x] Profile import from a running FDP (`importProfileFromFdp`, tested on
       recorded home.fairdatapoint.org responses). Read `/resource-definitions`, fetch
       `/{prefix}/spec` (`/spec` for the root), store the merged shapes under
-      `shapes/`. Record the source for later refresh.
+      `shapes/`. Record the source for later refresh. In the app from the
+      profile list, "Import from a FAIR Data Point…" (#20); CORS verified
+      (SPEC §9.2).
 - [x] Bundled FDP default profile (taken from home.fairdatapoint.org),
       `src/profiles/fdp-default/`.
 - [x] IRI mode detection from the base URI (SPEC §2.2): `*.github.io` and

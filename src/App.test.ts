@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import App from './App.vue';
+import { recordedFdpFetch } from './test/recordedFdp';
 
 describe('App', () => {
   it('renders the product name', () => {
@@ -43,6 +44,31 @@ describe('App', () => {
     await select.setValue(second);
     await flushPromises();
     expect(w.find('pre.turtle').text()).toContain(`dct:isPartOf <https://example.github.io/my-fdp/${second}>`);
+  });
+
+  it('imports the profile of a running FDP from the settings', async () => {
+    vi.stubGlobal('fetch', recordedFdpFetch());
+    try {
+      const w = mount(App);
+      const select = w.find('.settings select');
+      await select.setValue('__import');
+      await w.find('.settings__import input').setValue('https://fdp.test');
+      await w.find('.settings__import').trigger('submit');
+      await flushPromises();
+      expect(w.find('.settings__import').exists()).toBe(false);
+      expect((select.element as HTMLSelectElement).value).toBe('imported');
+      expect(select.text()).toContain('From https://fdp.test');
+
+      await w.find('.settings select').setValue('__import');
+      await w.find('.settings__import input').setValue('https://nowhere.test');
+      await w.find('.settings__import').trigger('submit');
+      await flushPromises();
+      expect(w.find('.settings__error').text()).toBe(
+        'Could not import the profile: GET https://nowhere.test/resource-definitions failed with HTTP 404',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('marks entities with missing required metadata', async () => {
