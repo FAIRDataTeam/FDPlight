@@ -29,7 +29,7 @@ file tracks how we build it.
 |---|---|---|
 | 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, on npm, used by FDPlight |
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
-| 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
+| 2 — Multi-shape forms | merged shapes per type, form per entity | ✅ default and ERDERA shapes tested |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ✅ matches the RI (SPEC §9.5) |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 imports from a repository done, with report; import by URL open |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Forms and checks from real ERDERA shapes; `ejp:` prefix (#29).
 - 2026-10-22 — SHACL finding texts translated (#28).
 - 2026-10-22 — Data-steward guide with screenshots, linked from the app
   (#26).
@@ -174,7 +175,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       first publish, warning after.
 - [x] Unit tests for profile parsing, base validation and re-basing.
 
-## Phase 2 — Multi-shape forms 🟡
+## Phase 2 — Multi-shape forms ✅
 
 The `/spec` response for a type is a graph of several NodeShapes (e.g.
 Resource plus Dataset). Contour still treats the first shape as primary
@@ -192,8 +193,12 @@ Resource plus Dataset). Contour still treats the first shape as primary
       and for catalogs only `dct:issued` / `dct:modified` (SPEC §5.3).
       Datasets and distributions keep `dct:issued` / `dct:modified` as
       user fields.
-- [ ] Tests with the real merged shapes of the default (done) and ERDERA
-      profiles.
+- [x] Tests with the real merged shapes of the default (done) and ERDERA
+      profiles (#29: ERDERA's Resource + PatientRegistry shapes from
+      ERDERA/FDP-Reference-Implementation-Configuration; merged form, nested
+      OrgShape and AnnotationShape sub-forms, checks on the complete file,
+      `dct:hasPart` from the catalog). The bundled ERDERA profile itself is
+      Phase 8.
 
 ## Phase 3 — Tree and wiring ✅
 

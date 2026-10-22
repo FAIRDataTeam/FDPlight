@@ -100,7 +100,7 @@ describe('import the WP13.3 proqolid FDP (TASKS Phase 4 test case)', () => {
     expect(dataset).toContain(`dct:isPartOf <${BASE}eprovide_catalog.ttl>`);
     expect(catalog).not.toContain('BasicContainer');
     // Metadata FDPlight does not model is kept verbatim.
-    expect(root).toContain('<https://w3id.org/ejp-rd/vocabulary#VPDiscoverable>');
+    expect(root).toContain('ejp:VPDiscoverable');
     expect(root).toContain('fdp:conformsToFdpSpec');
     expect(root).toContain('"MAPi Research Trust"');
     expect(root).toContain('"ePROVIDE FAIR Data Point"');
@@ -166,7 +166,7 @@ describe('import the WP13.3 proqolid FDP (TASKS Phase 4 test case)', () => {
       const ttl = content(plan, `sites/proqolid/${p}`);
       expect(ttl, p).not.toMatch(/proqolid\/eprovide_/);
     }
-    expect(content(plan, 'sites/proqolid/fdp.ttl')).toContain('<https://w3id.org/ejp-rd/vocabulary#VPDiscoverable>');
+    expect(content(plan, 'sites/proqolid/fdp.ttl')).toContain('ejp:VPDiscoverable');
   });
 
   it('refuses a root file that is not an FDP', () => {
