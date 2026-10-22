@@ -1,0 +1,37 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix dcat: <http://www.w3.org/ns/dcat#>.
+@prefix fdp: <https://w3id.org/fdp/fdp-o#>.
+@prefix ldp: <http://www.w3.org/ns/ldp#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix datacite: <http://purl.org/spar/datacite/>.
+
+<https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl> a dcat:Catalog, dcat:Resource;
+    dct:accessRights <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#accessRights>;
+    dct:conformsTo <https://fdplight.fairdatapoint.org/metadata/profile/catalog.ttl>;
+    dct:description "Software of the FAIR Data Team."@en;
+    dct:isPartOf <https://fdplight.fairdatapoint.org/metadata/fdp.ttl>;
+    dct:issued "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en>;
+    dct:modified "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
+    dct:publisher <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#publisher>;
+    dct:title "FAIR Data Team software"@en;
+    rdfs:label "FAIR Data Team software";
+    dcat:resource <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl>;
+    dcat:version "0.1.0";
+    fdp:metadataIdentifier <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#identifier>;
+    fdp:metadataIssued "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
+    fdp:metadataModified "2026-10-22T15:20:40.082Z"^^xsd:dateTime.
+<https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#accessRights> a dct:RightsStatement;
+    dct:description "This resource has no access restriction".
+<https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#identifier> a datacite:Identifier;
+    dct:identifier "https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl".
+<https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#publisher> a foaf:Agent;
+    foaf:name "FAIR Data Team".
+<https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl#software> a ldp:DirectContainer;
+    dct:title "Software";
+    ldp:contains <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl>;
+    ldp:hasMemberRelation dcat:resource;
+    ldp:membershipResource <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl>.
+<https://fdplight.fairdatapoint.org/metadata/profile/catalog.ttl> rdfs:label "Catalog Profile".

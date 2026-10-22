@@ -1,0 +1,36 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix dcat: <http://www.w3.org/ns/dcat#>.
+@prefix fdp: <https://w3id.org/fdp/fdp-o#>.
+@prefix ldp: <http://www.w3.org/ns/ldp#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix datacite: <http://purl.org/spar/datacite/>.
+
+<https://fdplight.fairdatapoint.org/metadata/fdp.ttl> a dcat:DataService, dcat:Resource, fdp:FAIRDataPoint, fdp:MetadataService;
+    dct:accessRights <https://fdplight.fairdatapoint.org/metadata/fdp.ttl#accessRights>;
+    dct:conformsTo <https://fdplight.fairdatapoint.org/metadata/profile/fdp.ttl>;
+    dct:description "Metadata about FDPlight, published with FDPlight itself as a file-only FAIR Data Point on GitHub Pages."@en;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en>;
+    dct:publisher <https://fdplight.fairdatapoint.org/metadata/fdp.ttl#publisher>;
+    dct:title "FDPlight FAIR Data Point"@en;
+    rdfs:label "FDPlight FAIR Data Point";
+    dcat:endpointURL <https://fdplight.fairdatapoint.org/metadata/fdp.ttl>;
+    dcat:version "0.1.0";
+    fdp:fdpSoftwareVersion "FDPlight:0.1.0";
+    fdp:metadataCatalog <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl>;
+    fdp:metadataIdentifier <https://fdplight.fairdatapoint.org/metadata/fdp.ttl#identifier>;
+    fdp:metadataIssued "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
+    fdp:metadataModified "2026-10-22T15:20:40.082Z"^^xsd:dateTime.
+<https://fdplight.fairdatapoint.org/metadata/fdp.ttl#accessRights> a dct:RightsStatement;
+    dct:description "This resource has no access restriction".
+<https://fdplight.fairdatapoint.org/metadata/fdp.ttl#catalog> a ldp:DirectContainer;
+    dct:title "Catalogs";
+    ldp:contains <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl>;
+    ldp:hasMemberRelation fdp:metadataCatalog;
+    ldp:membershipResource <https://fdplight.fairdatapoint.org/metadata/fdp.ttl>.
+<https://fdplight.fairdatapoint.org/metadata/fdp.ttl#identifier> a datacite:Identifier;
+    dct:identifier "https://fdplight.fairdatapoint.org/metadata/fdp.ttl".
+<https://fdplight.fairdatapoint.org/metadata/fdp.ttl#publisher> a foaf:Agent;
+    foaf:name "FAIR Data Team".
+<https://fdplight.fairdatapoint.org/metadata/profile/fdp.ttl> rdfs:label "FAIR Data Point Profile".

@@ -1,0 +1,33 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix dcat: <http://www.w3.org/ns/dcat#>.
+@prefix fdp: <https://w3id.org/fdp/fdp-o#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix datacite: <http://purl.org/spar/datacite/>.
+@prefix schema: <https://schema.org/>.
+
+<https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl> a dcat:Resource, schema:SoftwareSourceCode;
+    dct:accessRights <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl#accessRights>;
+    dct:conformsTo <https://fdplight.fairdatapoint.org/metadata/profile/source-code.ttl>;
+    dct:description "Vue 3 and TypeScript single-page app, built with Vite into one self-contained HTML file."@en;
+    dct:isPartOf <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl>;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en>;
+    dct:license <https://spdx.org/licenses/MIT>;
+    dct:publisher <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl#publisher>;
+    dct:title "FDPlight source code"@en;
+    rdfs:label "FDPlight source code";
+    dcat:version "0.1.0";
+    schema:codeRepository <https://github.com/FAIRDataTeam/FDPlight>;
+    schema:programmingLanguage "TypeScript", "Vue";
+    schema:runtimePlatform "Node.js 22 (build)", "Web browser";
+    fdp:metadataIdentifier <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl#identifier>;
+    fdp:metadataIssued "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
+    fdp:metadataModified "2026-10-22T15:20:40.082Z"^^xsd:dateTime.
+<https://fdplight.fairdatapoint.org/metadata/profile/source-code.ttl> rdfs:label "Software source code Profile".
+<https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl#accessRights> a dct:RightsStatement;
+    dct:description "This resource has no access restriction".
+<https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl#identifier> a datacite:Identifier;
+    dct:identifier "https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl".
+<https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl#publisher> a foaf:Agent;
+    foaf:name "FAIR Data Team".

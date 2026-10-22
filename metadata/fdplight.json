@@ -1,0 +1,84 @@
+{
+  "fdplight": "0.1",
+  "name": "FDPlight",
+  "base": "https://fdplight.fairdatapoint.org/metadata/",
+  "iriMode": "file",
+  "storageBase": null,
+  "defaults": {
+    "language": "http://id.loc.gov/vocabulary/iso639-1/en",
+    "license": null,
+    "accessRightsDescription": "This resource has no access restriction",
+    "metrics": []
+  },
+  "types": [
+    {
+      "key": "fdp",
+      "name": "FAIR Data Point",
+      "urlPrefix": "",
+      "targetClasses": [
+        "https://w3id.org/fdp/fdp-o#MetadataService",
+        "http://www.w3.org/ns/dcat#DataService",
+        "http://www.w3.org/ns/dcat#Resource",
+        "https://w3id.org/fdp/fdp-o#FAIRDataPoint"
+      ],
+      "shapes": "shapes/fdp.ttl",
+      "children": [
+        {
+          "type": "catalog",
+          "relation": "https://w3id.org/fdp/fdp-o#metadataCatalog",
+          "title": "Catalogs"
+        }
+      ]
+    },
+    {
+      "key": "catalog",
+      "name": "Catalog",
+      "urlPrefix": "catalog",
+      "targetClasses": [
+        "http://www.w3.org/ns/dcat#Resource",
+        "http://www.w3.org/ns/dcat#Catalog"
+      ],
+      "shapes": "shapes/catalog.ttl",
+      "children": [
+        {
+          "type": "software",
+          "relation": "http://www.w3.org/ns/dcat#resource",
+          "title": "Software"
+        }
+      ]
+    },
+    {
+      "key": "software",
+      "name": "Software",
+      "urlPrefix": "software",
+      "targetClasses": [
+        "http://www.w3.org/ns/dcat#Resource",
+        "https://schema.org/SoftwareApplication"
+      ],
+      "shapes": "shapes/software.ttl",
+      "children": [
+        {
+          "type": "source-code",
+          "relation": "https://schema.org/hasPart",
+          "title": "Source code"
+        }
+      ]
+    },
+    {
+      "key": "source-code",
+      "name": "Software source code",
+      "urlPrefix": "source-code",
+      "targetClasses": [
+        "http://www.w3.org/ns/dcat#Resource",
+        "https://schema.org/SoftwareSourceCode"
+      ],
+      "shapes": "shapes/source-code.ttl",
+      "children": []
+    }
+  ],
+  "folder": "metadata/",
+  "index": {
+    "url": "https://home.fairdatapoint.org",
+    "pagesWorkflow": "Deploy to GitHub Pages"
+  }
+}

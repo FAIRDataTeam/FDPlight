@@ -1,0 +1,41 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix dcat: <http://www.w3.org/ns/dcat#>.
+@prefix fdp: <https://w3id.org/fdp/fdp-o#>.
+@prefix ldp: <http://www.w3.org/ns/ldp#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix datacite: <http://purl.org/spar/datacite/>.
+@prefix schema: <https://schema.org/>.
+
+<https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl> a dcat:Resource, schema:SoftwareApplication;
+    dct:accessRights <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#accessRights>;
+    dct:conformsTo <https://fdplight.fairdatapoint.org/metadata/profile/software.ttl>;
+    dct:description "A serverless FAIR Data Point. Data stewards fill in forms generated from SHACL metadata schemas; FDPlight writes one correctly wired Turtle file per catalog, dataset or other resource, commits them to a GitHub repository served by GitHub Pages, and pings the FDP Index."@en;
+    dct:isPartOf <https://fdplight.fairdatapoint.org/metadata/catalog/software.ttl>;
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en>;
+    dct:license <https://spdx.org/licenses/MIT>;
+    dct:publisher <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#publisher>;
+    dct:title "FDPlight"@en;
+    rdfs:label "FDPlight";
+    dcat:version "0.1.0";
+    schema:applicationCategory "Metadata publishing";
+    schema:hasPart <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl>;
+    schema:operatingSystem "Web browser";
+    schema:softwareRequirements "A GitHub repository served by GitHub Pages";
+    schema:url <https://fdplight.fairdatapoint.org/>;
+    fdp:metadataIdentifier <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#identifier>;
+    fdp:metadataIssued "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
+    fdp:metadataModified "2026-10-22T15:20:40.082Z"^^xsd:dateTime.
+<https://fdplight.fairdatapoint.org/metadata/profile/software.ttl> rdfs:label "Software Profile".
+<https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#accessRights> a dct:RightsStatement;
+    dct:description "This resource has no access restriction".
+<https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#identifier> a datacite:Identifier;
+    dct:identifier "https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl".
+<https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#publisher> a foaf:Agent;
+    foaf:name "FAIR Data Team".
+<https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#source-code> a ldp:DirectContainer;
+    dct:title "Source code";
+    ldp:contains <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl>;
+    ldp:hasMemberRelation schema:hasPart;
+    ldp:membershipResource <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl>.
