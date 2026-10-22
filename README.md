@@ -2,7 +2,7 @@
 
 # FDPlight
 
-**A FAIR Data Point without a server.**
+**a serverless FAIR Data Point**
 
 FDPlight is a planned browser app for publishing a FAIR Data Point as plain
 Turtle files on GitHub. Data stewards fill in forms generated from their

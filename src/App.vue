@@ -7,7 +7,7 @@ import icon from './assets/fdplight-icon.svg';
     <img :src="icon" alt="" class="logo" width="40" height="40" />
     <div>
       <h1 class="name">FDPlight</h1>
-      <p class="tagline">A FAIR Data Point without a server</p>
+      <p class="tagline">a serverless FAIR Data Point</p>
     </div>
   </header>
   <main class="main">
