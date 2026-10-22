@@ -51,6 +51,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 - 2026-10-22 — Shared-core extraction plan (#5).
 - 2026-10-22 — Decisions: tree derived from the files, shared-core plan
   approved, app hosted on this repository's Pages (#6).
+- 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
+  `deploy-pages.yml` on every merge to main) (#7).
 
 ## Key technical decisions
 
@@ -251,12 +253,13 @@ See also SPEC §8.
    a `packages/record-core` workspace in the Contour repo.
 2. ~~Licence of FDPlight.~~ Decided 2026-10-22: MIT, like Contour.
 3. ~~Where FDPlight itself is hosted.~~ Decided 2026-10-22: GitHub Pages of
-   this repository now, `fdplight.fairdatapoint.org` once DNS is set (item 6).
+   this repository at https://fdplight.fairdatapoint.org/ (item 6).
 4. GitHub authentication beyond the pilot (Phase 6).
 5. ~~Where the entity tree is stored.~~ Decided 2026-10-22: not stored,
    derived from the files on open (SPEC §4.1).
-6. Custom domain for the app: `fdplight.fairdatapoint.org` once the DNS
-   CNAME to `fairdatateam.github.io` exists.
+6. ~~Custom domain for the app.~~ Done 2026-10-22: https://fdplight.fairdatapoint.org/
+   (CNAME to `fairdatateam.github.io`, domain verified for the FAIRDataTeam
+   org, HTTPS enforced).
 
 ## Related work
 
