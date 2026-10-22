@@ -496,7 +496,13 @@ Rules 3 to 6 are the classes of hand-written errors seen in the WP13.3 files
   changes; this includes parents whose children were added or removed.
 - Entity files that are no longer in the project are deleted, but only
   `fdp.ttl` and `{urlPrefix}/*.ttl` for the profile's prefixes.
-- Optional "propose changes" mode opens a pull request instead.
+- Optional **"propose changes"** mode: the same commit goes on a new branch
+  `fdplight/{yyyymmdd-hhmmss}` (UTC) created at the head FDPlight read, and a
+  pull request into the project's branch carries the commit message. The
+  project's branch is not written, so no conflict check applies; GitHub
+  shows any conflict in the pull request. Entities in the proposal count as
+  published for id locking (2.3). The token also needs *Pull requests:
+  read and write*.
 - FDPlight checks that the branch head is still the commit it read before
   writing (and updates the ref without force), so a concurrent edit is
   detected, never overwritten.

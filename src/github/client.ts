@@ -1,7 +1,7 @@
 // Minimal GitHub REST client for publishing (TASKS Phase 6, SPEC §7.1).
 // Browser fetch with a token; api.github.com allows CORS for authenticated
-// requests. Only what FDPlight needs: read a branch and its files, and write
-// one commit through the Git data API.
+// requests. Only what FDPlight needs: read a branch and its files, write one
+// commit through the Git data API, and propose it as a pull request.
 
 export const GITHUB_API = 'https://api.github.com';
 
@@ -140,7 +140,18 @@ export function createClient(token: string, fetchFn: GitHubFetch = fetch as unkn
     return commit.sha;
   }
 
-  return { branchHead, readFile, listFiles, commitFiles };
+  /** A new branch `name` at `sha`. Fails (HTTP 422) if it already exists. */
+  async function createBranch(r: RepoRef, name: string, sha: string): Promise<void> {
+    await call('POST', `${repoPath(r)}/git/refs`, { ref: `refs/heads/${name}`, sha });
+  }
+
+  /** SPEC §7.1 "propose changes". A pull request from `head` into `r.branch`. */
+  async function openPullRequest(r: RepoRef, head: string, title: string, body: string): Promise<{ number: number; url: string }> {
+    const pr = await call<{ number: number; html_url: string }>('POST', `${repoPath(r)}/pulls`, { title, head, base: r.branch, body });
+    return { number: pr.number, url: pr.html_url };
+  }
+
+  return { branchHead, readFile, listFiles, commitFiles, createBranch, openPullRequest };
 }
 
 export type GitHubClient = ReturnType<typeof createClient>;

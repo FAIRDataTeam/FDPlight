@@ -14,6 +14,14 @@ import { planPublish, type PublishPlan } from '../core/publish';
 
 const TOKEN_KEY = 'fdplight.github.token';
 
+const PROPOSAL_NOTE =
+  'Proposed with [FDPlight](https://fdplight.fairdatapoint.org/). Merging publishes these files; GitHub Pages serves them after its next deployment.';
+
+/** SPEC §7.1. Branch for a proposal, e.g. `fdplight/20261022-120000`. */
+export function proposalBranch(now: Date): string {
+  return `fdplight/${now.toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)}`;
+}
+
 function loadToken(): string {
   try {
     return sessionStorage.getItem(TOKEN_KEY) ?? '';
@@ -46,6 +54,11 @@ export function usePublish(
   const remoteFiles = shallowRef<string[]>([]);
   const plan = shallowRef<PublishPlan | null>(null);
   const lastCommit = ref('');
+  /** SPEC §7.1. Commit to the branch, or propose the commit as a pull request. */
+  const publishMode = ref<'commit' | 'propose'>('commit');
+  const lastPull = ref<{ number: number; url: string } | null>(null);
+  /** Entity paths sent in a pull request: their ids are locked too (SPEC §2.3). */
+  let proposed = new Set<string>();
   /** What loading the repository's project reported (SPEC §5.7: nothing dropped silently). */
   const loadReport = ref<string[]>([]);
   /** Per entity file: triples mapped to the form, regenerated and kept (TASKS Phase 4). */
@@ -108,7 +121,9 @@ export function usePublish(
     remote.value = contents;
     // SPEC §2.3: ids of entities that are in the repository are locked.
     const folder = state.project.folder ?? '';
-    state.published.value = new Set(state.project.entities.map((e) => state.pathOf(e)).filter((p) => contents.has(folder + p)));
+    state.published.value = new Set(
+      state.project.entities.map((e) => state.pathOf(e)).filter((p) => contents.has(folder + p) || proposed.has(p)),
+    );
   }
 
   /**
@@ -195,7 +210,21 @@ export function usePublish(
     busy.value = true;
     error.value = '';
     try {
-      if (plan.value.changes.length) lastCommit.value = await client.commitFiles(repo.value, head.value, plan.value.changes, plan.value.message);
+      const { changes, message } = plan.value;
+      lastPull.value = null;
+      if (changes.length && publishMode.value === 'propose') {
+        // A new branch at the head we read; the target branch is not written,
+        // so there is no conflict to check: GitHub shows one in the PR.
+        const branch = proposalBranch(new Date());
+        await client.createBranch(repo.value, branch, head.value);
+        lastCommit.value = await client.commitFiles({ ...repo.value, branch }, head.value, changes, message);
+        const [title, ...rest] = message.split('\n');
+        lastPull.value = await client.openPullRequest(repo.value, branch, title, `${rest.join('\n').trim()}\n\n${PROPOSAL_NOTE}`);
+        const folder = state.project.folder ?? '';
+        for (const c of changes) if (c.content !== null && c.path.startsWith(folder)) proposed.add(c.path.slice(folder.length));
+      } else if (changes.length) {
+        lastCommit.value = await client.commitFiles(repo.value, head.value, changes, message);
+      }
       state.project.entities = plan.value.entities;
       plan.value = null;
       await refresh();
@@ -240,11 +269,13 @@ export function usePublish(
 
   function disconnect(): void {
     client = null;
+    proposed = new Set();
+    lastPull.value = null;
     connected.value = false;
     plan.value = null;
     token.value = '';
     saveToken('');
   }
 
-  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
+  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, publishMode, lastPull, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
 }

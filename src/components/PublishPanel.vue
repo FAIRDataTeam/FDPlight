@@ -37,8 +37,8 @@ const mode = ref<ImportMode>('keep');
         A
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
         with <em>Contents: read and write</em> on this repository only (plus <em>Workflows: read and write</em> when
-        the project pings an Index). It is kept for this browser tab and sent
-        only to api.github.com.
+        the project pings an Index, and <em>Pull requests: read and write</em> to propose changes). It is kept for
+        this browser tab and sent only to api.github.com.
       </p>
       <button type="submit" class="primary" :disabled="pub.busy.value">{{ pub.busy.value ? 'Connecting…' : 'Connect' }}</button>
     </form>
@@ -116,6 +116,17 @@ const mode = ref<ImportMode>('keep');
             <li v-for="p in pub.plan.value.removed" :key="`r${p}`"><span class="tag del">remove</span> {{ p }}</li>
           </ul>
         </template>
+        <fieldset v-if="pub.plan.value.changes.length" class="publish__mode">
+          <legend>How</legend>
+          <label class="publish__radio">
+            <input v-model="pub.publishMode.value" type="radio" value="commit" />
+            Commit to <code>{{ pub.repo.value.branch }}</code>
+          </label>
+          <label class="publish__radio">
+            <input v-model="pub.publishMode.value" type="radio" value="propose" />
+            Propose changes: a pull request into <code>{{ pub.repo.value.branch }}</code> for someone to review and merge
+          </label>
+        </fieldset>
         <div class="publish__actions">
           <button
             v-if="pub.plan.value.changes.length"
@@ -124,13 +135,17 @@ const mode = ref<ImportMode>('keep');
             :disabled="pub.busy.value || pub.blockers.value.length > 0"
             @click="pub.publish()"
           >
-            {{ pub.busy.value ? 'Publishing…' : 'Publish' }}
+            {{ pub.busy.value ? 'Publishing…' : pub.publishMode.value === 'propose' ? 'Open pull request' : 'Publish' }}
           </button>
           <button type="button" class="link" @click="pub.plan.value = null">Cancel</button>
         </div>
       </div>
 
-      <p v-if="pub.commitUrl.value" class="publish__done">
+      <p v-if="pub.lastPull.value" class="publish__done">
+        Proposed: <a :href="pub.lastPull.value.url" target="_blank" rel="noopener">pull request #{{ pub.lastPull.value.number }}</a>.
+        Merging it publishes the changes.
+      </p>
+      <p v-else-if="pub.commitUrl.value" class="publish__done">
         Published: <a :href="pub.commitUrl.value" target="_blank" rel="noopener">{{ pub.lastCommit.value.slice(0, 7) }}</a>.
         GitHub Pages serves it once its deployment has run (Settings → Pages must be enabled for the repository).
       </p>
@@ -258,6 +273,19 @@ input {
   text-align: left;
   font-family: var(--font-mono);
   font-weight: 400;
+}
+.publish__mode {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.publish__mode legend {
+  font-weight: 600;
+  padding: 0 4px;
 }
 .publish__blockers {
   margin: 0 0 8px;
