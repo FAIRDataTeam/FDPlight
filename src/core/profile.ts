@@ -62,6 +62,8 @@ export interface ProjectFile {
   folder?: string;
   /** The Index to ping after each Pages deployment (SPEC §7.2). */
   index?: IndexSettings;
+  /** Root file path when it is not `fdp.ttl` (an FDP imported with its IRIs, SPEC §4.2). */
+  root?: string;
 }
 
 /** SPEC §4. Problems with a repository folder, empty when valid. */
@@ -212,6 +214,7 @@ export function parseProjectFile(input: string | unknown): Result<ProjectFile> {
       ...(o.source ? { source: o.source as ProfileSource } : {}),
       ...(folder ? { folder: folder as string } : {}),
       ...(index ? { index } : {}),
+      ...(isStr(o.root) && o.root !== 'fdp.ttl' ? { root: o.root } : {}),
     },
   };
 }
@@ -229,6 +232,7 @@ export function stringifyProjectFile(p: ProjectFile): string {
     ...(p.source ? { source: p.source } : {}),
     ...(p.folder ? { folder: p.folder } : {}),
     ...(p.index ? { index: p.index } : {}),
+    ...(p.root && p.root !== 'fdp.ttl' ? { root: p.root } : {}),
   };
   return JSON.stringify(out, null, 2) + '\n';
 }

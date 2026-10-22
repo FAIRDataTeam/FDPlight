@@ -5,6 +5,7 @@ import { computed, ref, shallowRef } from 'vue';
 import { ConflictError, createClient, GitHubError, type GitHubClient, type RepoRef } from '../github/client';
 import { DEFAULT_BASE, type ProjectState } from './useProject';
 import { pagesBase } from '../core/iri';
+import { importExistingFdp, type ImportMode } from '../core/import';
 import { loadProject } from '../core/load';
 import { parseProjectFile } from '../core/profile';
 import { entityForm } from '../core/forms';
@@ -48,6 +49,12 @@ export function usePublish(
   /** What loading the repository's project reported (SPEC §5.7: nothing dropped silently). */
   const loadReport = ref<string[]>([]);
   const loaded = ref(false);
+  /** The repository has no FDPlight project: an existing FDP can be imported. */
+  const canImport = computed(
+    () => connected.value && !loaded.value && !remoteFiles.value.some((p) => p === 'fdplight.json' || p.endsWith('/fdplight.json')),
+  );
+  /** Turtle files that could be the root of an existing FDP. */
+  const importCandidates = computed(() => remoteFiles.value.filter((p) => p.endsWith('.ttl') && !p.includes('shapes/')));
 
   let client: GitHubClient | null = null;
 
@@ -75,8 +82,10 @@ export function usePublish(
   function ownedPaths(files: string[]): string[] {
     const folder = state.project.folder ?? '';
     const prefixes = state.project.types.map((t) => t.urlPrefix).filter(Boolean);
+    // Entities imported with their own file names (SPEC §4.2) are ours too.
+    const entityFiles = new Set(state.project.entities.map((e) => folder + state.pathOf(e)));
     return files.filter((p) => {
-      if (p === PING_WORKFLOW_PATH) return true;
+      if (p === PING_WORKFLOW_PATH || entityFiles.has(p)) return true;
       if (!p.startsWith(folder)) return false;
       const rel = p.slice(folder.length);
       return (
@@ -194,6 +203,36 @@ export function usePublish(
     }
   }
 
+  /** SPEC §4.2. Import the FDP whose root file is `rootPath` (no fdplight.json yet). */
+  async function importExisting(rootPath: string, mode: ImportMode): Promise<void> {
+    if (!client) return;
+    error.value = '';
+    busy.value = true;
+    try {
+      const folder = rootPath.includes('/') ? rootPath.slice(0, rootPath.lastIndexOf('/') + 1) : '';
+      const files = new Map<string, string>();
+      for (const p of remoteFiles.value) {
+        if (!p.startsWith(folder) || !p.endsWith('.ttl')) continue;
+        const text = await client.readFile(repo.value, p, head.value);
+        if (text !== null) files.set(p, text);
+      }
+      const r = importExistingFdp({ rootPath, files, types: state.project.types, forms: state.forms, mode });
+      if (!r.ok) {
+        error.value = r.error;
+        return;
+      }
+      if (state.hasLocalWork() && !confirmReplace()) return;
+      state.load(r.loaded, state.shapes);
+      loadReport.value = r.loaded.report;
+      loaded.value = true;
+      await refresh();
+    } catch (e) {
+      fail(e);
+    } finally {
+      busy.value = false;
+    }
+  }
+
   function disconnect(): void {
     client = null;
     connected.value = false;
@@ -202,5 +241,5 @@ export function usePublish(
     saveToken('');
   }
 
-  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, loadReport, loaded, connect, prepare, publish, disconnect };
+  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, loadReport, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
 }

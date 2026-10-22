@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Import of FDPs FDPlight did not make, keep or migrate IRIs;
+  WP13.3 test case passes; canonical blank-node labels (#16). Verified:
+  142 tests.
 - 2026-10-22 — **Pilot**: FDPlight's own FDP published (commit a36180c),
   served by Pages, pinged by the generated workflow, ACTIVE in
   home.fairdatapoint.org with 4/4 entities. Index status in the app (#15).
@@ -203,8 +206,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
       fallback, siblings by title. Loads on Connect, with the repository's own
       shapes; asks before replacing local work (#14). Round trip verified:
       load → publish again changes nothing.
-- [ ] Open a file-only FDP **without** `fdplight.json` by its root URL (or a
-      repository). Crawl the same links the Index follows (LDP containers,
+- [x] Open a file-only FDP **without** `fdplight.json` from its repository:
+      pick the root file, keep the IRIs or migrate (SPEC §4.2, #16).
+- [ ] Same by its root URL only (no repository access). Crawl the same links the Index follows (LDP containers,
       else the navigation relations), infer each entity's type from its
       `rdf:type` and the chosen profile, rebuild the tree, then save a
       `fdplight.json`.
@@ -216,9 +220,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
       how many triples were mapped, regenerated
       and kept, plus wiring problems found (shared container IRIs, dangling
       links, identifier IRIs that do not match the entity).
-- [ ] Test case. Import ERDERA/WP13.3_document_based_fdp (proqolid), save, and
+- [x] Test case. Import ERDERA/WP13.3_document_based_fdp (proqolid), save, and
       check that the container clash and the identifier typo are gone and no
-      user metadata was lost.
+      user metadata was lost (#16; both modes; keep mode round-trips
+      exactly).
 
 ## Phase 5 — Validation 🟡
 

@@ -47,6 +47,11 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
     hashIri(E, 'identifier'),
     ...childPrefixes.map((p) => containerIri(s, E, p)),
     ...(userHas(DCT.accessRights) ? [] : [hashIri(E, 'accessRights')]),
+    // Identifier nodes of E at any IRI (e.g. a hand-written typo): wiring.
+    ...user
+      .getQuads(null, namedNode(DCT.identifier), literal(E), null)
+      .filter((q) => q.subject.termType === 'NamedNode' && user.has(quad(q.subject as never, namedNode(RDF_TYPE), namedNode(DATACITE_IDENTIFIER))))
+      .map((q) => q.subject.value),
     // Any LDP container in the input is wiring (§5.5), e.g. a hand-written one
     // at an IRI FDPlight would not generate.
     ...user
@@ -146,6 +151,8 @@ export function generatedPaths(type: EntityType): string[] {
     FDP.metadataModified,
     DCT.isPartOf,
     SIO.refersTo,
+    // A hand-made ldp:BasicContainer on the entity itself (SPEC §5.5).
+    LDP.contains,
     ...type.children.map((c) => c.relation),
     ...(isCatalog(type) ? [DCT.issued, DCT.modified] : []),
     ...(type.urlPrefix === '' ? [FDP.fdpSoftwareVersion, DCAT.endpointURL] : []),
@@ -174,7 +181,7 @@ const termOrder = (t: Term): string => `${t.termType === 'Literal' ? 1 : 0}${t.v
  * first within a subject.
  */
 export async function toTurtle(store: Store, mainSubject?: string): Promise<string> {
-  const quads = store.getQuads(null, null, null, null);
+  const quads = canonicalBlankNodes(store.getQuads(null, null, null, null));
   const used = Object.entries(NS).filter(([, ns]) =>
     quads.some((q) =>
       // rdf:type as a predicate is written as "a" and needs no prefix.
@@ -187,6 +194,32 @@ export async function toTurtle(store: Store, mainSubject?: string): Promise<stri
   const writer = new Writer({ prefixes: Object.fromEntries(used) });
   writer.addQuads(sorted);
   return new Promise((resolve, reject) => writer.end((err, result) => (err ? reject(err) : resolve(result ?? ''))));
+}
+
+/**
+ * Blank node labels depend on how a graph was parsed, so the same graph could
+ * be written differently each time. Relabel them `b0`, `b1`, … in an order
+ * derived from their content: what each node states, then how it is
+ * referenced. (Nodes with identical content get an arbitrary but harmless
+ * order among themselves.)
+ */
+export function canonicalBlankNodes(quads: Quad[]): Quad[] {
+  const term = (t: Term) => (t.termType === 'BlankNode' ? '_' : termOrder(t) + (t.termType === 'Literal' ? `@${(t as ReturnType<typeof literal>).language}^${(t as ReturnType<typeof literal>).datatype.value}` : ''));
+  const sig = new Map<string, string[]>();
+  const add = (b: Term, line: string) => {
+    if (b.termType !== 'BlankNode') return;
+    if (!sig.has(b.value)) sig.set(b.value, []);
+    sig.get(b.value)!.push(line);
+  };
+  for (const q of quads) {
+    add(q.subject, `>${q.predicate.value} ${term(q.object)}`);
+    add(q.object, `<${term(q.subject)} ${q.predicate.value}`);
+  }
+  if (!sig.size) return quads;
+  const order = [...sig.entries()].map(([id, lines]) => [id, lines.sort().join('\n')] as const).sort((a, b) => cmp(a[1], b[1]));
+  const label = new Map(order.map(([id], i) => [id, DataFactory.blankNode(`b${i}`)]));
+  const relabel = <T extends Term>(t: T): T => (t.termType === 'BlankNode' ? (label.get(t.value) as unknown as T) : t);
+  return quads.map((q) => quad(relabel(q.subject) as never, q.predicate, relabel(q.object) as never, q.graph));
 }
 
 function cmpQuad(a: Quad, b: Quad, main?: string): number {

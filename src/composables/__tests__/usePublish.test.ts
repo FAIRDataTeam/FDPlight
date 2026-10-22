@@ -1,3 +1,7 @@
+// @vitest-environment node
+// Reads the WP13.3 fixtures from disk; no DOM needed.
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { nextTick } from 'vue';
 import { expandTerm, fieldKey, shapeFields } from '@fairdatateam/record-core/record';
 import { ConflictError, type FileChange, type GitHubClient } from '../../github/client';
@@ -150,5 +154,34 @@ describe('usePublish (TASKS Phase 6)', () => {
     expect(asked).toBe(1);
     expect(pubB.loaded.value).toBe(false);
     expect(b.project.entities).toHaveLength(2);
+  });
+
+  it('offers to import an existing FDP and keeps its IRIs (SPEC §4.2)', async () => {
+    const dir = fileURLToPath(new URL('../../core/__tests__/fixtures/wp13.3-proqolid/', import.meta.url));
+    const files = Object.fromEntries(
+      readdirSync(dir).filter((f) => f.endsWith('.ttl')).map((f) => [`sites/proqolid/${f}`, readFileSync(dir + f, 'utf8')]),
+    );
+    const gh = fakeRepo(files);
+    const s = useProject();
+    const pub = usePublish(s, () => gh.client, () => true);
+    pub.repo.value = { owner: 'ERDERA', repo: 'WP13.3_document_based_fdp', branch: 'master' };
+    await pub.connect();
+    expect(pub.canImport.value).toBe(true);
+    expect(pub.importCandidates.value).toContain('sites/proqolid/eprovide_fdp.ttl');
+    await pub.importExisting('sites/proqolid/eprovide_fdp.ttl', 'keep');
+    expect(pub.error.value).toBe('');
+    expect(pub.loaded.value).toBe(true);
+    expect(s.project.base).toBe('https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/');
+    expect(s.titleOf('eprovide_fdp.ttl')).toBe('ePROVIDE FAIR Data Point');
+    expect([...s.published.value].sort()).toEqual(['eprovide_catalog.ttl', 'eprovide_dataset.ttl', 'eprovide_distribution.ttl', 'eprovide_fdp.ttl']);
+    await pub.prepare();
+    expect(pub.plan.value!.updated.sort()).toEqual([
+      'sites/proqolid/eprovide_catalog.ttl',
+      'sites/proqolid/eprovide_dataset.ttl',
+      'sites/proqolid/eprovide_distribution.ttl',
+      'sites/proqolid/eprovide_fdp.ttl',
+    ]);
+    expect(pub.plan.value!.added).toContain('sites/proqolid/fdplight.json');
+    expect(pub.plan.value!.removed).toEqual([]);
   });
 });

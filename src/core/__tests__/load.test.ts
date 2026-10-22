@@ -81,13 +81,18 @@ describe('loadProject (SPEC §4.1, §5.7)', () => {
     expect(loaded.project.entities.find((e) => e.id === 'empty-set')!.parent).toBe('catalog/rare-diseases.ttl');
   });
 
-  it('ignores non-entity files and reports broken ones', async () => {
+  it('ignores non-entity files and reports unlinked or broken ones', async () => {
     const { files, settings } = await published();
     files.set('README.md', '# hi');
-    files.set('dataset/broken.ttl', '<a> <b> .');
-    const loaded = loadProject(settings, files, forms);
-    expect(loaded.report[0]).toMatch(/^dataset\/broken\.ttl: not valid Turtle/);
+    files.set('dataset/stray.ttl', '<a> <b> <c> .');
+    let loaded = loadProject(settings, files, forms);
+    expect(loaded.report).toEqual(['dataset/stray.ttl: not linked from the tree; left out']);
     expect(loaded.project.entities).toHaveLength(5);
+
+    files.set('distribution/registry-csv.ttl', '<a> <b> .');
+    loaded = loadProject(settings, files, forms);
+    expect(loaded.report[0]).toMatch(/^distribution\/registry-csv\.ttl: not valid Turtle/);
+    expect(loaded.project.entities).toHaveLength(4);
   });
 });
 

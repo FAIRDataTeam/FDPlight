@@ -1,0 +1,56 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix fdp: <https://w3id.org/fdp/fdp-o#> .
+@prefix ejp: <https://w3id.org/ejp-rd/vocabulary#> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl>
+    a dcat:Catalog, dcat:Resource ;
+    dct:title "Catalog of Clinical Outcome Assessments" ;
+    ejp:vpConnection ejp:VPDiscoverable ;
+    dct:description "Catalog of PROQOLID instruments available via ePROVIDE." ;
+    dcat:landingPage <https://eprovide.mapi-trust.org/about/about-mapi-research-trust> ;
+    foaf:logo <https://eprovide.mapi-trust.org/assets/images/eprovide-logo.png> ;
+
+    dct:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    fdp:metadataIssued "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    fdp:metadataModified "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:issued "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+    dct:modified "2025-11-04T00:00:00Z"^^xsd:dateTime ;
+
+    dct:license <https://creativecommons.org/licenses/by/4.0/> ;
+
+    dcat:theme <https://w3id.org/ejp-rd/vocabulary#FAIRData> ;
+    dcat:keyword "FAIR", "COA", "ePROVIDE", "Metadata" ;
+
+
+    dct:publisher [
+        a foaf:Organization ;
+        foaf:name "MAPi Research Trust" ;
+        foaf:homepage <https://eprovide.mapi-trust.org/about/about-mapi-research-trust> ;
+        foaf:logo <https://eprovide.mapi-trust.org/assets/images/eprovide-logo.png> ;
+    ] ;
+
+
+    dcat:contactPoint [
+        a vcard:Organization ;
+        vcard:fn "MAPi Research Trust FAIR Data Team" 
+    ] ;
+
+
+
+    a ldp:BasicContainer ; 
+    ldp:contains <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_dataset.ttl> ;
+    dcat:dataset <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_dataset.ttl> ;
+    fdp:metadataIdentifier <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl#identifier> .
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl#identifier> a <http://purl.org/spar/datacite/Identifier>;
+  dct:identifier "https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl" .
+
+<https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/catalog/datasets/> a ldp:DirectContainer ;
+  dct:title "Datasets" ;
+  ldp:hasMemberRelation  dcat:dataset;
+  ldp:membershipResource <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_catalog.ttl>;
+  ldp:contains <https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/eprovide_dataset.ttl> .
