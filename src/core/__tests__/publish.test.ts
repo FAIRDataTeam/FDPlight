@@ -98,4 +98,24 @@ describe('planPublish (SPEC §4, §5.2, §7.1)', () => {
     const plan = await run(project, values, remote, T1);
     expect(plan.removed).toEqual([]);
   });
+
+  it('writes into the project folder and adds the ping workflow when an Index is set', async () => {
+    const { project, values } = fresh();
+    project.folder = 'metadata/';
+    project.index = { url: 'https://home.fairdatapoint.org', pagesWorkflow: 'Deploy to GitHub Pages' };
+    const remote = new Map<string, string | null>([['index.html', '<html>'], ['catalog/old.ttl', ''], ['metadata/catalog/old.ttl', '']]);
+    const plan = await run(project, values, remote, T1);
+    expect(plan.added).toContain('metadata/fdp.ttl');
+    expect(plan.added).toContain('metadata/fdplight.json');
+    expect(plan.added).toContain('metadata/shapes/dataset.ttl');
+    expect(plan.added).toContain('.github/workflows/fdp-ping.yml');
+    expect(plan.added.filter((p) => !p.startsWith('metadata/') && !p.startsWith('.github/'))).toEqual([]);
+    expect(plan.removed).toEqual(['metadata/catalog/old.ttl']); // outside the folder is not ours
+    const wf = plan.changes.find((c) => c.path === '.github/workflows/fdp-ping.yml')!.content!;
+    expect(wf).toContain(`ROOT_URL: "${FILE_MODE.base}fdp.ttl"`);
+    const json = JSON.parse(plan.changes.find((c) => c.path === 'metadata/fdplight.json')!.content!);
+    expect([json.folder, json.index.pagesWorkflow]).toEqual(['metadata/', 'Deploy to GitHub Pages']);
+    expect(plan.message).toContain('- add metadata/fdp.ttl');
+    expect(plan.message).not.toContain('shapes/');
+  });
 });

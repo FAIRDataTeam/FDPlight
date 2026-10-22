@@ -79,4 +79,21 @@ describe('useProject', () => {
     expect(s.errorCount('fdp.ttl')).toBe(2);
     expect(s.totalErrors.value).toBe(2);
   });
+
+  it('switches to the Software profile, keeping base, folder and Index', async () => {
+    const s = useProject();
+    s.project.folder = 'metadata/';
+    s.project.index = { url: 'https://home.fairdatapoint.org', pagesWorkflow: 'Deploy to GitHub Pages' };
+    s.add('fdp.ttl', 'catalog');
+    s.switchProfile('software');
+    expect(s.project.entities).toHaveLength(1);
+    expect(s.project.types.map((t) => t.key)).toEqual(['fdp', 'catalog', 'software', 'source-code']);
+    expect([s.project.folder, s.project.index?.pagesWorkflow]).toEqual(['metadata/', 'Deploy to GitHub Pages']);
+    s.add('fdp.ttl', 'catalog');
+    s.add(s.selected.value, 'software');
+    expect(s.selected.value).toMatch(/^software\//);
+    expect(s.forms.software).toBeDefined();
+    s.project.folder = 'bad';
+    expect(s.settingsErrors.value[0]).toMatch(/folder/);
+  });
 });

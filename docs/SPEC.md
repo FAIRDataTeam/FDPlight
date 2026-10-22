@@ -1,11 +1,12 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.5** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.6** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
 wiring replaces (§5.7). v0.5: the entity tree is derived from the files
-(§4.1).
+(§4.1). v0.6: repository folder, Index settings and the inline ping workflow
+(§3.1, §4, §7.2); the bundled Software profile (§3.2).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -225,12 +226,25 @@ home.fairdatapoint.org)
   repository so a project is self-contained. It may also be a URL.
 - `source` (optional) records where the profile was imported from, so it can
   be refreshed.
+- `folder` (optional, default `""`) is the repository folder that holds the
+  FDP, ending with `/` (e.g. `"metadata/"`). See 4.
+- `index` (optional) is `{ "url": "https://home.fairdatapoint.org",
+  "pagesWorkflow": "pages-build-deployment" }`: the Index to ping and the
+  name of the workflow that deploys Pages. Without it no ping workflow is
+  written. See 7.2.
 
 The values in the example are those currently served by home.fairdatapoint.org.
 
 ### 3.2 Bundled profiles
 
 - **FDP default** (FDP → Catalog → Dataset → Distribution), as above.
+- **Software** (FDP → Catalog → Software → Software source code). Root and
+  catalog as in the FDP default; Software is `schema:SoftwareApplication`,
+  source code `schema:SoftwareSourceCode` (schema.org, as CodeMeta), both
+  also `dcat:Resource` so the generic Resource shape applies. Relations:
+  Catalog → Software `dcat:resource` (DCAT 3), Software → source code
+  `schema:hasPart`. Shapes under `https://fdplight.fairdatapoint.org/shapes/`.
+  Used for FDPlight's own FDP.
 - **ERDERA / EJP RD VP**, from the ERDERA FDP reference configuration
   (Catalog children such as Dataset, Biobank, Patient registry, Guideline,
   Data service). To be confirmed against the current ERDERA schemas.
@@ -249,6 +263,11 @@ The values in the example are those currently served by home.fairdatapoint.org.
 /w3id/.htaccess                     redirect mode only, to copy into the w3id PR
 ```
 
+- With a `folder` (3.1), every path above except the workflow is inside it
+  (`metadata/fdp.ttl`, `metadata/catalog/{id}.ttl`, `metadata/fdplight.json`,
+  …), and the base URI points at that folder. The workflow stays in
+  `.github/workflows/`, where GitHub looks for it. FDPlight deletes only
+  entity files inside the folder.
 - One entity per file. Each file is the complete graph the RI would serve for
   that entity (its metadata, its system triples, its LDP containers).
 - Files are written as clean Turtle with the prefixes actually used.
@@ -442,41 +461,52 @@ Rules 3 to 6 are the classes of hand-written errors seen in the WP13.3 files
 
 ### 7.2 Ping workflow
 
-FDPlight writes `.github/workflows/fdp-ping.yml` into the project. It pings
-after every Pages deployment and on a schedule.
+When the project has `index` settings (3.1), FDPlight writes
+`.github/workflows/fdp-ping.yml` on every publish, with the Index URL and the
+root IRI **inline** (decided 2026-10-22: regenerating the file keeps them
+current, and the token needs no Variables permission). It pings after every
+successful run of the Pages workflow, on a schedule, and on demand.
 
 ```yaml
 name: Ping FDP Index
 on:
   workflow_run:
-    workflows: ["pages-build-deployment"]
+    workflows: ["{index.pagesWorkflow}"]   # pages-build-deployment, or the repo's own deploy workflow
     types: [completed]
   schedule:
     - cron: "17 3 */3 * *"     # every 3 days, the Index marks an FDP inactive after a week
   workflow_dispatch:
+permissions: {}
 jobs:
   ping:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Ping
+      - name: Ping {index.url}
         env:
-          INDEX_URL: ${{ vars.FDP_INDEX_URL }}
-          ROOT_URL: ${{ vars.FDP_ROOT_URL }}
+          INDEX_URL: "{index.url}"
+          ROOT_URL: "{root IRI}"
         run: |
           curl --fail -sS -X POST "$INDEX_URL" \
             -H 'Content-Type: application/json' \
             -d "{\"clientUrl\": \"$ROOT_URL\"}"
 ```
 
-- Index URL and root URL are repository variables, so the same workflow
-  serves any Index. Indexes that need authorization (the ERDERA VP Index)
-  get a secret and an extra header once the mechanism is known.
+- `pagesWorkflow` is `pages-build-deployment` when Pages deploys from a
+  branch, or the name of the repository's own workflow when Pages deploys
+  with GitHub Actions (FDPlight's own repository: "Deploy to GitHub Pages").
+- Writing a workflow file needs the token's **Workflows** permission in
+  addition to Contents.
+- The values are validated so they cannot break out of the YAML or the shell
+  (https URLs without quotes, `$` or backticks).
+- Indexes that need authorization (the ERDERA VP Index) get a secret and an
+  extra header once the mechanism is known.
 - The ping payload and the 204 response are verified against
   home.fairdatapoint.org (v1.22.1). The Index accepts only
   `application/json` (`IndexPingController`), not the form-encoded variant
   documented in the static-fdp README.
-- The `workflow_run` trigger on the Pages workflow is to be verified in a
-  pilot repository.
+- The `workflow_run` trigger is verified in the pilot (FDPlight's own
+  repository, TASKS Phase 7).
 
 ---
 
