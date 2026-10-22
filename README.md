@@ -1,3 +1,5 @@
+<img src="src/assets/fdplight-icon.svg" alt="" width="72" align="right" />
+
 # FDPlight
 
 **A FAIR Data Point without a server.**
@@ -31,7 +33,16 @@ example in ERDERA, and replaces hand-written RDF files, which are error prone.
 
 ## Status
 
-Planning. Nothing is implemented yet.
+Early development. The app is scaffolded (Vue 3, TypeScript, Vite
+single-file build); the core modules are being written against the SPEC.
+
+```sh
+npm install
+npm run dev         # http://localhost:5174
+npm run type-check
+npm test
+npm run build       # dist/index.html, one self-contained file
+```
 
 - [docs/SPEC.md](docs/SPEC.md) — exactly which files, IRIs and triples FDPlight
   generates, with the evidence behind each rule.

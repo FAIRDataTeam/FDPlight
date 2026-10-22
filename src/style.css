@@ -1,0 +1,39 @@
+/* ---------- FDPlight design tokens (shared palette with Contour) ---------- */
+:root {
+  /* Navy "ink" — structure, the file outline in the logo */
+  --color-primary: #1b2a4a;
+  --color-primary-tint: #eaeef4;
+
+  /* Teal "node" accent — the linked-data layer */
+  --color-accent: #0e7c7b;
+  --color-accent-tint: #e6f2f1;
+
+  --color-text-default: #3a3d45;
+  --color-text-lighter: #6b6e76;
+
+  /* Warm "sand" surfaces */
+  --color-bg: #eae7e0;
+  --color-surface-card: #fcfbf8;
+  --color-border: #e4e0d6;
+
+  --radius-lg: 10px;
+  --shadow-2: 0 2px 8px rgba(0, 32, 60, 0.06);
+
+  --font: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: var(--font);
+  color: var(--color-text-default);
+  background: var(--color-bg);
+  line-height: 1.5;
+}
