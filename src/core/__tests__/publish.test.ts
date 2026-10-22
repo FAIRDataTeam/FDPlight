@@ -92,6 +92,20 @@ describe('planPublish (SPEC §4, §5.2, §7.1)', () => {
     expect(second.changes.find((c) => c.path === 'distribution/registry-csv.ttl')!.content).toBeNull();
   });
 
+  it('moving a dataset rewrites both catalogs and the dataset; no file is added or removed', async () => {
+    const { project, values } = fresh();
+    project.entities.push({ type: 'catalog', id: 'other', parent: 'fdp.ttl' });
+    values['catalog/other.ttl'] = normalizeRecord(forms.catalog, {});
+    const first = await run(project, values, new Map(), T1);
+    project.entities = first.entities.map((e) => (e.id === 'empty-set' ? { ...e, parent: 'catalog/other.ttl' } : e));
+    const second = await run(project, values, applied(new Map(), first), T2);
+    expect([second.added, second.removed]).toEqual([[], []]);
+    expect(second.updated.sort()).toEqual(['catalog/other.ttl', 'catalog/rare-diseases.ttl', 'dataset/empty-set.ttl']);
+    const moved = second.changes.find((c) => c.path === 'dataset/empty-set.ttl')!.content!;
+    expect(moved).toContain('dct:isPartOf <https://example.github.io/my-fdp/catalog/other.ttl>');
+    expect(second.changes.find((c) => c.path === 'catalog/rare-diseases.ttl')!.content).not.toContain('empty-set');
+  });
+
   it('never deletes files it does not own', async () => {
     const { project, values } = fresh();
     const remote = new Map<string, string | null>([['README.md', '# hi'], ['docs/notes.ttl', ''], ['catalog/sub/x.ttl', '']]);

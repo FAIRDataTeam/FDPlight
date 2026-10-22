@@ -61,3 +61,37 @@ export function renameEntity(p: Project, path: string, newId: string): TreeResul
   });
   return { ok: true, entities, path: newPath };
 }
+
+/**
+ * Entities that may become the parent of the entity at `path`: the profile
+ * allows its type there, and it is not the entity itself or below it. The
+ * current parent is included.
+ */
+export function moveTargets(p: Project, path: string): string[] {
+  const e = findByPath(p, path);
+  if (!e || e.parent === null) return [];
+  const below = new Set(subtree(p, path));
+  return p.entities
+    .filter((x) => typeByKey(p.types, x.type).children.some((c) => c.type === e.type))
+    .map((x) => pathOf(p, x))
+    .filter((x) => !below.has(x));
+}
+
+/**
+ * Move the entity at `path`, with everything below it, under `newParent`.
+ * Its file and IRI stay the same (they depend on its type and id only); the
+ * old and new parents' containers and its `dct:isPartOf` follow on save
+ * (SPEC §5.5).
+ */
+export function moveEntity(p: Project, path: string, newParent: string): TreeResult {
+  const e = findByPath(p, path);
+  if (!e) return { ok: false, error: `no entity at ${path}` };
+  if (e.parent === null) return { ok: false, error: 'the root cannot be moved' };
+  const target = findByPath(p, newParent);
+  if (!target) return { ok: false, error: `no entity at ${newParent}` };
+  if (subtree(p, path).includes(newParent)) return { ok: false, error: 'an entity cannot be moved below itself' };
+  if (!typeByKey(p.types, target.type).children.some((c) => c.type === e.type))
+    return { ok: false, error: `a ${target.type} cannot contain a ${e.type}` };
+  if (e.parent === newParent) return { ok: true, entities: p.entities, path };
+  return { ok: true, entities: p.entities.map((x) => (x === e ? { ...x, parent: newParent } : x)), path };
+}

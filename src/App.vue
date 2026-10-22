@@ -22,6 +22,15 @@ const type = computed(() => state.typeOf(entity.value));
 const idDraft = ref(entity.value.id);
 watch(entity, (e) => (idDraft.value = e.id));
 
+// Other places the selected entity may move to (its current parent excluded).
+const moveTo = computed(() => (isRoot.value ? [] : state.moveOptions(selected.value).filter((o) => o.path !== entity.value.parent)));
+
+function moveSelected(ev: Event) {
+  const select = ev.target as HTMLSelectElement;
+  if (select.value) state.move(selected.value, select.value);
+  select.value = '';
+}
+
 function removeSelected() {
   const below = project.entities.filter((e) => e.parent === selected.value).length;
   const what = below ? ' and everything below it' : '';
@@ -53,7 +62,7 @@ function removeSelected() {
     <div class="columns">
       <nav class="card tree" aria-label="Entities">
         <ul class="tree__root">
-          <EntityTree :state="state" path="fdp.ttl" />
+          <EntityTree :state="state" :path="state.root.value" />
         </ul>
       </nav>
 
@@ -72,6 +81,13 @@ function removeSelected() {
                 @change="state.rename(selected, idDraft)"
                 @keyup.enter="state.rename(selected, idDraft)"
               />
+            </label>
+            <label v-if="moveTo.length" class="entity__move">
+              <span>Move to</span>
+              <select @change="moveSelected">
+                <option value="">…</option>
+                <option v-for="o in moveTo" :key="o.path" :value="o.path">{{ o.label }}</option>
+              </select>
             </label>
             <button type="button" class="danger" @click="removeSelected">Delete</button>
           </div>
@@ -196,7 +212,8 @@ function removeSelected() {
   gap: 10px;
   margin-top: 8px;
 }
-.entity__id {
+.entity__id,
+.entity__move {
   display: grid;
   gap: 2px;
   font-size: 0.8rem;
@@ -209,6 +226,15 @@ function removeSelected() {
   padding: 5px 8px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
+}
+.entity__move select {
+  font: inherit;
+  font-weight: 400;
+  max-width: 16rem;
+  padding: 5px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface-card);
 }
 .danger {
   font: inherit;

@@ -173,6 +173,8 @@ describe('usePublish (TASKS Phase 6)', () => {
     expect(pub.loaded.value).toBe(true);
     expect(s.project.base).toBe('https://erdera.github.io/WP13.3_document_based_fdp/sites/proqolid/');
     expect(s.titleOf('eprovide_fdp.ttl')).toBe('ePROVIDE FAIR Data Point');
+    // The tree starts at the kept root file, not fdp.ttl.
+    expect([s.root.value, s.selected.value]).toEqual(['eprovide_fdp.ttl', 'eprovide_fdp.ttl']);
     expect([...s.published.value].sort()).toEqual(['eprovide_catalog.ttl', 'eprovide_dataset.ttl', 'eprovide_distribution.ttl', 'eprovide_fdp.ttl']);
     await pub.prepare();
     expect(pub.plan.value!.updated.sort()).toEqual([

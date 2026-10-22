@@ -1,5 +1,5 @@
 import { pathOf, type Project } from '../project';
-import { addChild, removeEntity, renameEntity, subtree } from '../tree';
+import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, subtree } from '../tree';
 import { defaultProject, FILE_MODE } from './fixtures/defaultTree';
 
 const paths = (p: Project) => p.entities.map((e) => pathOf(p, e));
@@ -48,5 +48,34 @@ describe('tree edits (TASKS Phase 3)', () => {
     expect(p.entities.find((e) => e.type === 'distribution')!.parent).toBe('dataset/registry-2024.ttl'); // input untouched
     expect(renameEntity(p, 'dataset/registry-2024.ttl', 'empty-set').ok).toBe(false);
     expect(renameEntity(p, 'fdp.ttl', 'x').ok).toBe(false);
+  });
+
+  it('lists where an entity can move: allowed parents, not itself or below it', () => {
+    const p = apply(defaultProject(FILE_MODE), addChild(defaultProject(FILE_MODE), 'fdp.ttl', 'catalog', 'other'));
+    expect(moveTargets(p, 'dataset/registry-2024.ttl')).toEqual(['catalog/rare-diseases.ttl', 'catalog/other.ttl']);
+    expect(moveTargets(p, 'distribution/registry-csv.ttl')).toEqual(['dataset/registry-2024.ttl', 'dataset/empty-set.ttl']);
+    expect(moveTargets(p, 'catalog/rare-diseases.ttl')).toEqual(['fdp.ttl']);
+    expect(moveTargets(p, 'fdp.ttl')).toEqual([]);
+  });
+
+  it('moves an entity with its subtree; file and IRI stay', () => {
+    const p0 = defaultProject(FILE_MODE);
+    const p = apply(p0, addChild(p0, 'fdp.ttl', 'catalog', 'other'));
+    const r = moveEntity(p, 'dataset/registry-2024.ttl', 'catalog/other.ttl');
+    expect(r.ok && r.path).toBe('dataset/registry-2024.ttl');
+    const q = apply(p, r);
+    expect(subtree(q, 'catalog/other.ttl')).toEqual(['catalog/other.ttl', 'dataset/registry-2024.ttl', 'distribution/registry-csv.ttl']);
+    expect(subtree(q, 'catalog/rare-diseases.ttl')).toEqual(['catalog/rare-diseases.ttl', 'dataset/empty-set.ttl']);
+    expect(p.entities.find((e) => e.id === 'registry-2024')!.parent).toBe('catalog/rare-diseases.ttl'); // input untouched
+  });
+
+  it('refuses moves the profile or the tree does not allow', () => {
+    const p = defaultProject(FILE_MODE);
+    expect(moveEntity(p, 'fdp.ttl', 'catalog/rare-diseases.ttl')).toEqual({ ok: false, error: 'the root cannot be moved' });
+    expect(moveEntity(p, 'dataset/registry-2024.ttl', 'fdp.ttl')).toEqual({ ok: false, error: 'a fdp cannot contain a dataset' });
+    expect(moveEntity(p, 'catalog/rare-diseases.ttl', 'catalog/rare-diseases.ttl')).toEqual({ ok: false, error: 'an entity cannot be moved below itself' });
+    expect(moveEntity(p, 'dataset/registry-2024.ttl', 'nope.ttl').ok).toBe(false);
+    const same = moveEntity(p, 'dataset/empty-set.ttl', 'catalog/rare-diseases.ttl');
+    expect(same.ok && same.entities).toBe(p.entities);
   });
 });

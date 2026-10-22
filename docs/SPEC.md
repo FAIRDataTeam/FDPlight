@@ -414,6 +414,9 @@ E  R  c1, … , cn .                                   # direct relation
 - Both the relation triples and the container are **recomputed from the
   project tree on every save**. Users never edit them. Adding, moving or
   deleting a child rewrites the parent file.
+- Moving an entity to another parent keeps its file and IRI, which depend
+  on its type and id only, so it is allowed after publishing. The save
+  rewrites the old parent, the new parent and the entity's `dct:isPartOf`.
 - `ldp:BasicContainer` on the entity itself (as in the WP13.3 files) is
   **not** emitted because the RI does not produce it.
 - Any LDP container node found in the input (other than `E` itself) is

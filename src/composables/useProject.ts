@@ -11,8 +11,8 @@ import type { LoadedProject } from '../core/load';
 import { entityForm, userGraphFromForm } from '../core/forms';
 import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { typeByKey, type EntityType } from '../core/profile';
-import { findByPath, iriOf, pathOf, stamp, type Entity, type Project } from '../core/project';
-import { addChild, removeEntity, renameEntity, type TreeResult } from '../core/tree';
+import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
+import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
 import { DCT } from '../core/vocab';
 import { serializeEntity, toTurtle } from '../core/wiring';
@@ -68,6 +68,8 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
   const previewTime = new Date();
 
   const entity = computed(() => findByPath(project, selected.value) ?? project.entities[0]);
+  /** The root's file: `fdp.ttl`, or the kept path of an imported root (SPEC §4.2). */
+  const root = computed(() => rootPath(project));
   const typeOf = (e: Entity): EntityType => typeByKey(project.types, e.type);
 
   /** The entity's English (else first) title from its form, or '' . */
@@ -107,7 +109,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
   }
 
   function remove(path: string): void {
-    const parent = findByPath(project, path)?.parent ?? 'fdp.ttl';
+    const parent = findByPath(project, path)?.parent ?? root.value;
     if (apply(removeEntity(project, path))) selected.value = parent;
   }
 
@@ -118,6 +120,19 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     }
     const r = renameEntity(project, path, newId.trim());
     if (apply(r, path) && r.ok) selected.value = r.path;
+  }
+
+  /** Move under another parent; file and IRI stay, so this works after publishing too. */
+  function move(path: string, newParent: string): void {
+    if (apply(moveEntity(project, path, newParent))) selected.value = path;
+  }
+
+  /** Where the entity at `path` may move, with labels for a picker. */
+  function moveOptions(path: string): { path: string; label: string }[] {
+    return moveTargets(project, path).map((p) => {
+      const e = findByPath(project, p)!;
+      return { path: p, label: `${typeOf(e).name}: ${titleOf(p) || (e.parent === null ? 'FAIR Data Point' : e.id)}` };
+    });
   }
 
   // ---- settings (SPEC §2.2) ----
@@ -153,7 +168,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
       if (!values[p]) values[p] = normalizeRecord(forms[e.type], {});
     }
     extras.value = loaded.extras;
-    selected.value = 'fdp.ttl';
+    selected.value = rootPath(project);
     lastError.value = '';
   }
 
@@ -166,7 +181,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     project.types = next.types;
     project.entities = [{ type: 'fdp', id: '', parent: null }];
     published.value = new Set();
-    selected.value = 'fdp.ttl';
+    selected.value = rootPath(project);
     loadProfile();
   }
 
@@ -265,6 +280,9 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     add,
     remove,
     rename,
+    move,
+    moveOptions,
+    root,
     setBase,
     setMode,
     detectedMode,

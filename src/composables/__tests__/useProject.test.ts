@@ -45,6 +45,29 @@ describe('useProject', () => {
     expect(Object.keys(s.values)).toEqual(['fdp.ttl']);
   });
 
+  it('moves an entity, even a published one, keeping its values; offers labelled targets', () => {
+    const s = useProject();
+    s.add('fdp.ttl', 'catalog');
+    s.rename(s.selected.value, 'a');
+    setTitle(s, 'catalog/a.ttl', 'Catalog A');
+    s.add('fdp.ttl', 'catalog');
+    s.rename(s.selected.value, 'b');
+    s.add('catalog/a.ttl', 'dataset');
+    const ds = s.selected.value;
+    setTitle(s, ds, 'Registry');
+    s.published.value = new Set([ds]);
+    expect(s.moveOptions(ds)).toEqual([
+      { path: 'catalog/a.ttl', label: 'Catalog: Catalog A' },
+      { path: 'catalog/b.ttl', label: 'Catalog: b' },
+    ]);
+    s.move(ds, 'catalog/b.ttl');
+    expect(s.lastError.value).toBe('');
+    expect(s.project.entities.find((e) => e.type === 'dataset')!.parent).toBe('catalog/b.ttl');
+    expect([s.selected.value, s.titleOf(ds)]).toEqual([ds, 'Registry']);
+    s.move(ds, 'fdp.ttl');
+    expect(s.lastError.value).toBe('a fdp cannot contain a dataset');
+  });
+
   it('detects the IRI mode from the base URI and validates it (SPEC §2.2)', async () => {
     const s = useProject();
     s.setBase('https://w3id.org/example/fdp/');
