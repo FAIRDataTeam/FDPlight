@@ -1,0 +1,66 @@
+[
+  {
+    "key": "fdp",
+    "name": "FAIR Data Point",
+    "urlPrefix": "",
+    "targetClasses": [
+      "https://w3id.org/fdp/fdp-o#MetadataService",
+      "http://www.w3.org/ns/dcat#DataService",
+      "http://www.w3.org/ns/dcat#Resource",
+      "https://w3id.org/fdp/fdp-o#FAIRDataPoint"
+    ],
+    "shapes": "shapes/fdp.ttl",
+    "children": [
+      {
+        "type": "catalog",
+        "relation": "https://w3id.org/fdp/fdp-o#metadataCatalog",
+        "title": "Catalogs"
+      }
+    ]
+  },
+  {
+    "key": "catalog",
+    "name": "Catalog",
+    "urlPrefix": "catalog",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#Catalog"
+    ],
+    "shapes": "shapes/catalog.ttl",
+    "children": [
+      {
+        "type": "dataset",
+        "relation": "http://www.w3.org/ns/dcat#dataset",
+        "title": "Datasets"
+      }
+    ]
+  },
+  {
+    "key": "dataset",
+    "name": "Dataset",
+    "urlPrefix": "dataset",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#Dataset"
+    ],
+    "shapes": "shapes/dataset.ttl",
+    "children": [
+      {
+        "type": "distribution",
+        "relation": "http://www.w3.org/ns/dcat#distribution",
+        "title": "Distributions"
+      }
+    ]
+  },
+  {
+    "key": "distribution",
+    "name": "Distribution",
+    "urlPrefix": "distribution",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#Distribution"
+    ],
+    "shapes": "shapes/distribution.ttl",
+    "children": []
+  }
+]

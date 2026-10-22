@@ -5,6 +5,9 @@ workspace in the Contour repository, published as `@fairdatateam/record-core`
 on public npm. Contour stays at `luizbonino/Contour`. This note says what
 moves, what has to change on the way, and in what order.
 
+**Progress (2026-10-22): steps 1 to 5 done** (Contour #25 to #29, FDPlight
+#8). See section 6 for how the result differs from the plan.
+
 Survey of Contour at `~/GitHub/Contour` (main, 205 tests green on
 2026-10-22; TASKS.md there still says 202).
 
@@ -96,6 +99,29 @@ build comparable apart from module order.
    unmapped quads (item 3), peer-shape forms (item 1). Tag `v0.1.0`.
 5. FDPlight depends on the tag and renders one form for the default profile
    (closes Phase 0).
+
+## 6. As built (2026-10-22)
+
+| Step | Contour PR | Notes |
+|---|---|---|
+| 1 | #25 | Leaf modules moved; `dist/` byte-identical |
+| 2 | #26 | `record`, `shacl`, `shaclCheck`; the DASH widget catalogue moved as `widgets.ts`, `data.ts` re-exports it; unminified bundle differs only by a duplicated one-line helper |
+| 3 | #27 | Renderer components and `useFillContext`; i18n through `RECORD_I18N` with English defaults, Contour provides its `t()` |
+| 4 | #28 | `forms.formSchema` (peer shapes), `unmappedQuads`, shapes-graph input to the SHACL check. Package 0.1.0 |
+| 4b | #29 | `renderer.css`: the renderer's 59 rules copied from Contour's `style.css`, tokens as `:where(:root)` defaults. Package 0.2.0 |
+| 5 | FDPlight #8 | FDPlight renders the four default-profile forms |
+
+Differences from the plan
+
+- **Item 1 (peer shapes)** is solved by `formSchema(schema, targetClasses)`,
+  which merges the matching shapes into the existing Schema model, instead of
+  moving the record API onto `ShapesDoc`. Smaller change, no Contour impact.
+- **Styles** were not in the plan: the components had none of their own.
+  Contour still uses its own copies of those rules. Follow-up: make Contour
+  import `renderer.css` and delete the duplicates, with a visual check.
+- **Consumption** is a vendored `npm pack` tarball in FDPlight's `vendor/`
+  until the npm organisation exists (then switch to the registry version).
+- Contour's TASKS.md still says 202 tests; it has 216 now.
 
 ## 5. Decisions
 
