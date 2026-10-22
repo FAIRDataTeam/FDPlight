@@ -2,11 +2,12 @@
 // compared with what the repository has, as one set of changes.
 
 import type { RecordNode } from '@fairdatateam/record-core/record';
+import type { Quad } from '@fairdatateam/record-core/rdf';
 import type { Schema } from '@fairdatateam/record-core/types';
 import type { FileChange } from '../github/client';
 import { userGraphFromForm } from './forms';
 import { PING_WORKFLOW_PATH, pingWorkflow } from './ping';
-import { FORMAT_VERSION, stringifyProjectFile } from './profile';
+import { DEFAULT_ACCESS_RIGHTS, FORMAT_VERSION, stringifyProjectFile } from './profile';
 import { iriOf, pathOf, rootOf, stamp, type Entity, type Project } from './project';
 import { serializeEntity, toTurtle } from './wiring';
 
@@ -16,6 +17,8 @@ export interface PublishInput {
   values: Record<string, RecordNode>;
   /** Merged SHACL per type key, written to `shapes/{key}.ttl`. */
   shapes: Record<string, string>;
+  /** Unmapped triples per entity path, kept from loaded files (SPEC §5.7). */
+  extras?: Record<string, Quad[]>;
   /** Current repository contents by path (null or absent = no such file). */
   remote: Map<string, string | null>;
   /** All file paths currently in the repository. */
@@ -35,7 +38,8 @@ export interface PublishPlan {
 
 async function entityTurtle(input: PublishInput, e: Entity): Promise<string> {
   const iri = iriOf(input.project, e);
-  const user = userGraphFromForm(input.forms[e.type], iri, input.values[pathOf(input.project, e)] ?? {});
+  const path = pathOf(input.project, e);
+  const user = userGraphFromForm(input.forms[e.type], iri, input.values[path] ?? {}, input.extras?.[path]);
   return toTurtle(serializeEntity(input.project, e, user), iri);
 }
 
@@ -71,7 +75,8 @@ export async function planPublish(input: PublishInput): Promise<PublishPlan> {
       base: project.base,
       iriMode: project.iriMode,
       storageBase: project.storageBase,
-      defaults: project.defaults,
+      // As parseProjectFile reads it back, so a reload writes the same file.
+      defaults: { ...project.defaults, accessRightsDescription: project.defaults.accessRightsDescription ?? DEFAULT_ACCESS_RIGHTS },
       types: project.types,
       ...(project.source ? { source: project.source } : {}),
       ...(folder ? { folder } : {}),

@@ -2,10 +2,12 @@
 // entity, and everything derived from them (graphs, checks, Turtle).
 
 import { computed, reactive, ref, shallowRef, watch, watchEffect } from 'vue';
-import { expandTerm, fieldKey, normalizeRecord, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
+import { expandTerm, fieldKey, normalizeRecord, recordHasContent, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
+import type { Quad } from '@fairdatateam/record-core/rdf';
 import type { Schema } from '@fairdatateam/record-core/types';
 import type { Store } from 'n3';
 import { checkProject, type Issue } from '../core/checks';
+import type { LoadedProject } from '../core/load';
 import { entityForm, userGraphFromForm } from '../core/forms';
 import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { typeByKey, type EntityType } from '../core/profile';
@@ -15,7 +17,7 @@ import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation'
 import { DCT } from '../core/vocab';
 import { serializeEntity, toTurtle } from '../core/wiring';
 import { validateIndex } from '../core/ping';
-import { validateFolder } from '../core/profile';
+import { DEFAULT_ACCESS_RIGHTS, validateFolder } from '../core/profile';
 import { PROFILES, type BundledProfile } from '../profiles';
 
 export const DEFAULT_BASE = 'https://example.github.io/my-fdp/';
@@ -30,7 +32,7 @@ export function newProject(base = DEFAULT_BASE, profile: BundledProfile = PROFIL
     defaults: {
       language: 'http://id.loc.gov/vocabulary/iso639-1/en',
       license: null,
-      accessRightsDescription: null,
+      accessRightsDescription: DEFAULT_ACCESS_RIGHTS,
       metrics: [],
     },
     types: profile.types,
@@ -48,6 +50,8 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
   let forms: Record<string, Schema> = {};
   let shapeQuads: Record<string, ReturnType<typeof shapesGraph>> = {};
   const values = reactive<Record<string, RecordNode>>({});
+  /** Unmapped triples per entity, kept from loaded files (SPEC §5.7). */
+  const extras = shallowRef<Record<string, Quad[]>>({});
   function loadProfile(): void {
     forms = Object.fromEntries(project.types.map((t) => [t.key, entityForm(t, shapes[t.key])]));
     shapeQuads = Object.fromEntries(project.types.map((t) => [t.key, shapesGraph(shapes[t.key])]));
@@ -130,6 +134,29 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     ...(project.index ? validateIndex(project.index) : []),
   ]);
 
+  /** Whether the user has entered anything that loading a project would replace. */
+  const hasLocalWork = () => project.entities.length > 1 || Object.values(values).some(recordHasContent);
+
+  /** Replace the project with one loaded from a repository (SPEC §4.1). */
+  function load(loaded: LoadedProject, loadedShapes: Record<string, string>): void {
+    shapes = loadedShapes;
+    const match = Object.entries(PROFILES).find(([, prof]) => JSON.stringify(prof.types) === JSON.stringify(loaded.project.types));
+    profile.value = match ? match[0] : 'repository';
+    for (const k of Object.keys(project) as (keyof Project)[]) delete project[k];
+    Object.assign(project, loaded.project);
+    forms = Object.fromEntries(project.types.map((t) => [t.key, entityForm(t, shapes[t.key])]));
+    shapeQuads = Object.fromEntries(project.types.map((t) => [t.key, shapesGraph(shapes[t.key])]));
+    for (const k of Object.keys(values)) delete values[k];
+    Object.assign(values, loaded.values);
+    for (const e of project.entities) {
+      const p = pathOf(project, e);
+      if (!values[p]) values[p] = normalizeRecord(forms[e.type], {});
+    }
+    extras.value = loaded.extras;
+    selected.value = 'fdp.ttl';
+    lastError.value = '';
+  }
+
   /** Start over with another bundled profile, keeping base URI, folder and Index. */
   function switchProfile(key: string): void {
     const next = PROFILES[key];
@@ -170,7 +197,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     for (const e of project.entities) {
       const path = pathOf(project, e);
       const stamped = e.issued && e.modified ? e : stamp(e, previewTime);
-      const user = userGraphFromForm(forms[e.type], iriOf(project, e), values[path] ?? {});
+      const user = userGraphFromForm(forms[e.type], iriOf(project, e), values[path] ?? {}, extras.value[path]);
       out.set(path, serializeEntity(project, stamped, user));
     }
     graphs.value = out;
@@ -224,6 +251,9 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
       return shapes;
     },
     switchProfile,
+    load,
+    hasLocalWork,
+    extras,
     values,
     selected,
     entity,
