@@ -30,7 +30,7 @@ file tracks how we build it.
 | 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, on npm, used by FDPlight |
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
-| 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 tree editing done; RI cross-check open |
+| 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ✅ matches the RI (SPEC §9.5) |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 imports from a repository done, with report; import by URL open |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish, PR mode and conflict check done |
@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — RI cross-check: 128 triples identical, two documented
+  differences; SPEC v0.8 corrects the RI's container IRIs (#23). GitHub's
+  device flow has no CORS (#22).
 - 2026-10-22 — Owner's browser pilot run (e1484bb). record-core published on
   npm (0.2.0, Contour #30 release workflow); FDPlight uses it, `vendor/`
   removed (#21). Verified: 154 tests.
@@ -186,7 +189,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [ ] Tests with the real merged shapes of the default (done) and ERDERA
       profiles.
 
-## Phase 3 — Tree and wiring 🟡
+## Phase 3 — Tree and wiring ✅
 
 - [x] Entity tree UI. Root at the top, children grouped by child type (using
       the list titles), add / rename / delete (#9), move (#17).
@@ -199,7 +202,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] `serializeEntity(project, entity, userGraph)` producing the full graph
       for one file (`src/core/wiring.ts`), plus `toTurtle` (clean Turtle,
       used prefixes only)
-  - [ ] user metadata from the record engine (takes an N3 `Store` until then);
+  - [x] user metadata from the record engine (`userGraphFromForm`, #10);
   - [x] system triples (SPEC §5.2), catalog extras (§5.3), root extras (§5.4);
   - [x] child relations and one `ldp:DirectContainer` per child type, empty
         ones included (§5.5);
@@ -212,9 +215,15 @@ Resource plus Dataset). Contour still treats the first shape as primary
       (`planPublish`, #11).
 - [x] Golden-file tests (both IRI modes, `src/core/__tests__/golden/`). Build the default-profile example tree and compare
       each file with the expected Turtle, triple by triple.
-- [ ] Cross-check against the RI. Create the same tree in a local RI
+- [x] Cross-check against the RI. Create the same tree in a local RI
       (`fdp-ri` compose), fetch each entity, diff the graphs ignoring
-      IRIs and the documented differences.
+      IRIs and the documented differences (#23, `scripts/ri-crosscheck.ts`).
+      RI 1.22.0: 128 triples identical; the only differences are the
+      publisher node (blank in the RI, `E#publisher` in FDPlight) and the
+      RI root's `dcat:endpointDescription` (SPEC §9.5). Found on the way: the
+      RI names every catalog's dataset container `{persistentUrl}/dataset/`,
+      so the RI itself shares container IRIs across parents (SPEC §2.6
+      corrected).
 
 ## Phase 4 — Import and edit 🟡
 

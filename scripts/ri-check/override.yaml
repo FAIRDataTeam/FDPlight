@@ -1,0 +1,18 @@
+# Runs ~/GitHub/fdp-ri's compose group as a separate project for the FDPlight
+# cross-check: own volumes, port 8190, pinging disabled (application.yml).
+#
+#   RI_CHECK_JWT_SECRET=$(openssl rand -hex 64) \
+#     docker compose -f ~/GitHub/fdp-ri/compose.yaml -f scripts/ri-check/override.yaml up -d
+#   npx vite-node scripts/ri-crosscheck.ts
+#   docker compose -f ~/GitHub/fdp-ri/compose.yaml -f scripts/ri-check/override.yaml down -v
+name: fdplight-ri-check
+services:
+  fdp:
+    environment:
+      # Set it for `up` (the JWT signing secret); `down` works without.
+      RI_CHECK_JWT_SECRET: ${RI_CHECK_JWT_SECRET:-}
+    volumes: !override
+      - ${PWD}/scripts/ri-check/application.yml:/fdp/application.yml:ro
+  fdp-client:
+    ports: !override
+      - "8190:80"
