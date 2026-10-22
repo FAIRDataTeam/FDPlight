@@ -9,6 +9,8 @@ const en = {
     tagline: 'a serverless FAIR Data Point',
     wip: 'Work in progress: pilot version.',
     language: 'Language',
+    guide: 'Guide',
+    guideTitle: 'Open the data-steward guide (in English) in a new tab',
     entities: 'Entities (arrow keys move between entities)',
     metadata: 'Metadata',
     generatedFile: 'Generated file',

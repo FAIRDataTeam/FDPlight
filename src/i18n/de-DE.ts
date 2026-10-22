@@ -6,6 +6,8 @@ const deDE = {
     tagline: 'ein serverloser FAIR Data Point',
     wip: 'In Arbeit: Pilotversion.',
     language: 'Sprache',
+    guide: 'Anleitung',
+    guideTitle: 'Die Anleitung für Data Stewards (auf Englisch) in einem neuen Tab öffnen',
     entities: 'Entitäten (mit den Pfeiltasten wechseln Sie zwischen Entitäten)',
     metadata: 'Metadaten',
     generatedFile: 'Erzeugte Datei',

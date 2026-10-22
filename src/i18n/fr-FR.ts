@@ -6,6 +6,8 @@ const frFR = {
     tagline: 'un FAIR Data Point sans serveur',
     wip: 'En cours de développement : version pilote.',
     language: 'Langue',
+    guide: 'Guide',
+    guideTitle: 'Ouvrir le guide pour les data stewards (en anglais) dans un nouvel onglet',
     entities: 'Entités (les flèches du clavier permettent de passer d’une entité à l’autre)',
     metadata: 'Métadonnées',
     generatedFile: 'Fichier généré',

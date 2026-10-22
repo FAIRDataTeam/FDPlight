@@ -17,6 +17,7 @@ const state = useProject();
 const pub = usePublish(state);
 const { project, selected, entity } = state;
 const { t, plural, locale, setLocale } = useI18n();
+const GUIDE_URL = 'https://github.com/FAIRDataTeam/FDPlight/blob/main/docs/data-steward-guide.md';
 // The page's language follows the chosen locale (screen readers, hyphenation).
 watch(locale, (l) => (document.documentElement.lang = l), { immediate: true });
 
@@ -66,6 +67,7 @@ function removeSelected() {
       <p class="tagline">{{ t('app.tagline') }}</p>
     </div>
     <p class="wip">{{ t('app.wip') }}</p>
+    <a class="guide" :href="GUIDE_URL" target="_blank" rel="noopener" :title="t('app.guideTitle')">{{ t('app.guide') }}</a>
     <label class="lang">
       <select :value="locale" :aria-label="t('app.language')" @change="setLocale(($event.target as HTMLSelectElement).value as never)">
         <option v-for="l in LOCALES" :key="l.code" :value="l.code">{{ l.label }}</option>
@@ -173,6 +175,10 @@ function removeSelected() {
   margin: 0 0 0 auto;
   font-size: 0.8rem;
   color: var(--color-text-lighter);
+}
+.guide {
+  font-size: 0.85rem;
+  color: var(--color-accent);
 }
 .lang select {
   font: inherit;

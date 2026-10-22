@@ -16,8 +16,8 @@ example in ERDERA, and replaces hand-written RDF files, which are error prone.
 
 ## What it does
 
-- **Create.** Pick a profile (the FDP default, ERDERA, or one imported from any
-  running FDP), give the base URI where the files will be served, and build
+- **Create.** Pick a profile (the FDP default, Software, or one imported from
+  any running FDP), give the base URI where the files will be served, and build
   the tree FDP → catalogs → datasets, distributions or other resource types.
 - **Edit.** Open an existing file-only FDP (made with FDPlight or by hand),
   edit it in the same forms and save it back. Triples FDPlight does not
@@ -33,8 +33,14 @@ example in ERDERA, and replaces hand-written RDF files, which are error prone.
 
 ## Status
 
-Early development. The app is scaffolded (Vue 3, TypeScript, Vite
-single-file build); the core modules are being written against the SPEC.
+Pilot. Creating, editing, importing, checking and publishing work end to end;
+FDPlight publishes its own FDP from this repository (`metadata/`), listed on
+home.fairdatapoint.org. The interface is in English, Portuguese, Dutch,
+German, Spanish and French. Open items are in [TASKS.md](TASKS.md).
+
+**Using it:** [the data-steward guide](docs/data-steward-guide.md).
+
+**Developing it** (Vue 3, TypeScript, Vite single-file build):
 
 ```sh
 npm install
@@ -47,8 +53,10 @@ npm run build       # dist/index.html, one self-contained file
 - [docs/SPEC.md](docs/SPEC.md) — exactly which files, IRIs and triples FDPlight
   generates, with the evidence behind each rule.
 - [TASKS.md](TASKS.md) — the phased implementation plan.
+- [docs/data-steward-guide.md](docs/data-steward-guide.md) — the user guide;
+  its screenshots come from `scripts/shoot.cjs`.
 
-Live (work in progress): https://fdplight.fairdatapoint.org/
+Live (pilot): https://fdplight.fairdatapoint.org/
 
 ## Relation to Contour
 

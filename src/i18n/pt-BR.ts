@@ -6,6 +6,8 @@ const ptBR = {
     tagline: 'um FAIR Data Point sem servidor',
     wip: 'Em desenvolvimento: versão piloto.',
     language: 'Idioma',
+    guide: 'Guia',
+    guideTitle: 'Abrir o guia para data stewards (em inglês) em uma nova aba',
     entities: 'Entidades (as setas do teclado movem entre as entidades)',
     metadata: 'Metadados',
     generatedFile: 'Arquivo gerado',
