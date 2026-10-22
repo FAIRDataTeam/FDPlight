@@ -505,8 +505,8 @@ jobs:
   home.fairdatapoint.org (v1.22.1). The Index accepts only
   `application/json` (`IndexPingController`), not the form-encoded variant
   documented in the static-fdp README.
-- The `workflow_run` trigger is verified in the pilot (FDPlight's own
-  repository, TASKS Phase 7).
+- The `workflow_run` trigger is verified (pilot in FDPlight's own repository,
+  9.2).
 
 ---
 
@@ -572,6 +572,17 @@ jobs:
   `https://fdplight.fairdatapoint.org` for `PATCH` with `Authorization`,
   `Content-Type` and `X-GitHub-Api-Version` returns 204 with
   `access-control-allow-origin: *` and those headers allowed.
+- **Pilot, FDPlight's own FDP** (Software profile, 4 entities under
+  `https://fdplight.fairdatapoint.org/metadata/`, published by
+  `scripts/publish-own-fdp.ts` in commit a36180c). Pages served every file as
+  `text/turtle; charset=utf-8`; the generated ping workflow fired on
+  `workflow_run` after the "Deploy to GitHub Pages" workflow and succeeded;
+  home.fairdatapoint.org registered the entry ACTIVE (uuid
+  `85acf112-1ef7-4cbc-8fcb-018411428164`) and its data contains all four
+  entities. `GET /index/entries/{uuid}` returns 200 with title, publisher name
+  (from the `E#publisher` hash node), description and version.
+- home.fairdatapoint.org allows browser access to `/index/entries/all`
+  (`access-control-allow-origin: *`).
 - Pinging the WP13.3 root returned 204, the entry went from INACTIVE to
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).
@@ -591,4 +602,6 @@ only writes Turtle, so it is unaffected.
 - Identifier subject `eprovide_disribution.ttl#identifier` (typo) does not
   match the distribution IRI.
 - `GET /index/entries/{uuid}` for this entry returns HTTP 500 while other
-  entries return 200. Cause unknown.
+  entries return 200. Still 500 on 2026-10-22, while FDPlight's pilot entry,
+  with a hash-IRI publisher, returns 200: consistent with the blank-node
+  publisher being the cause, not proof.

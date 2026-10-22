@@ -34,7 +34,7 @@ file tracks how we build it.
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 FDPlight projects load back losslessly; foreign FDPs open |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish and conflict check done |
-| 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | 🟡 workflow generated; pilot next |
+| 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ⬜ |
 | 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | ⬜ |
 
@@ -53,6 +53,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — **Pilot**: FDPlight's own FDP published (commit a36180c),
+  served by Pages, pinged by the generated workflow, ACTIVE in
+  home.fairdatapoint.org with 4/4 entities. Index status in the app (#15).
 - 2026-10-22 — Load a project back from its repository on Connect (tree,
   timestamps, metadata, unmapped triples kept); exact round trip (#14).
   Verified: 131 tests.
@@ -248,26 +251,29 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [ ] First-publish helper. Create the repository if needed and explain how
       to enable Pages (or enable it through the API when the token allows).
 
-## Phase 7 — Ping and Pages 🟡
+## Phase 7 — Ping and Pages ✅
 
 - [x] Generate `.github/workflows/fdp-ping.yml` (SPEC §7.2) with the Index
       and root URLs inline (decided 2026-10-22, no repository variables),
       triggered by a configurable Pages workflow (#13).
 - [x] Repository folder for the FDP (`folder`, SPEC §4) so an FDP can live
       next to other content, e.g. this repository's `metadata/` (#13).
-- [ ] Verify that `workflow_run` fires after each Pages deployment. Pilot:
-      FDPlight's own repository (Pages by "Deploy to GitHub Pages").
-- [ ] End-to-end pilot against **home.fairdatapoint.org** (the ERDERA VP Index
+- [x] Verify that `workflow_run` fires after each Pages deployment. Pilot:
+      FDPlight's own repository (Pages by "Deploy to GitHub Pages"): fired
+      after each deploy, succeeded.
+- [x] End-to-end pilot against **home.fairdatapoint.org** (the ERDERA VP Index
       needs authorization) with **FDPlight's own FDP** (decided 2026-10-22):
       metadata about FDPlight under `metadata/` of this repository, Software
       profile, direct commits to main, first run by script then by the owner
       in the browser. Create, publish, wait for Pages, ping, then check
       `GET /index/entries/all` (state ACTIVE) and
-      `GET /index/entries/{uuid}/data` (all entities harvested).
-- [ ] Check whether `GET /index/entries/{uuid}` works for the pilot entry
-      (it returns 500 for the WP13.3 entry).
-- [ ] Show the Index status of the project in FDPlight (read-only, public
-      endpoints).
+      `GET /index/entries/{uuid}/data` (all entities harvested). Done
+      2026-10-22 by script: ACTIVE, 4 of 4 harvested (SPEC §9.2). The
+      owner's browser run is still to do.
+- [x] Check whether `GET /index/entries/{uuid}` works for the pilot entry:
+      200 (WP13.3 still 500, SPEC §9.4).
+- [x] Show the Index status of the project in FDPlight (read-only, public
+      endpoints): state, last update, harvested vs missing entities (#15).
 
 ## Phase 8 — Polish and docs ⬜
 
