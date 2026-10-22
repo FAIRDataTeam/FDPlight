@@ -9,6 +9,11 @@ export default defineConfig({
     port: 5174,
     open: true,
   },
+  // record-core ships TypeScript and .vue sources: compile it with the app
+  // instead of pre-bundling it with esbuild.
+  optimizeDeps: {
+    exclude: ['@fairdatateam/record-core'],
+  },
   build: {
     // Inline everything — no threshold, no separate chunk files
     assetsInlineLimit: Infinity,

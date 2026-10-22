@@ -27,9 +27,9 @@ file tracks how we build it.
 
 | Phase | Theme | Status |
 |---|---|---|
-| 0 — Shared core | extract Contour's record engine into a package | 🟡 packaging decided, scaffold done |
+| 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, used by FDPlight (vendored until npm) |
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
-| 2 — Multi-shape forms | merged shapes per type, form per entity | ⬜ |
+| 2 — Multi-shape forms | merged shapes per type, form per entity | 🟡 default profile done, ERDERA open |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | 🟡 core and golden tests done, UI open |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ⬜ |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 structural checks done |
@@ -53,6 +53,10 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Phase 0 done: record-core extracted in Contour (#25 to #29
+  there); FDPlight renders the default-profile forms with the shared renderer
+  and previews the Turtle it would publish (#8). Verified: type-check,
+  84 tests, build 527 kB (234 kB gzip), checked in headless Chrome.
 
 ## Key technical decisions
 
@@ -71,29 +75,31 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ---
 
-## Phase 0 — Shared core 🟡
+## Phase 0 — Shared core ✅
 
 - [x] Extraction plan written and approved 2026-10-22:
       [docs/shared-core.md](docs/shared-core.md). Package
       `@fairdatateam/record-core` on public npm; Contour stays at
       `luizbonino/Contour`.
 - [ ] Create the npm organisation `fairdatateam` (owner, needs an npm
-      account).
+      account), publish `@fairdatateam/record-core`, drop `vendor/`.
 - [x] Decide the packaging (2026-10-22: **option (a)**). Options were
   - (a) a `packages/record-core` workspace in the Contour repo, published to
     npm or consumed as a git dependency;
   - (b) a separate `fdp-forms-core` repository;
   - (c) a git submodule in FDPlight.
-- [ ] Move the modules listed under decision 2 without behaviour change.
-      Contour's 202 tests stay green, the single-file build stays byte
-      comparable apart from module order.
-- [ ] Remove Contour-only assumptions from the moved code (the `Schema` type
-      with an implicit primary shape, `localStorage` keys).
+- [x] Move the modules listed under decision 2 without behaviour change
+      (Contour #25 to #27, 205 tests green throughout, build byte-identical
+      or explained).
+- [x] Remove Contour-only assumptions from the moved code: peer shapes
+      (`formSchema`), external shapes graph, unmapped quads (Contour #28),
+      i18n without `localStorage` (#27), renderer stylesheet (#29).
 - [x] FDPlight scaffold (Vite, Vue 3, TS, Vitest, single-file build, GitHub
       Pages deploy workflow, CI on PRs, logo and favicons) — #2.
       Verified 2026-10-22: type-check, 1 test, build 231 kB (150 kB gzip).
       Pages deploy is gated on the `DEPLOY_PAGES` repository variable.
-- [ ] Scaffold imports the shared package and renders one form.
+- [x] Scaffold imports the shared package and renders the default-profile
+      forms, with a live preview of the generated Turtle (#8).
 
 ## Phase 1 — Project model and profile 🟡
 
@@ -110,7 +116,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       recorded home.fairdatapoint.org responses). Read `/resource-definitions`, fetch
       `/{prefix}/spec` (`/spec` for the root), store the merged shapes under
       `shapes/`. Record the source for later refresh.
-- [ ] Bundled FDP default profile (taken from home.fairdatapoint.org).
+- [x] Bundled FDP default profile (taken from home.fairdatapoint.org),
+      `src/profiles/fdp-default/`.
 - [x] IRI mode detection from the base URI (SPEC §2.2): `*.github.io` and
       the repository's Pages CNAME give file mode, known redirectors (w3id,
       purl) give redirect mode, anything else asks once. User can override.
@@ -119,24 +126,26 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       first publish, warning after.
 - [x] Unit tests for profile parsing, base validation and re-basing.
 
-## Phase 2 — Multi-shape forms ⬜
+## Phase 2 — Multi-shape forms 🟡
 
 The `/spec` response for a type is a graph of several NodeShapes (e.g.
 Resource plus Dataset). Contour still treats the first shape as primary
 (its F4.2 is deferred).
 
-- [ ] For a given type, build the form from **all** NodeShapes whose
+- [x] For a given type, build the form from **all** NodeShapes whose
       `sh:targetClass` is one of the type's target classes. Merge their
       property shapes, keep `sh:group` / `sh:order`, de-duplicate identical
-      paths.
-- [ ] Nested shapes (`sh:node`) keep working as sub-forms.
-- [ ] Hide the paths FDPlight generates (SPEC §5.2 to 5.5) from the form even
+      paths (record-core `formSchema`, FDPlight `entityForm`).
+- [x] Nested shapes (`sh:node`) keep working as sub-forms (non-matching
+      shapes stay nested).
+- [x] Hide the paths FDPlight generates (SPEC §5.2 to 5.5) from the form even
       when a schema declares them, e.g. `dct:isPartOf`,
       `fdp:metadataIdentifier`, `fdp:metadataIssued`, `fdp:metadataModified`,
       and for catalogs only `dct:issued` / `dct:modified` (SPEC §5.3).
       Datasets and distributions keep `dct:issued` / `dct:modified` as
       user fields.
-- [ ] Tests with the real merged shapes of the default and ERDERA profiles.
+- [ ] Tests with the real merged shapes of the default (done) and ERDERA
+      profiles.
 
 ## Phase 3 — Tree and wiring 🟡
 

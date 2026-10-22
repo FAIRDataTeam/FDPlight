@@ -5,7 +5,7 @@
 import { DataFactory, Store, Writer, type Quad, type Term } from 'n3';
 import { containerIri, hashIri, profileIri } from './iri';
 import { md5Hex } from './md5';
-import { DEFAULT_ACCESS_RIGHTS, isCatalog, typeByKey } from './profile';
+import { DEFAULT_ACCESS_RIGHTS, isCatalog, typeByKey, type EntityType } from './profile';
 import { childrenOf, entityType, findByPath, iriOf, iriSettings, type Entity, type Project } from './project';
 import { DATACITE_IDENTIFIER, DCAT, DCT, FDP, LDP, NS, RDFS_LABEL, RDF_TYPE, SIO, XSD_DATETIME } from './vocab';
 import { FDPLIGHT_VERSION } from './version';
@@ -41,18 +41,7 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
 
   // ---- user metadata, minus what is regenerated below ----
   const catalog = isCatalog(type);
-  const regenerated = new Set<string>([
-    RDF_TYPE,
-    FDP.metadataIdentifier,
-    RDFS_LABEL,
-    FDP.metadataIssued,
-    FDP.metadataModified,
-    DCT.isPartOf,
-    SIO.refersTo,
-    ...type.children.map((c) => c.relation),
-    ...(catalog ? [DCT.issued, DCT.modified] : []),
-    ...(type.urlPrefix === '' ? [FDP.fdpSoftwareVersion, DCAT.endpointURL] : []),
-  ]);
+  const regenerated = new Set(generatedPaths(type));
   const childPrefixes = type.children.map((c) => typeByKey(project.types, c.type).urlPrefix);
   const generatedSubjects = new Set<string>([
     hashIri(E, 'identifier'),
@@ -142,6 +131,25 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
   });
 
   return out;
+}
+
+/**
+ * SPEC §5.7. The predicates on `E` that the wiring writes itself, replacing
+ * whatever the input had. Forms hide them (TASKS Phase 2).
+ */
+export function generatedPaths(type: EntityType): string[] {
+  return [
+    RDF_TYPE,
+    FDP.metadataIdentifier,
+    RDFS_LABEL,
+    FDP.metadataIssued,
+    FDP.metadataModified,
+    DCT.isPartOf,
+    SIO.refersTo,
+    ...type.children.map((c) => c.relation),
+    ...(isCatalog(type) ? [DCT.issued, DCT.modified] : []),
+    ...(type.urlPrefix === '' ? [FDP.fdpSoftwareVersion, DCAT.endpointURL] : []),
+  ];
 }
 
 /**
