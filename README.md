@@ -48,6 +48,8 @@ npm run build       # dist/index.html, one self-contained file
   generates, with the evidence behind each rule.
 - [TASKS.md](TASKS.md) — the phased implementation plan.
 
+Live (work in progress): https://fdplight.fairdatapoint.org/
+
 ## Relation to Contour
 
 [Contour](https://contour.fairdatapoint.org/) is the SHACL schema editor.

@@ -43,7 +43,7 @@ removes the hand-writing.
 | Licence | MIT |
 | Shared core | `packages/record-core` workspace in the Contour repo, published as `@fairdatateam/record-core` on public npm; Contour stays at `luizbonino/Contour` ([plan](docs/shared-core.md), approved) |
 | Entity tree | Not stored; derived from the files on open (SPEC §4.1) |
-| App hosting | GitHub Pages of this repository; `fdplight.fairdatapoint.org` once DNS is set |
+| App hosting | https://fdplight.fairdatapoint.org/, GitHub Pages of this repository, deployed on every merge to main |
 | Repository | github.com/FAIRDataTeam/FDPlight (public). Work lands through pull requests |
 | Test Index | **home.fairdatapoint.org** (FDP v1.22.1). The ERDERA VP Index requires authorization, do not target it yet |
 
