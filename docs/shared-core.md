@@ -117,8 +117,9 @@ Differences from the plan
   which merges the matching shapes into the existing Schema model, instead of
   moving the record API onto `ShapesDoc`. Smaller change, no Contour impact.
 - **Styles** were not in the plan: the components had none of their own.
-  Contour still uses its own copies of those rules. Follow-up: make Contour
-  import `renderer.css` and delete the duplicates, with a visual check.
+  Since Contour #31 (2026-10-22) Contour imports `renderer.css` too and its
+  own copies of the 59 rules are gone; its 30 guide screenshots were
+  pixel-identical before and after.
 - **Consumption**: FDPlight first used a vendored `npm pack` tarball. Since
   2026-10-22 it depends on `@fairdatateam/record-core@^0.2.0` from npm
   (sources identical to the tarball).
