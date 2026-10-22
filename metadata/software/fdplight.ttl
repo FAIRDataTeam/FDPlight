@@ -22,11 +22,11 @@
     schema:applicationCategory "Metadata publishing";
     schema:hasPart <https://fdplight.fairdatapoint.org/metadata/source-code/fdplight.ttl>;
     schema:operatingSystem "Web browser";
-    schema:softwareRequirements "A GitHub repository served by GitHub Pages";
+    schema:softwareRequirements "A GitHub repository served by GitHub Pages.";
     schema:url <https://fdplight.fairdatapoint.org/>;
     fdp:metadataIdentifier <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#identifier>;
     fdp:metadataIssued "2026-10-22T15:20:40.082Z"^^xsd:dateTime;
-    fdp:metadataModified "2026-10-22T15:20:40.082Z"^^xsd:dateTime.
+    fdp:metadataModified "2026-10-22T16:45:32.761Z"^^xsd:dateTime.
 <https://fdplight.fairdatapoint.org/metadata/profile/software.ttl> rdfs:label "Software Profile".
 <https://fdplight.fairdatapoint.org/metadata/software/fdplight.ttl#accessRights> a dct:RightsStatement;
     dct:description "This resource has no access restriction".
