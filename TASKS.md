@@ -53,6 +53,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-22 — Data-steward guide with screenshots, linked from the app
+  (#26).
 - 2026-10-22 — Interface in six languages, Contour's i18n mechanism (#25).
 - 2026-10-22 — Keyboard navigation in the entity tree (#24). Verified:
   157 tests.
@@ -325,8 +327,11 @@ Resource plus Dataset). Contour still treats the first shape as primary
       the header (#25). Still English: messages built by the core (import
       report, structural checks, SHACL finding texts, settings errors). The
       translations were written without a native-speaker review.
-- [ ] User guide for data stewards (create, fill in, publish, edit), with
-      screenshots, in the style of Contour's data-steward guide.
+- [x] User guide for data stewards (create, fill in, publish, edit), with
+      screenshots, in the style of Contour's data-steward guide
+      ([docs/data-steward-guide.md](docs/data-steward-guide.md), #26; English
+      only; screenshots from `scripts/shoot.cjs`). Linked from the app
+      header. Translations of the guide are still open.
 - [ ] Bundled ERDERA profile, verified against the current ERDERA schemas and
       the VP Level 1 / Level 2 queries in WP13.3.
 - [ ] Accessibility pass. Keyboard tree navigation done (#24): arrow keys,

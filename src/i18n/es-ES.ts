@@ -6,6 +6,8 @@ const esES = {
     tagline: 'un FAIR Data Point sin servidor',
     wip: 'En desarrollo: versión piloto.',
     language: 'Idioma',
+    guide: 'Guía',
+    guideTitle: 'Abrir la guía para data stewards (en inglés) en una pestaña nueva',
     entities: 'Entidades (las teclas de flecha mueven entre entidades)',
     metadata: 'Metadatos',
     generatedFile: 'Archivo generado',

@@ -6,6 +6,8 @@ const nlNL = {
     tagline: 'een serverloos FAIR Data Point',
     wip: 'In ontwikkeling: pilotversie.',
     language: 'Taal',
+    guide: 'Handleiding',
+    guideTitle: 'De handleiding voor datastewards (in het Engels) in een nieuw tabblad openen',
     entities: 'Entiteiten (met de pijltjestoetsen ga je van entiteit naar entiteit)',
     metadata: 'Metadata',
     generatedFile: 'Gegenereerd bestand',
