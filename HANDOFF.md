@@ -49,7 +49,9 @@ removes the hand-writing.
 | GitHub authentication | Fine-grained tokens only (2026-10-23). A GitHub App would need a token proxy (no CORS on GitHub's device flow, SPEC §9.2) |
 | Hosting of the files | GitHub Pages stays the default (2026-10-23); FDPlight checks the base URI is served. w3id in front of Pages (redirect mode) for persistent IRIs; raw.githubusercontent.com is not used (`text/plain`, branch in the URL) |
 | Import by URL | New IRIs under the project base, each record linked to its old IRI with `prov:wasDerivedFrom` (2026-10-23) |
-| ERDERA profile | All ERDERA types (catalog → dataset → distribution, patient registry, biobank, guideline, data services); users tick the types they use. The profile writes `ejp:vpConnection ejp:VPDiscoverable` unless a record is hidden, and `fdp:conformsToFdpSpec` on the root (2026-10-23) |
+| Profile documents | The type's merged SHACL is published at `{base}profile/{type}.ttl` (2026-10-23) |
+| Metrics | None by default; the metric triples are expected to leave the FDP specification (2026-10-23) |
+| ERDERA profile | All ERDERA types (catalog → dataset → distribution, patient registry, biobank, guideline, data services); users tick the types they use. The profile writes `ejp:vpConnection ejp:VPDiscoverable` unless a record is hidden, and `fdp:conformsToFdpSpec` on the root (2026-10-23). Data services need `dct:type`; hiding a record warns (2026-10-23) |
 
 ### 3.1 Automatic IRI mode (written into SPEC §2.2 to 2.4 in v0.2)
 

@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.11** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.12** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
@@ -14,7 +14,8 @@ bundled ERDERA profile (3.2), child types told apart by path or `rdf:type`
 (4.1). v0.10: a profile from local files (3.3); custom domains are asked
 about, since their Pages domain cannot be read without an extra token
 permission (2.2). v0.11: the VP Level 1 and Level 2 queries over ERDERA
-output (9.6).
+output (9.6). v0.12: decisions on the profile document, metrics and ERDERA
+follow-ups (8.1, 8.3, 8.6).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -448,8 +449,8 @@ Nested `sh:node` values follow 5.3.
 | `E sio:SIO_000628 M` and `M sio:SIO_000628 r ; sio:SIO_000332 r` for each configured metric `{metric, resource: r}`, with `M` named after `metric` (2.6) | only when `defaults.metrics` is non-empty | `enhance` → `setMetrics`; RI settings entries are `(metricUri, resourceUri)` |
 
 `profileIRI(T)` is `{base}profile/{T.key}.ttl` in file mode and
-`{base}profile/{T.key}` in redirect mode. Publishing a profile document
-there is an open decision (see 8).
+`{base}profile/{T.key}` in redirect mode. The type's merged SHACL is
+published there (8.1, decided 2026-10-23).
 
 ### 5.3 Catalog-only triples
 
@@ -651,18 +652,30 @@ jobs:
 
 ## 8. Open decisions
 
-1. **Profile document.** What, if anything, is served at `profileIRI(T)`.
-   Options are nothing (as WP13.3), the merged SHACL, or a PROF description
-   like the RI.
+1. ~~**Profile document.**~~ Decided 2026-10-23: the type's merged SHACL
+   is published at `profileIRI(T)`, so the `dct:conformsTo` link of every
+   record resolves (not nothing as WP13.3, not a PROF description like the
+   RI).
 2. ~~**Container IRI form in file mode.**~~ Decided 2026-10-22: hash
    (`E#dataset`) in file mode, RI style (`E/dataset/`) in redirect mode (2.6).
-3. **Default metrics.** Emit none (proposed) or mirror the RI defaults.
+3. ~~**Default metrics.**~~ Decided 2026-10-23: none by default (the RI
+   writes two). A project can still list metrics in `fdplight.json`. The
+   owner expects the metric triples to be dropped in the coming update of
+   the FDP specification.
 4. ~~**ERDERA specifics.**~~ Decided 2026-10-23: system triples of the
    ERDERA profile. `ejp:vpConnection ejp:VPDiscoverable` on every entity
    unless the user hides it (`ejp:VPInvisible`, the ERDERA shapes' field),
    and `fdp:conformsToFdpSpec` on the root.
 5. **Redirect mode timing.** The rules are specified (2.2 to 2.4). The
-   implementation stays in Phase 9 unless a pilot needs it earlier.
+   implementation stays in Phase 9 unless a pilot needs it earlier (asked
+   2026-10-23, no pilot named).
+6. ~~**ERDERA data services and hidden records.**~~ Decided 2026-10-23
+   after the VP query check (9.6): FDPlight's ERDERA profile requires
+   `dct:type` on data services, so Level 2 lists them; choosing
+   `ejp:VPInvisible` shows a warning that, with the current VP queries, one
+   hidden record can hide others. The problems found in ERDERA's queries and
+   shapes are taken up with ERDERA later; the owner expects to fix many
+   directly.
 
 ---
 
