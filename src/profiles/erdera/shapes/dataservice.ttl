@@ -269,6 +269,7 @@
     sh:name "Ontological Type of your service (use EDAM)" ;
     sh:path dct:type ;
     sh:nodeKind sh:IRI ;
+    sh:minCount 1 ; # FDPlight: required by the VP Level 2 query
     dash:editor dash:URIEditor ;
     dash:viewer dash:LabelViewer ;
   ] , [

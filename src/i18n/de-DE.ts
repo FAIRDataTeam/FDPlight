@@ -23,6 +23,7 @@ const deDE = {
     },
     metadataComplete: 'Metadaten vollständig',
     structureOk: 'Struktur OK',
+    vpHidden: 'Für die Virtual Platform verborgen. Mit den aktuellen Abfragen der Virtual Platform kann ein verborgener Eintrag auch andere Einträge verbergen, möglicherweise den ganzen FAIR Data Point. Verbergen Sie Einträge nur, wenn es nötig ist.',
   },
   tree: {
     root: 'FAIR Data Point',

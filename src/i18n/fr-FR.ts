@@ -23,6 +23,7 @@ const frFR = {
     },
     metadataComplete: 'Métadonnées complètes',
     structureOk: 'Structure OK',
+    vpHidden: 'Masqué pour la Virtual Platform. Avec les requêtes actuelles de la Virtual Platform, un enregistrement masqué peut aussi masquer d’autres enregistrements, voire tout le FAIR Data Point. Ne masquez des enregistrements qu’en cas de besoin.',
   },
   tree: {
     root: 'FAIR Data Point',

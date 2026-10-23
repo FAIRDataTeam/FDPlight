@@ -151,4 +151,16 @@ describe('useProject', () => {
     expect(s.typeInUse('dataset')).toBe(false);
     expect(Object.keys(s.forms)).toHaveLength(erdera.types.length);
   });
+
+  it('flags a record set to ejp:VPInvisible (SPEC §8.6)', () => {
+    const s = useProject(undefined, 'erdera');
+    s.add('fdp.ttl', 'catalog');
+    expect(s.hiddenFromVp.value).toBe(false);
+    const form = s.forms.catalog;
+    const f = shapeFields(form).find((x) => expandTerm(x.path, form.prefixes) === 'https://w3id.org/ejp-rd/vocabulary#vpConnection')!;
+    s.values[s.selected.value][fieldKey(f)][0].value = 'ejp:VPInvisible';
+    expect(s.hiddenFromVp.value).toBe(true);
+    s.selected.value = 'fdp.ttl';
+    expect(s.hiddenFromVp.value).toBe(false);
+  });
 });

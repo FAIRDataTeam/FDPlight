@@ -11,6 +11,10 @@
   --color-text-default: #3a3d45;
   --color-text-lighter: #6b6e76;
 
+  /* Amber: warnings that do not block publishing */
+  --color-warning: #8a5300;
+  --color-warning-tint: #fbf1e0;
+
   /* Warm "sand" surfaces */
   --color-bg: #eae7e0;
   --color-surface-card: #fcfbf8;

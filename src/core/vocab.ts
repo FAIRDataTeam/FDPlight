@@ -21,6 +21,9 @@ export const NS = {
 export const RDF_TYPE = `${NS.rdf}type`;
 export const RDFS_LABEL = `${NS.rdfs}label`;
 export const XSD_DATETIME = `${NS.xsd}dateTime`;
+/** ERDERA's VP visibility (SPEC §3.2, §8.6). */
+export const EJP_VP_CONNECTION = `${NS.ejp}vpConnection`;
+export const EJP_VP_INVISIBLE = `${NS.ejp}VPInvisible`;
 
 export const DCT = {
   title: `${NS.dct}title`,

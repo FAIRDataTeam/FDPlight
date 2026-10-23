@@ -23,6 +23,7 @@ const ptBR = {
     },
     metadataComplete: 'Metadados completos',
     structureOk: 'Estrutura OK',
+    vpHidden: 'Oculto na Virtual Platform. Com as consultas atuais da Virtual Platform, um registro oculto pode ocultar também outros registros, possivelmente o FAIR Data Point inteiro. Oculte registros só quando precisar.',
   },
   tree: {
     root: 'FAIR Data Point',

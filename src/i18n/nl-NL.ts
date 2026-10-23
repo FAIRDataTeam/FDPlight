@@ -23,6 +23,7 @@ const nlNL = {
     },
     metadataComplete: 'Metadata compleet',
     structureOk: 'Structuur OK',
+    vpHidden: 'Verborgen voor het Virtual Platform. Met de huidige queries van het Virtual Platform kan één verborgen record ook andere records verbergen, mogelijk het hele FAIR Data Point. Verberg records alleen als het nodig is.',
   },
   tree: {
     root: 'FAIR Data Point',

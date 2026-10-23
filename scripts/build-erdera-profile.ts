@@ -22,11 +22,18 @@ const syntaxFix = (ttl: string) =>
     .replace(MISSING_SEMICOLON, MISSING_SEMICOLON.replace('"\n', '" ;\n'));
 const src = (f: string) => syntaxFix(readFileSync(`${dir}/source/${f}.ttl`, 'utf8'));
 
-// The one change to ERDERA's shapes: FDPlight writes ejp:vpConnection
+// First change to ERDERA's shapes: FDPlight writes ejp:vpConnection
 // ejp:VPDiscoverable unless a record is hidden (decided 2026-10-23, SPEC §8.4),
 // so the field accepts both values instead of only ejp:VPInvisible.
 const VP_ONLY = 'sh:in (<https://w3id.org/ejp-rd/vocabulary#VPInvisible>) ;';
 const VP_BOTH = 'sh:in (<https://w3id.org/ejp-rd/vocabulary#VPDiscoverable> <https://w3id.org/ejp-rd/vocabulary#VPInvisible>) ;';
+// Second change (decided 2026-10-23, SPEC §8.6): the VP's Level 2 query lists
+// a data service only with a dct:type, so the profile requires one.
+const SERVICE_TYPE = 'sh:path dct:type ;\n    sh:nodeKind sh:IRI ;';
+const dataService = src('data-service');
+if (!dataService.includes(SERVICE_TYPE)) throw new Error('data-service.ttl changed: the dct:type property was not found');
+const DATA_SERVICE = dataService.replace(SERVICE_TYPE, `${SERVICE_TYPE}\n    sh:minCount 1 ; # FDPlight: required by the VP Level 2 query`);
+
 const resource = src('resource');
 if (!resource.includes(VP_ONLY)) throw new Error('resource.ttl changed: the ejp:vpConnection sh:in list was not found');
 const RESOURCE = resource.replace(VP_ONLY, `${VP_BOTH} # FDPlight: VPDiscoverable added`);
@@ -55,7 +62,7 @@ const TYPES: Record<string, string[]> = {
 };
 
 for (const [key, parts] of Object.entries(TYPES)) {
-  const own = parts.map((p) => (p === 'FDP shapes' ? FDP_SHAPES : src(p)));
+  const own = parts.map((p) => (p === 'FDP shapes' ? FDP_SHAPES : p === 'data-service' ? DATA_SERVICE : src(p)));
   const ttl = header(`${key} (Resource + ${parts.join(' + ')})`) + [RESOURCE, ...own].join('\n\n');
   new Parser().parse(ttl); // must stay valid Turtle
   writeFileSync(`${dir}/shapes/${key}.ttl`, ttl);
