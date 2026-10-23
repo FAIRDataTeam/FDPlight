@@ -157,8 +157,14 @@ Redirect mode needs a second URI, the **storage base** `{storage}` (absolute
   silently.
 - After the first publish, re-basing is an explicit action with a warning. All
   IRIs are rewritten and the old root URL should keep being pinged until it is
-  removed from the Index.
+  removed from the Index (not done by FDPlight; the warning says the old entry
+  becomes inactive).
 - Changing the IRI mode is a re-base.
+- Re-basing also moves the user's own references to the project's IRIs, in
+  the forms and in the kept triples (5.7): entity IRIs, their hash IRIs, and
+  any other IRI under the old base (profile IRIs, …), unless it is already
+  under a new base that extends the old one (`iriRewriter`, implemented
+  2026-10-23).
 
 ### 2.6 Derived IRIs inside an entity file
 

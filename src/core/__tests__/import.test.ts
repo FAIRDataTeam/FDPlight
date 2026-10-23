@@ -4,7 +4,7 @@ import { Parser, Store } from 'n3';
 import { FDP_DEFAULT } from '../../profiles/fdp-default';
 import { checkProject } from '../checks';
 import { entityForm } from '../forms';
-import { importExistingFdp } from '../import';
+import { importExistingFdp, iriRewriter } from '../import';
 import { loadProject } from '../load';
 import { parseProjectFile } from '../profile';
 import { pathOf } from '../project';
@@ -172,5 +172,13 @@ describe('import the WP13.3 proqolid FDP (TASKS Phase 4 test case)', () => {
   it('refuses a root file that is not an FDP', () => {
     const r = importExistingFdp({ rootPath: 'sites/proqolid/eprovide_catalog.ttl', files: FILES, types: FDP_DEFAULT.types, forms, mode: 'keep' });
     expect(r).toEqual({ ok: false, error: 'sites/proqolid/eprovide_catalog.ttl has no FAIR Data Point whose IRI ends with /eprovide_catalog.ttl' });
+  });
+
+  it('iriRewriter moves other IRIs under the old base, but not twice into a longer new base (SPEC §2.5)', () => {
+    const rw = iriRewriter(new Map([['https://a.org/x/fdp.ttl', 'https://a.org/x/m/fdp.ttl']]), { from: 'https://a.org/x/', to: 'https://a.org/x/m/' });
+    expect(rw.iri('https://a.org/x/fdp.ttl#publisher')).toBe('https://a.org/x/m/fdp.ttl#publisher');
+    expect(rw.iri('https://a.org/x/profile/catalog.ttl')).toBe('https://a.org/x/m/profile/catalog.ttl');
+    expect(rw.iri('https://a.org/x/m/profile/catalog.ttl')).toBe('https://a.org/x/m/profile/catalog.ttl');
+    expect(rw.iri('https://other.org/x/')).toBe('https://other.org/x/');
   });
 });

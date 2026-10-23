@@ -23,18 +23,28 @@ const owner = ref(props.pub.repo.value.owner);
 const repo = ref(props.pub.repo.value.repo);
 const branch = ref(props.pub.repo.value.branch || 'main');
 const folder = ref(p.folder ?? '');
-const customDomain = ref(false);
+// Where the IRIs live: the Pages address, a Pages custom domain, or w3id.org
+// redirecting to Pages (redirect mode, SPEC §2.4).
+const hosting = ref<'pages' | 'custom' | 'w3id'>(p.iriMode === 'redirect' && p.base.startsWith('https://w3id.org/') ? 'w3id' : 'pages');
 const domain = ref('');
+const w3id = ref(hosting.value === 'w3id' ? p.base.slice('https://w3id.org/'.length).replace(/\/+$/, '') : '');
+const pages = computed(() =>
+  owner.value.trim() && repo.value.trim() ? pagesBase(owner.value.trim(), repo.value.trim()) + normalFolder.value : '',
+);
 const normalFolder = computed(() => {
   const f = folder.value.trim().replace(/^\/+/, '');
   return f && !f.endsWith('/') ? `${f}/` : f;
 });
 const base = computed(() => {
-  if (customDomain.value) {
+  if (hosting.value === 'custom') {
     const host = domain.value.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
     return host ? `https://${host}/${normalFolder.value}` : '';
   }
-  return owner.value.trim() && repo.value.trim() ? pagesBase(owner.value.trim(), repo.value.trim()) + normalFolder.value : '';
+  if (hosting.value === 'w3id') {
+    const path = w3id.value.trim().replace(/^https?:\/\/w3id\.org\//, '').replace(/^\/+|\/+$/g, '');
+    return path && pages.value ? `https://w3id.org/${path}/` : '';
+  }
+  return pages.value;
 });
 
 // Step 2: the profile (bundled; importing or opening files stays in the settings).
@@ -53,13 +63,15 @@ const pagesWorkflow = ref(p.index?.pagesWorkflow ?? BRANCH_PAGES_WORKFLOW);
 const canNext = computed(() => (step.value === 1 ? !!base.value && !!branch.value.trim() : true));
 
 function finish(): void {
+  if (base.value !== p.base && props.state.rebaseNeedsConfirm.value && !window.confirm(t('settings.rebaseConfirm'))) return;
   if (profile.value !== props.state.profile.value) {
     if (props.state.hasLocalWork() && !window.confirm(t('settings.switchConfirm'))) return;
     props.state.switchProfile(profile.value);
   }
   p.folder = normalFolder.value || undefined;
+  if (hosting.value === 'w3id') p.storageBase = pages.value; // the files stay on Pages (SPEC §2.4)
   props.state.setBase(base.value);
-  if (customDomain.value) props.state.setMode('file'); // a Pages custom domain serves the files as they are (SPEC §2.2)
+  if (hosting.value === 'custom') props.state.setMode('file'); // a Pages custom domain serves the files as they are (SPEC §2.2)
   p.index = ping.value ? { url: indexUrl.value.trim(), pagesWorkflow: pagesWorkflow.value.trim() } : undefined;
   if (!props.pub.connected.value) props.pub.repo.value = { owner: owner.value.trim(), repo: repo.value.trim(), branch: branch.value.trim() };
   emit('close');
@@ -101,8 +113,17 @@ function go(n: number): void {
           <label class="wizard__narrow"><span>{{ t('publish.branch') }}</span><input v-model.trim="branch" spellcheck="false" /></label>
         </div>
         <label><span>{{ t('settings.folder') }}</span><input v-model="folder" spellcheck="false" :placeholder="t('settings.folderPlaceholder')" /></label>
-        <label class="wizard__check"><input v-model="customDomain" type="checkbox" /> {{ t('wizard.customDomain') }}</label>
-        <label v-if="customDomain"><span>{{ t('wizard.domain') }}</span><input v-model="domain" spellcheck="false" placeholder="fdp.example.org" /></label>
+        <fieldset class="wizard__hosting">
+          <legend>{{ t('wizard.hosting') }}</legend>
+          <label class="wizard__choice"><input v-model="hosting" type="radio" value="pages" /> {{ t('wizard.hostPages') }}</label>
+          <label class="wizard__choice"><input v-model="hosting" type="radio" value="custom" /> {{ t('wizard.customDomain') }}</label>
+          <label class="wizard__choice"><input v-model="hosting" type="radio" value="w3id" /> {{ t('wizard.hostW3id') }}</label>
+        </fieldset>
+        <label v-if="hosting === 'custom'"><span>{{ t('wizard.domain') }}</span><input v-model="domain" spellcheck="false" placeholder="fdp.example.org" /></label>
+        <template v-if="hosting === 'w3id'">
+          <label><span>{{ t('wizard.w3idPath') }}</span><input v-model="w3id" spellcheck="false" placeholder="my-org/my-fdp" /></label>
+          <p class="wizard__hint">{{ t('wizard.w3idHint', { storage: pages || '…' }) }}</p>
+        </template>
         <p class="wizard__base">
           {{ t('settings.baseUri') }}: <code>{{ base || '…' }}</code>
         </p>
@@ -209,6 +230,19 @@ function go(n: number): void {
   padding: 7px 10px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
+}
+.wizard__hosting {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+.wizard__hosting legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 4px;
 }
 .wizard__row {
   display: grid;
