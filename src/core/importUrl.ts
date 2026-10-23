@@ -8,10 +8,10 @@ import type { Quad } from '@fairdatateam/record-core/rdf';
 import type { Schema } from '@fairdatateam/record-core/types';
 import { DataFactory, Parser, Writer } from 'n3';
 import { iriRewriter, slug } from './import';
-import { childLinks, readRecord, type LoadedProject } from './load';
+import { candidatesByTarget, childLinks, pickType, readRecord, type LoadedProject } from './load';
 import { rootType, type EntityType, type ProjectFile } from './profile';
 import { iriOf, pathOf, type Entity, type Project } from './project';
-import { DCT, NS } from './vocab';
+import { DCT, NS, RDF_TYPE } from './vocab';
 import { pickTitle } from './wiring';
 
 export const PROV_WAS_DERIVED_FROM = 'http://www.w3.org/ns/prov#wasDerivedFrom';
@@ -62,13 +62,13 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
   const report: string[] = [];
   const fetched: Fetched[] = [];
   const seen = new Set<string>();
-  const queue: { iri: string; type: EntityType; parent: string | null }[] = [
-    { iri: input.rootUrl.trim(), type: rootType(settings.types), parent: null },
+  const queue: { iri: string; types: EntityType[]; parent: string | null }[] = [
+    { iri: input.rootUrl.trim(), types: [rootType(settings.types)], parent: null },
   ];
   seen.add(queue[0].iri);
 
   while (queue.length) {
-    const { iri, type, parent } = queue.shift()!;
+    const { iri, types: candidates, parent } = queue.shift()!;
     if (fetched.length >= max) {
       report.push(`Stopped after ${max} records; ${queue.length + 1} more were not copied`);
       break;
@@ -104,16 +104,17 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
       report.push(`${iri}: does not describe itself; left out`);
       continue;
     }
+    // Several child types can share a relation: the record's rdf:type decides.
+    const type = pickType(candidates, null, new Set(quads.filter((q) => q.subject.value === subject && q.predicate.value === RDF_TYPE).map((q) => q.object.value)));
     const titles = quads.filter((q) => q.subject.value === subject && q.predicate.value === DCT.title).map((q) => q.object);
     fetched.push({ iri: subject, type, parent, text: await ntriples(quads), quads, title: pickTitle(titles as never) ?? '' });
 
     const known = new Set(type.children.map((c) => c.relation));
-    for (const { childType, targets } of childLinks(quads, subject, type, settings.types))
-      for (const t of targets) {
-        if (seen.has(t)) continue;
-        seen.add(t);
-        queue.push({ iri: t, type: childType, parent: subject });
-      }
+    for (const [t, childTypes] of candidatesByTarget(childLinks(quads, subject, type, settings.types))) {
+      if (seen.has(t)) continue;
+      seen.add(t);
+      queue.push({ iri: t, types: childTypes, parent: subject });
+    }
     // Children this profile has no type for.
     const other = quads.filter(
       (q) => q.predicate.value === `${NS.ldp}hasMemberRelation` && !known.has(q.object.value) &&
@@ -152,6 +153,9 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
     byIri.set(f.iri, entity);
     project.entities.push(entity);
   }
+
+  for (const key of new Set(project.entities.map((e) => e.type)))
+    if (project.use && !project.use.includes(key) && key !== rootType(settings.types).key) project.use = [...project.use, key];
 
   // ---- metadata, with the old IRIs rewritten ----
   const iriMap = new Map(ordered.map((f) => [f.iri, iriOf(project, byIri.get(f.iri)!)]));

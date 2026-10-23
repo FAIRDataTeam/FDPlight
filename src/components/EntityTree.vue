@@ -13,8 +13,11 @@ const { t, plural } = useI18n();
 const entity = computed(() => findByPath(props.state.project, props.path)!);
 const type = computed(() => props.state.typeOf(entity.value));
 const label = computed(() => props.state.titleOf(props.path) || (entity.value.parent === null ? t('tree.root') : entity.value.id));
+// Types the project does not use are not offered (unless records exist).
 const groups = computed(() =>
-  type.value.children.map((c) => ({
+  type.value.children
+    .filter((c) => props.state.typeInUse(c.type) || props.state.project.entities.some((e) => e.parent === props.path && e.type === c.type))
+    .map((c) => ({
     spec: c,
     childType: typeByKey(props.state.project.types, c.type),
     paths: props.state.project.entities

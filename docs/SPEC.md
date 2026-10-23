@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.8** (2026-10-22). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.9** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
@@ -8,7 +8,10 @@ wiring replaces (§5.7). v0.5: the entity tree is derived from the files
 (§4.1). v0.6: repository folder, Index settings and the inline ping workflow
 (§3.1, §4, §7.2); the bundled Software profile (§3.2). v0.7: opening FDPs
 FDPlight did not make, keeping or migrating their IRIs (§4.2). v0.8: the RI
-cross-check (9.5) and a correction of the RI's container IRIs (2.6).
+cross-check (9.5) and a correction of the RI's container IRIs (2.6). v0.9:
+copying an FDP by its URL (4.3), `use` and type defaults (3.1, 5.2), the
+bundled ERDERA profile (3.2), child types told apart by path or `rdf:type`
+(4.1).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -239,6 +242,14 @@ home.fairdatapoint.org)
   written. See 7.2.
 - `root` (optional) is the root file when it is not `fdp.ttl`, for an FDP
   imported with its own IRIs (4.2).
+- `use` (optional, decided 2026-10-23) lists the keys of the non-root types
+  the project uses; absent means all. Unused types are not offered in the
+  tree and get no LDP container in their parent's file (5.5). A type with
+  records cannot be left out; loading records of a type that is left out puts
+  it back in use, with a note in the report.
+- `types[].defaults` (optional) are triples the profile writes on every
+  entity of that type unless the user gave a value for the predicate (5.2):
+  `[{ "predicate": IRI, "object": IRI }]`.
 
 The values in the example are those currently served by home.fairdatapoint.org.
 
@@ -252,9 +263,21 @@ The values in the example are those currently served by home.fairdatapoint.org.
   Catalog → Software `dcat:resource` (DCAT 3), Software → source code
   `schema:hasPart`. Shapes under `https://fdplight.fairdatapoint.org/shapes/`.
   Used for FDPlight's own FDP.
-- **ERDERA / EJP RD VP**, from the ERDERA FDP reference configuration
-  (Catalog children such as Dataset, Biobank, Patient registry, Guideline,
-  Data service). To be confirmed against the current ERDERA schemas.
+- **ERDERA** (decided 2026-10-23), the resource definitions and shapes of
+  ERDERA/FDP-Reference-Implementation-Configuration (commit 4444c1a, CC0),
+  `src/profiles/erdera/`. Every schema extends Resource. FDP → Catalog →
+  Dataset → Distribution → Access Service (`dcat:accessService`); under a
+  catalog also Patient Registries, Biobanks and Guidelines (all three
+  `dct:hasPart`) and Data Services (`dcat:service`). The root is not a
+  `dcat:DataService`. New projects use catalog, dataset and distribution; the
+  user ticks the other types (3.1 `use`). Type defaults:
+  `ejp:vpConnection ejp:VPDiscoverable` on every type, `fdp:conformsToFdpSpec
+  <https://w3id.org/fdp/fdp-o/1.2>` on the root (8.4; the value WP13.3 uses).
+  Two changes to ERDERA's shapes, made by `scripts/build-erdera-profile.ts`:
+  the dataset and distribution files are not valid Turtle at that commit and
+  get two mechanical syntax fixes; `ejp:vpConnection` accepts
+  `ejp:VPDiscoverable` as well as `ejp:VPInvisible`. `ejp:VPContentDiscovery`
+  is deprecated (owner, 2026-10-23) and stays out.
 
 ---
 
@@ -298,6 +321,9 @@ Rules
 - Starting from any entity file, FDPlight follows `dct:isPartOf` up to the
   root, then the containers down. Without containers it falls back to the
   child relations of the profile, as the Index harvester does (9.1).
+- When several child types share a relation (ERDERA's `dct:hasPart`), a
+  child's type is the one whose URL prefix its path uses, else the most
+  specific one whose target classes its `rdf:type`s include, else the first.
 - Each entity's type is the profile type whose `targetClasses` all appear in
   its `rdf:type`, choosing the type with most matching classes. An entity
   whose types match no profile type is reported.
@@ -390,6 +416,7 @@ Nested `sh:node` values follow 5.3.
 | `E rdfs:label "…"`, one plain literal (no language tag) with the lexical form of a `dct:title` of `E`. With several titles FDPlight takes the first English one, else the first in code-point order | when a title exists | `enhance` → `setLabel(getTitle)`, `l(Value)` drops the tag. The RI takes the first title in model order |
 | `E dct:language defaults.language` | only when the user gave none and a default is set | `enhance` |
 | `E dct:license defaults.license` | only when the user gave none and a default is set | `enhance` |
+| `E p o` for every `{p, o}` in `T.defaults` | only when the user gave no value for `p` | not in RI (profile defaults, 3.1) |
 | `E dct:accessRights E#accessRights` and `E#accessRights a dct:RightsStatement ; dct:description "…"` | only when the user gave none | `enhance` → `setAccessRights` |
 | `E fdp:metadataIssued t0` (`xsd:dateTime`) | `t0` = first save, never changed | `enhance` → `setIssued`, which writes `fdp:metadataIssued`. `enhance(…, oldMetadata)` keeps the old value |
 | `E fdp:metadataModified t` (`xsd:dateTime`) | `t` = every save | `enhance` → `setModified`, which writes `fdp:metadataModified` |
@@ -684,6 +711,17 @@ jobs:
 - Pinging the WP13.3 root returned 204, the entry went from INACTIVE to
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).
+
+- **VP Index survey** (https://index.vp.ejprarediseases.org, read-only, 2026-10-23):
+  32 entries, 12 ACTIVE, all 12 readable. Harvested records: 818 patient
+  registries, 186 biobanks, 121 datasets, 114 distributions, 30 data
+  services, 25 catalogs, no guidelines. Container relations as in the ERDERA
+  profile (`fdp:metadataCatalog`, `dcat:dataset`, `dct:hasPart`,
+  `dcat:distribution`, `dcat:service`, `dcat:accessService`).
+  `ejp:vpConnection` on 54 of 1,293 records (the others are indexed
+  anyway): `VPDiscoverable` alone on 41, with the deprecated
+  `VPContentDiscovery` on 17. No `fdp:conformsToFdpSpec` in the harvested
+  data.
 
 ### 9.3 RI issue noticed
 

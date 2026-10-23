@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Base URI, IRI mode and storage base (SPEC §2.1 to 2.4).
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { recordHasContent } from '@fairdatateam/record-core/record';
 import type { ProjectState } from '../composables/useProject';
 import type { IriMode } from '../core/iri';
@@ -13,6 +13,10 @@ import { useI18n } from '../composables/useI18n';
 const props = defineProps<{ state: ProjectState }>();
 const { t } = useI18n();
 const p = props.state.project;
+
+// SPEC §3.1 `use`: the non-root types, to tick the ones the project uses.
+const optionalTypes = computed(() => p.types.filter((ty) => ty.urlPrefix !== ''));
+const hasRecords = (key: string) => p.entities.some((e) => e.type === key);
 
 const IMPORT = '__import';
 const importing = ref(false);
@@ -110,6 +114,13 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
       </div>
       <p v-if="importError" class="settings__error" role="alert">{{ importError }}</p>
     </form>
+    <fieldset v-if="optionalTypes.length > 1" class="settings__types">
+      <legend>{{ t('settings.typesInUse') }}</legend>
+      <label v-for="ty in optionalTypes" :key="ty.key" class="settings__check" :title="hasRecords(ty.key) ? t('settings.typeHasRecords') : ''">
+        <input type="checkbox" :checked="state.typeInUse(ty.key)" :disabled="hasRecords(ty.key)" @change="state.setTypeInUse(ty.key, ($event.target as HTMLInputElement).checked)" />
+        {{ ty.name }}
+      </label>
+    </fieldset>
     <label class="settings__field">
       <span>{{ t('settings.baseUri') }}</span>
       <input v-model="base" type="url" spellcheck="false" @change="state.setBase(base)" @keyup.enter="state.setBase(base)" />
@@ -197,6 +208,20 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
   display: flex;
   gap: 6px;
   align-items: center;
+}
+.settings__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+.settings__types legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 4px;
 }
 .settings__row {
   display: grid;

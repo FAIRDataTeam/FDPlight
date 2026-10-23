@@ -1,0 +1,204 @@
+[
+  {
+    "key": "fdp",
+    "name": "FAIR Data Point",
+    "urlPrefix": "",
+    "targetClasses": [
+      "https://w3id.org/fdp/fdp-o#MetadataService",
+      "http://www.w3.org/ns/dcat#Resource",
+      "https://w3id.org/fdp/fdp-o#FAIRDataPoint"
+    ],
+    "shapes": "shapes/fdp.ttl",
+    "children": [
+      {
+        "type": "catalog",
+        "relation": "https://w3id.org/fdp/fdp-o#metadataCatalog",
+        "title": "Catalogs"
+      }
+    ],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      },
+      {
+        "predicate": "https://w3id.org/fdp/fdp-o#conformsToFdpSpec",
+        "object": "https://w3id.org/fdp/fdp-o/1.2"
+      }
+    ]
+  },
+  {
+    "key": "catalog",
+    "name": "Catalog",
+    "urlPrefix": "catalog",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#Catalog"
+    ],
+    "shapes": "shapes/catalog.ttl",
+    "children": [
+      {
+        "type": "dataset",
+        "relation": "http://www.w3.org/ns/dcat#dataset",
+        "title": "Datasets"
+      },
+      {
+        "type": "patientregistry",
+        "relation": "http://purl.org/dc/terms/hasPart",
+        "title": "Patient Registries"
+      },
+      {
+        "type": "biobank",
+        "relation": "http://purl.org/dc/terms/hasPart",
+        "title": "Biobanks"
+      },
+      {
+        "type": "guideline",
+        "relation": "http://purl.org/dc/terms/hasPart",
+        "title": "Guidelines"
+      },
+      {
+        "type": "dataservice2",
+        "relation": "http://www.w3.org/ns/dcat#service",
+        "title": "Data Services"
+      }
+    ],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "dataset",
+    "name": "Dataset",
+    "urlPrefix": "dataset",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#Dataset"
+    ],
+    "shapes": "shapes/dataset.ttl",
+    "children": [
+      {
+        "type": "distribution",
+        "relation": "http://www.w3.org/ns/dcat#distribution",
+        "title": "Distributions"
+      }
+    ],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "distribution",
+    "name": "Distribution",
+    "urlPrefix": "distribution",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#Distribution"
+    ],
+    "shapes": "shapes/distribution.ttl",
+    "children": [
+      {
+        "type": "dataservice",
+        "relation": "http://www.w3.org/ns/dcat#accessService",
+        "title": "Access Services"
+      }
+    ],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "patientregistry",
+    "name": "Patient Registry",
+    "urlPrefix": "patientregistry",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "https://w3id.org/ejp-rd/vocabulary#PatientRegistry"
+    ],
+    "shapes": "shapes/patientregistry.ttl",
+    "children": [],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "biobank",
+    "name": "Biobank",
+    "urlPrefix": "biobank",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "https://w3id.org/ejp-rd/vocabulary#Biobank"
+    ],
+    "shapes": "shapes/biobank.ttl",
+    "children": [],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "guideline",
+    "name": "Guideline",
+    "urlPrefix": "guideline",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "https://w3id.org/ejp-rd/vocabulary#Guideline"
+    ],
+    "shapes": "shapes/guideline.ttl",
+    "children": [],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "dataservice",
+    "name": "Access Service",
+    "urlPrefix": "dataservice",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#DataService"
+    ],
+    "shapes": "shapes/dataservice.ttl",
+    "children": [],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  },
+  {
+    "key": "dataservice2",
+    "name": "Data Service",
+    "urlPrefix": "dataservice2",
+    "targetClasses": [
+      "http://www.w3.org/ns/dcat#Resource",
+      "http://www.w3.org/ns/dcat#DataService"
+    ],
+    "shapes": "shapes/dataservice2.ttl",
+    "children": [],
+    "defaults": [
+      {
+        "predicate": "https://w3id.org/ejp-rd/vocabulary#vpConnection",
+        "object": "https://w3id.org/ejp-rd/vocabulary#VPDiscoverable"
+      }
+    ]
+  }
+]

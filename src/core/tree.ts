@@ -3,7 +3,7 @@
 // result on save (SPEC §5.5).
 
 import { filePath, isValidId, mintId } from './iri';
-import { typeByKey } from './profile';
+import { typeByKey, typeInUse } from './profile';
 import { findByPath, pathOf, type Entity, type Project } from './project';
 
 export type TreeResult = { ok: true; entities: Entity[]; path: string } | { ok: false; error: string };
@@ -25,6 +25,7 @@ export function addChild(p: Project, parentPath: string, childType: string, id: 
   if (!parent) return { ok: false, error: `no entity at ${parentPath}` };
   if (!typeByKey(p.types, parent.type).children.some((c) => c.type === childType))
     return { ok: false, error: `a ${parent.type} cannot contain a ${childType}` };
+  if (!typeInUse(p, childType)) return { ok: false, error: `${typeByKey(p.types, childType).name} is not in use in this project` };
   const prefix = typeByKey(p.types, childType).urlPrefix;
   const path = filePath(prefix, id);
   if (!isValidId(id)) return { ok: false, error: `"${id}" is not a valid id (lowercase letters, digits and "-")` };

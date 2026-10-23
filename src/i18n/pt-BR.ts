@@ -51,6 +51,8 @@ const ptBR = {
     ping: 'Notificar (ping) um FDP Index após cada implantação do Pages (grava .github/workflows/fdp-ping.yml)',
     indexUrl: 'URL do Index',
     pagesWorkflow: 'Nome do workflow do Pages',
+    typesInUse: 'Tipos em uso',
+    typeHasRecords: 'Este tipo tem registros: exclua-os primeiro para deixá-lo de fora',
     copyFromUrl: 'Copiar um FAIR Data Point pelo seu URL…',
     copyUrl: 'Endereço do FAIR Data Point a copiar',
     copyHint: 'Os registros recebem novos IRIs sob o URI base acima, e cada um aponta para o seu IRI antigo (prov:wasDerivedFrom). Defina o URI base primeiro. O FDP original não é alterado.',

@@ -51,6 +51,8 @@ const nlNL = {
     ping: 'Een FDP Index pingen na elke Pages-deployment (schrijft .github/workflows/fdp-ping.yml)',
     indexUrl: 'Index-URL',
     pagesWorkflow: 'Naam van de Pages-workflow',
+    typesInUse: 'Gebruikte typen',
+    typeHasRecords: 'Dit type heeft records: verwijder die eerst om het weg te laten',
     copyFromUrl: 'Een FAIR Data Point kopiëren via de URL…',
     copyUrl: 'Adres van het FAIR Data Point om te kopiëren',
     copyHint: "De records krijgen nieuwe IRI's onder de basis-URI hierboven, en elk verwijst naar zijn oude IRI (prov:wasDerivedFrom). Stel eerst de basis-URI in. Het oorspronkelijke FDP verandert niet.",
