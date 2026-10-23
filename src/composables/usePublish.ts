@@ -14,6 +14,7 @@ import { PING_WORKFLOW_PATH } from '../core/ping';
 import { planPublish, type PublishPlan } from '../core/publish';
 import { isServed, rootFileUrl, type FetchLike } from '../core/served';
 import { rootPath } from '../core/project';
+import { say } from '../core/messages';
 
 const TOKEN_KEY = 'fdplight.github.token';
 const { t, plural } = useI18n();
@@ -156,7 +157,7 @@ export function usePublish(
     const shapes: Record<string, string> = {};
     for (const t of settings.types) {
       const s = await client.readFile(repo.value, folder + t.shapes, head.value);
-      if (s === null) throw new Error(`${folder}${t.shapes} is missing from the repository`);
+      if (s === null) throw new Error(say('shapesMissing', { path: folder + t.shapes }));
       shapes[t.key] = s;
     }
     const files = new Map<string, string>();

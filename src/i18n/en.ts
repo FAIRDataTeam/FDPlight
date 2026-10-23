@@ -3,6 +3,7 @@
 // Plural entries are { one, other } objects resolved via the `plural()` helper.
 // The formPreview, fieldInput and lookup sections are record-core's renderer
 // keys (RECORD_MESSAGES_EN), with Contour's translations in the other locales.
+import { CORE_MESSAGES } from '../core/messages';
 
 const en = {
   app: {
@@ -188,6 +189,8 @@ const en = {
       noEndpoint: 'No SPARQL endpoint is set for this field.',
     },
   },
+  // Messages built by the core, translated by key (src/core/messages.ts).
+  core: CORE_MESSAGES,
 };
 
 export default en;

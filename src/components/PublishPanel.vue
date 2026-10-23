@@ -7,7 +7,7 @@ import type { ImportMode } from '../core/import';
 import { useI18n } from '../composables/useI18n';
 
 defineProps<{ pub: ReturnType<typeof usePublish> }>();
-const { t, plural } = useI18n();
+const { t, plural, tc } = useI18n();
 const rootPath = ref('');
 const mode = ref<ImportMode>('keep');
 </script>
@@ -74,7 +74,7 @@ const mode = ref<ImportMode>('keep');
       </form>
       <p v-if="pub.loaded.value" class="publish__loaded">{{ t('publish.loaded') }}</p>
       <ul v-if="pub.loadReport.value.length" class="publish__report">
-        <li v-for="r in pub.loadReport.value" :key="r">{{ r }}</li>
+        <li v-for="r in pub.loadReport.value" :key="r">{{ tc(r) }}</li>
       </ul>
       <details v-if="Object.keys(pub.loadCounts.value).length" class="publish__counts">
         <summary>{{ t('publish.countsSummary') }}</summary>
@@ -167,7 +167,7 @@ const mode = ref<ImportMode>('keep');
       </p>
     </div>
 
-    <p v-if="pub.error.value" class="publish__error" role="alert">{{ pub.error.value }}</p>
+    <p v-if="pub.error.value" class="publish__error" role="alert">{{ tc(pub.error.value) }}</p>
   </section>
 </template>
 

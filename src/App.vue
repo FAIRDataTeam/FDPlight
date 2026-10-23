@@ -16,7 +16,7 @@ import { treeKeyTarget } from './core/tree';
 const state = useProject();
 const pub = usePublish(state);
 const { project, selected, entity } = state;
-const { t, plural, locale, setLocale } = useI18n();
+const { t, plural, tc, locale, setLocale } = useI18n();
 const GUIDE_URL = 'https://github.com/FAIRDataTeam/FDPlight/blob/main/docs/data-steward-guide.md';
 // The page's language follows the chosen locale (screen readers, hyphenation).
 watch(locale, (l) => (document.documentElement.lang = l), { immediate: true });
@@ -118,7 +118,7 @@ function removeSelected() {
             </label>
             <button type="button" class="danger" @click="removeSelected">{{ t('app.delete') }}</button>
           </div>
-          <p v-if="state.lastError.value" class="error" role="alert">{{ state.lastError.value }}</p>
+          <p v-if="state.lastError.value" class="error" role="alert">{{ tc(state.lastError.value) }}</p>
         </div>
         <EntityForm
           :key="selected"
@@ -137,7 +137,7 @@ function removeSelected() {
           <template v-if="!state.issues.value.length">{{ t('app.structureOk') }}</template>
           <ul v-else>
             <li v-for="(i, n) in state.issues.value" :key="n" :class="`is-${i.severity}`">
-              <strong v-if="i.entity">{{ i.entity }}:</strong> {{ i.message }}
+              <strong v-if="i.entity">{{ i.entity }}:</strong> {{ tc(i.message) }}
             </li>
           </ul>
         </div>

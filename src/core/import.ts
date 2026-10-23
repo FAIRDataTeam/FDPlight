@@ -13,6 +13,7 @@ import { DEFAULT_ACCESS_RIGHTS, FORMAT_VERSION, type EntityType, type ProjectFil
 import { iriOf, pathOf, type Entity } from './project';
 import { DCT, FDP, R3D_REPOSITORY, RDF_TYPE } from './vocab';
 import { pickTitle } from './wiring';
+import { say } from './messages';
 
 export type ImportMode = 'keep' | 'migrate';
 
@@ -34,16 +35,16 @@ export function importExistingFdp(input: ImportInput): ImportResult {
   const folder = slash < 0 ? '' : input.rootPath.slice(0, slash + 1);
   const rootFile = input.rootPath.slice(folder.length);
   const text = input.files.get(input.rootPath);
-  if (text === undefined) return { ok: false, error: `${input.rootPath} is not in the repository` };
+  if (text === undefined) return { ok: false, error: say('rootNotInRepository', { path: input.rootPath }) };
   const parsed = parseRdf(text, 'turtle');
-  if (parsed.error) return { ok: false, error: `${input.rootPath} is not valid Turtle: ${parsed.error}` };
+  if (parsed.error) return { ok: false, error: say('rootNotTurtle', { path: input.rootPath, error: parsed.error }) };
 
   // The root: a subject typed as an FDP whose IRI is the file's URL.
   const rootClasses = new Set([FDP.MetadataService, R3D_REPOSITORY, 'https://w3id.org/fdp/fdp-o#FAIRDataPoint']);
   const rootIri = parsed.quads.find(
     (q) => q.predicate.value === RDF_TYPE && rootClasses.has(q.object.value) && q.subject.termType === 'NamedNode' && q.subject.value.endsWith(`/${rootFile}`),
   )?.subject.value;
-  if (!rootIri) return { ok: false, error: `${input.rootPath} has no FAIR Data Point whose IRI ends with /${rootFile}` };
+  if (!rootIri) return { ok: false, error: say('noFdpRoot', { path: input.rootPath, file: rootFile }) };
   const base = rootIri.slice(0, rootIri.length - rootFile.length);
 
   const title = pickTitle(parsed.quads.filter((q) => q.subject.value === rootIri && q.predicate.value === DCT.title).map((q) => q.object as never));
@@ -106,7 +107,7 @@ export function migrate(loaded: LoadedProject): LoadedProject {
   }
   const left = before.filter((b) => b.path !== pathMap.get(b.path)).map((b) => b.path);
   const report = [...loaded.report];
-  if (left.length) report.push(`Migrated to new IRIs. The old files stay in the repository until you delete them: ${left.join(', ')}`);
+  if (left.length) report.push(say('migrated', { paths: left.join(', ') }));
   return { project, values, extras, report, counts };
 }
 

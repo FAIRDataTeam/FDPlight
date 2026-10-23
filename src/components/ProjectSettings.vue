@@ -12,7 +12,7 @@ import { PROFILES } from '../profiles';
 import { useI18n } from '../composables/useI18n';
 
 const props = defineProps<{ state: ProjectState }>();
-const { t } = useI18n();
+const { t, tc } = useI18n();
 const p = props.state.project;
 
 // SPEC §3.1 `use`: the non-root types, to tick the ones the project uses.
@@ -59,7 +59,7 @@ async function importProfile() {
     props.state.useImportedProfile(imported);
     importing.value = false;
   } catch (err) {
-    importError.value = t('settings.importFailed', { error: err instanceof Error ? err.message : String(err) });
+    importError.value = err instanceof Error ? err.message : String(err);
   } finally {
     busy.value = false;
   }
@@ -98,7 +98,7 @@ async function copyFdp() {
   try {
     const r = await importFromUrl({ rootUrl: copyUrl.value.trim(), settings: p, forms: props.state.forms });
     if (!r.ok) {
-      copyError.value = t('settings.copyFailed', { error: r.error });
+      copyError.value = r.error;
       return;
     }
     if (hasContent() && !window.confirm(t('settings.copyConfirm'))) return;
@@ -150,7 +150,7 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
         <button type="button" class="link" @click="openingFiles = false">{{ t('settings.cancel') }}</button>
       </div>
       <ul v-if="fileErrors.length" class="settings__errors" role="alert">
-        <li v-for="e in fileErrors" :key="e">{{ e }}</li>
+        <li v-for="e in fileErrors" :key="e">{{ tc(e) }}</li>
       </ul>
     </form>
     <form v-if="importing" class="settings__import" @submit.prevent="importProfile">
@@ -162,7 +162,7 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
         <button type="submit" class="primary" :disabled="busy">{{ busy ? t('settings.importing') : t('settings.importProfile') }}</button>
         <button type="button" class="link" @click="importing = false">{{ t('settings.cancel') }}</button>
       </div>
-      <p v-if="importError" class="settings__error" role="alert">{{ importError }}</p>
+      <p v-if="importError" class="settings__error" role="alert">{{ t('settings.importFailed', { error: tc(importError) }) }}</p>
     </form>
     <fieldset v-if="optionalTypes.length > 1" class="settings__types">
       <legend>{{ t('settings.typesInUse') }}</legend>
@@ -220,13 +220,13 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
         <button type="submit" class="primary" :disabled="busy || state.settingsErrors.value.length > 0">{{ busy ? t('settings.copying') : t('settings.copy') }}</button>
         <button type="button" class="link" @click="copying = false">{{ t('settings.cancel') }}</button>
       </div>
-      <p v-if="copyError" class="settings__error" role="alert">{{ copyError }}</p>
+      <p v-if="copyError" class="settings__error" role="alert">{{ t('settings.copyFailed', { error: tc(copyError) }) }}</p>
     </form>
     <ul v-if="copyReport.length" class="settings__report">
-      <li v-for="r in copyReport" :key="r">{{ r }}</li>
+      <li v-for="r in copyReport" :key="r">{{ tc(r) }}</li>
     </ul>
     <ul v-if="state.settingsErrors.value.length" class="settings__errors">
-      <li v-for="e in state.settingsErrors.value" :key="e">{{ e }}</li>
+      <li v-for="e in state.settingsErrors.value" :key="e">{{ tc(e) }}</li>
     </ul>
   </section>
 </template>

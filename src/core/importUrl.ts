@@ -13,6 +13,7 @@ import { rootType, type EntityType, type ProjectFile } from './profile';
 import { iriOf, pathOf, type Entity, type Project } from './project';
 import { DCT, NS, RDF_TYPE } from './vocab';
 import { pickTitle } from './wiring';
+import { say } from './messages';
 
 export const PROV_WAS_DERIVED_FROM = 'http://www.w3.org/ns/prov#wasDerivedFrom';
 
@@ -70,7 +71,7 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
   while (queue.length) {
     const { iri, types: candidates, parent } = queue.shift()!;
     if (fetched.length >= max) {
-      report.push(`Stopped after ${max} records; ${queue.length + 1} more were not copied`);
+      report.push(say('copyStopped', { max, n: queue.length + 1 }));
       break;
     }
     let res: Awaited<ReturnType<TurtleFetch>>;
@@ -78,13 +79,13 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
       res = await fetchFn(iri, { headers: { Accept: 'text/turtle' } });
     } catch (e) {
       const why = e instanceof Error ? e.message : String(e);
-      if (parent === null) return { ok: false, error: `${iri} could not be read (${why}); the server may not allow browser access (CORS)` };
-      report.push(`${iri}: could not be read (${why}); left out`);
+      if (parent === null) return { ok: false, error: say('copyRootUnreadable', { iri, error: why }) };
+      report.push(say('copyUnreadable', { iri, error: why }));
       continue;
     }
     if (!res.ok) {
-      if (parent === null) return { ok: false, error: `${iri} answered HTTP ${res.status}` };
-      report.push(`${iri}: HTTP ${res.status}; left out`);
+      if (parent === null) return { ok: false, error: say('copyRootHttp', { iri, status: res.status }) };
+      report.push(say('copyHttp', { iri, status: res.status }));
       continue;
     }
     let quads: Quad[];
@@ -92,16 +93,16 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
       quads = new Parser({ baseIRI: res.url || iri }).parse(await res.text()) as unknown as Quad[];
     } catch (e) {
       const why = e instanceof Error ? e.message : String(e);
-      if (parent === null) return { ok: false, error: `${iri} is not Turtle (${why})` };
-      report.push(`${iri}: not Turtle (${why}); left out`);
+      if (parent === null) return { ok: false, error: say('copyRootNotTurtle', { iri, error: why }) };
+      report.push(say('copyNotTurtle', { iri, error: why }));
       continue;
     }
     // The record is about the IRI asked for (as the Index assumes), or about
     // the address a redirect led to.
     const subject = [iri, res.url].find((c) => c && quads.some((q) => q.subject.value === c));
     if (!subject) {
-      if (parent === null) return { ok: false, error: `${iri} does not describe itself; is it the root of a FAIR Data Point?` };
-      report.push(`${iri}: does not describe itself; left out`);
+      if (parent === null) return { ok: false, error: say('copyRootNoSelf', { iri }) };
+      report.push(say('copyNoSelf', { iri }));
       continue;
     }
     // Several child types can share a relation: the record's rdf:type decides.
@@ -122,7 +123,7 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
     );
     for (const c of other) {
       const n = quads.filter((q) => q.subject.equals(c.subject) && q.predicate.value === `${NS.ldp}contains`).length;
-      if (n) report.push(`${subject}: ${n} record(s) linked by ${c.object.value} are not in this profile; left out`);
+      if (n) report.push(say('copyOtherTypes', { iri: subject, n, relation: c.object.value }));
     }
   }
 
@@ -167,7 +168,7 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
     const e = byIri.get(f.iri)!;
     const path = pathOf(project, e);
     const rec = readRecord(f.text, f.quads, f.iri, input.forms[e.type]);
-    if (!rec.found) report.push(`${f.iri}: no metadata could be read into the form`);
+    if (!rec.found) report.push(say('copyNoMetadata', { iri: f.iri }));
     // What the source server generated about itself: its metric nodes, its
     // profile IRIs and (on the root) its API description. FDPlight writes its own.
     const sourceOwn = (q: Quad) =>
@@ -184,12 +185,10 @@ export async function importFromUrl(input: UrlImportInput): Promise<UrlImportRes
       ...kept.map(rw.quad),
       DataFactory.quad(DataFactory.namedNode(iriMap.get(f.iri)!), DataFactory.namedNode(PROV_WAS_DERIVED_FROM), DataFactory.namedNode(f.iri)) as unknown as Quad,
     ];
-    if (rec.others) report.push(`${f.iri}: ${rec.others} other record(s) in the response are kept as they are`);
+    if (rec.others) report.push(say('copyOthersKept', { iri: f.iri, n: rec.others }));
   }
-  if (serverTriples) report.push(`${serverTriples} triple(s) the source server generated about itself (metrics, profiles, API description) were left out; FDPlight writes its own`);
-  report.unshift(
-    `Copied ${ordered.length} record(s) from ${fetched[0].iri}. They get new IRIs under ${settings.base}; each links to its old IRI with prov:wasDerivedFrom.`,
-  );
+  if (serverTriples) report.push(say('copyServerTriples', { n: serverTriples }));
+  report.unshift(say('copied', { n: ordered.length, iri: fetched[0].iri, base: settings.base }));
   return { ok: true, loaded: { project, values, extras, report, counts: {} } };
 }
 

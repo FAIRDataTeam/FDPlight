@@ -1,6 +1,8 @@
 // IRI rules of a file-only FDP: base URI, IRI mode, entity / container /
 // hash IRIs, id minting and re-basing. Every function maps to SPEC §2.
 
+import { say } from './messages';
+
 export type IriMode = 'file' | 'redirect';
 
 /** The IRI-related settings of a project (SPEC §3.1 `base`, `iriMode`, `storageBase`). */
@@ -23,28 +25,28 @@ export function validateBase(uri: string): string[] {
   try {
     url = new URL(uri);
   } catch {
-    return ['is not an absolute URI'];
+    return [say('notAbsoluteUri')];
   }
   const errors: string[] = [];
-  if (url.protocol !== 'https:') errors.push('must use https');
-  if (!uri.endsWith('/')) errors.push('must end with "/"');
-  if (url.search || uri.includes('?')) errors.push('must not have a query');
-  if (url.hash || uri.includes('#')) errors.push('must not have a fragment');
-  if (url.username || url.password) errors.push('must not contain credentials');
-  if (url.href !== uri) errors.push(`is not in normal form (expected ${url.href})`);
+  if (url.protocol !== 'https:') errors.push(say('mustHttps'));
+  if (!uri.endsWith('/')) errors.push(say('mustSlash'));
+  if (url.search || uri.includes('?')) errors.push(say('noQuery'));
+  if (url.hash || uri.includes('#')) errors.push(say('noFragment'));
+  if (url.username || url.password) errors.push(say('noCredentials'));
+  if (url.href !== uri) errors.push(say('notNormal', { expected: url.href }));
   return errors;
 }
 
 /** SPEC §2.2, §3.1. Problems with a project's IRI settings, empty when valid. */
 export function validateIriSettings(s: IriSettings): string[] {
-  const errors = validateBase(s.base).map((e) => `base URI ${e}`);
+  const errors = validateBase(s.base).map((problem) => say('baseUri', { problem }));
   if (s.iriMode === 'redirect') {
-    if (!s.storageBase) errors.push('redirect mode needs a storage base');
-    else errors.push(...validateBase(s.storageBase).map((e) => `storage base ${e}`));
+    if (!s.storageBase) errors.push(say('storageBaseNeeded'));
+    else errors.push(...validateBase(s.storageBase).map((problem) => say('storageBase', { problem })));
   } else if (s.iriMode === 'file') {
-    if (s.storageBase) errors.push('file mode must not have a storage base');
+    if (s.storageBase) errors.push(say('storageBaseInFileMode'));
   } else {
-    errors.push(`unknown IRI mode "${String(s.iriMode)}"`);
+    errors.push(say('unknownMode', { mode: String(s.iriMode) }));
   }
   return errors;
 }

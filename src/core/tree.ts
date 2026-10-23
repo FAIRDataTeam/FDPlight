@@ -5,6 +5,7 @@
 import { filePath, isValidId, mintId } from './iri';
 import { typeByKey, typeInUse } from './profile';
 import { findByPath, pathOf, type Entity, type Project } from './project';
+import { say } from './messages';
 
 export type TreeResult = { ok: true; entities: Entity[]; path: string } | { ok: false; error: string };
 
@@ -22,22 +23,22 @@ export function subtree(p: Project, path: string): string[] {
  */
 export function addChild(p: Project, parentPath: string, childType: string, id: string = mintId()): TreeResult {
   const parent = findByPath(p, parentPath);
-  if (!parent) return { ok: false, error: `no entity at ${parentPath}` };
+  if (!parent) return { ok: false, error: say('noEntity', { path: parentPath }) };
   if (!typeByKey(p.types, parent.type).children.some((c) => c.type === childType))
-    return { ok: false, error: `a ${parent.type} cannot contain a ${childType}` };
-  if (!typeInUse(p, childType)) return { ok: false, error: `${typeByKey(p.types, childType).name} is not in use in this project` };
+    return { ok: false, error: say('cannotContain', { parent: parent.type, child: childType }) };
+  if (!typeInUse(p, childType)) return { ok: false, error: say('typeNotInUse', { type: typeByKey(p.types, childType).name }) };
   const prefix = typeByKey(p.types, childType).urlPrefix;
   const path = filePath(prefix, id);
-  if (!isValidId(id)) return { ok: false, error: `"${id}" is not a valid id (lowercase letters, digits and "-")` };
-  if (findByPath(p, path)) return { ok: false, error: `${path} already exists` };
+  if (!isValidId(id)) return { ok: false, error: say('invalidId', { id }) };
+  if (findByPath(p, path)) return { ok: false, error: say('exists', { path }) };
   return { ok: true, entities: [...p.entities, { type: childType, id, parent: parentPath }], path };
 }
 
 /** Remove the entity at `path` and everything below it. The root cannot be removed. */
 export function removeEntity(p: Project, path: string): TreeResult {
   const e = findByPath(p, path);
-  if (!e) return { ok: false, error: `no entity at ${path}` };
-  if (e.parent === null) return { ok: false, error: 'the root cannot be removed' };
+  if (!e) return { ok: false, error: say('noEntity', { path }) };
+  if (e.parent === null) return { ok: false, error: say('rootNotRemovable') };
   const gone = new Set(subtree(p, path));
   return { ok: true, entities: p.entities.filter((x) => !gone.has(pathOf(p, x))), path };
 }
@@ -48,13 +49,13 @@ export function removeEntity(p: Project, path: string): TreeResult {
  */
 export function renameEntity(p: Project, path: string, newId: string): TreeResult {
   const e = findByPath(p, path);
-  if (!e) return { ok: false, error: `no entity at ${path}` };
-  if (e.parent === null) return { ok: false, error: 'the root file is always fdp.ttl' };
-  if (e.path) return { ok: false, error: 'an imported entity keeps its file name and IRI' };
-  if (!isValidId(newId)) return { ok: false, error: `"${newId}" is not a valid id (lowercase letters, digits and "-")` };
+  if (!e) return { ok: false, error: say('noEntity', { path }) };
+  if (e.parent === null) return { ok: false, error: say('rootFileFixed') };
+  if (e.path) return { ok: false, error: say('importedKeepsName') };
+  if (!isValidId(newId)) return { ok: false, error: say('invalidId', { id: newId }) };
   const newPath = filePath(typeByKey(p.types, e.type).urlPrefix, newId);
   if (newPath === path) return { ok: true, entities: p.entities, path };
-  if (findByPath(p, newPath)) return { ok: false, error: `${newPath} already exists` };
+  if (findByPath(p, newPath)) return { ok: false, error: say('exists', { path: newPath }) };
   const entities = p.entities.map((x) => {
     if (x === e) return { ...x, id: newId };
     if (x.parent === path) return { ...x, parent: newPath };
@@ -86,13 +87,13 @@ export function moveTargets(p: Project, path: string): string[] {
  */
 export function moveEntity(p: Project, path: string, newParent: string): TreeResult {
   const e = findByPath(p, path);
-  if (!e) return { ok: false, error: `no entity at ${path}` };
-  if (e.parent === null) return { ok: false, error: 'the root cannot be moved' };
+  if (!e) return { ok: false, error: say('noEntity', { path }) };
+  if (e.parent === null) return { ok: false, error: say('rootNotMovable') };
   const target = findByPath(p, newParent);
-  if (!target) return { ok: false, error: `no entity at ${newParent}` };
-  if (subtree(p, path).includes(newParent)) return { ok: false, error: 'an entity cannot be moved below itself' };
+  if (!target) return { ok: false, error: say('noEntity', { path: newParent }) };
+  if (subtree(p, path).includes(newParent)) return { ok: false, error: say('moveBelowItself') };
   if (!typeByKey(p.types, target.type).children.some((c) => c.type === e.type))
-    return { ok: false, error: `a ${target.type} cannot contain a ${e.type}` };
+    return { ok: false, error: say('cannotContain', { parent: target.type, child: e.type }) };
   if (e.parent === newParent) return { ok: true, entities: p.entities, path };
   return { ok: true, entities: p.entities.map((x) => (x === e ? { ...x, parent: newParent } : x)), path };
 }
