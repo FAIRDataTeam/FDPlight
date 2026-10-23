@@ -32,11 +32,11 @@ file tracks how we build it.
 | 2 — Multi-shape forms | merged shapes per type, form per entity | ✅ default and ERDERA shapes tested |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ✅ matches the RI (SPEC §9.5) |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ✅ repository import, report, copy by URL |
-| 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
-| 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish, PR mode and conflict check done |
+| 5 — Validation | SHACL plus structural checks before publish | ✅ both checks live in the editor; publishing is blocked while there are errors |
+| 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | ✅ fine-grained token, one-commit publish, PR mode, conflict check, served check |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ✅ six locales, guide in six languages, ERDERA, accessibility |
-| 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | ⬜ |
+| 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | 🟡 profile documents done (#41); redirect mode, VP Index auth and CSV open |
 
 Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
@@ -285,7 +285,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
       user metadata was lost (#16; both modes; keep mode round-trips
       exactly).
 
-## Phase 5 — Validation 🟡
+## Phase 5 — Validation ✅
 
 - [x] Per entity SHACL check against the type's shapes, on the complete file
       graph so system triples count (`src/core/validation.ts`, record-core
@@ -296,7 +296,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] Publish button disabled while there are errors (#12), with a list that jumps
       to the offending entity and field.
 
-## Phase 6 — GitHub publish 🟡
+## Phase 6 — GitHub publish ✅
 
 - [x] Authentication for the pilot: fine-grained personal access token
       (contents read/write on one repository) kept in `sessionStorage` (#12).
@@ -401,7 +401,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
       record-core 0.2.2 with `aria-invalid` added (Contour #33, #38). Now no
       violations. Not done: a test with a screen reader.
 
-## Phase 9 — Optional ⬜
+## Phase 9 — Optional 🟡
 
 - [ ] Redirect mode UI and publishing (SPEC §2.4): storage base, generated
       w3id `.htaccess` rules, check that `{base}` resolves before publishing.
