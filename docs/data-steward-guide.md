@@ -179,6 +179,11 @@ remove, then lets you choose **how**:
   opens a **pull request**, so a colleague can review it on GitHub first.
   Merging the pull request publishes the changes.
 
+After publishing, **Check whether it is online** fetches your FDP from the
+base URI. If it is not served yet, FDPlight shows how to switch on GitHub
+Pages; the first deployment takes a minute or two. When you connect to a
+repository that already has an FDP, FDPlight runs this check by itself.
+
 Everything is written as **one commit**. FDPlight only updates a file when
 its content changes, so the *modified* date of a record changes only when
 the record itself (or its list of children) changed. If someone else
@@ -254,6 +259,6 @@ same forms.
 | *Repository or branch not found, or the token cannot access it (404).* | Check the spelling, and that the token was created for this repository (and approved, for an organisation). |
 | *The branch has new commits …* | Someone else published meanwhile. Reconnect, then make your edits again. |
 | Publishing fails on `.github/workflows/fdp-ping.yml` | The token lacks *Workflows: read and write*. |
-| The files are not on the web | Check *Settings → Pages* in the repository and the *Actions* tab for the Pages deployment. |
+| *… is not on the web yet.* | Switch on GitHub Pages (*Settings → Pages → Deploy from a branch*) and look at the *Actions* tab for the Pages deployment, then *Check again*. |
 | The Index does not list the FDP | Wait for the Pages deployment and the *Ping FDP Index* workflow in the *Actions* tab; you can also run that workflow by hand there. |
 | The interface is in the wrong language | Use the language menu at the top right. |

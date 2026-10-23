@@ -137,6 +137,32 @@ describe('usePublish (TASKS Phase 6)', () => {
     expect([...s.published.value].sort()).toEqual([cat, 'fdp.ttl'].sort());
   });
 
+  it('checks that a published project is on the web, and offers the Pages steps when not', async () => {
+    const s = useProject();
+    const gh = fakeRepo({ 'fdp.ttl': '' });
+    let online = false;
+    const urls: string[] = [];
+    const fetchFn = async (url: string) => {
+      urls.push(url);
+      return { ok: online };
+    };
+    const pub = usePublish(s, () => gh.client, () => true, fetchFn);
+    pub.repo.value = { owner: 'erdera', repo: 'my-fdp', branch: 'main' };
+    await pub.connect();
+    expect(pub.servedUrl.value).toBe('https://erdera.github.io/my-fdp/fdp.ttl');
+    expect(pub.served.value).toBe('no');
+    online = true;
+    await pub.checkServed();
+    expect(pub.served.value).toBe('yes');
+    expect(urls).toHaveLength(2);
+
+    // A repository without the root file: nothing to check before the first publish.
+    const fresh = usePublish(useProject(), () => fakeRepo().client, () => true, fetchFn);
+    fresh.repo.value = { owner: 'erdera', repo: 'new-fdp', branch: 'main' };
+    await fresh.connect();
+    expect([fresh.served.value, urls.length]).toEqual(['unknown', 2]);
+  });
+
   it('reports a conflict instead of overwriting someone else’s commit', async () => {
     const s = useProject();
     const gh = fakeRepo();

@@ -509,6 +509,13 @@ Rules 3 to 6 are the classes of hand-written errors seen in the WP13.3 files
   shows any conflict in the pull request. Entities in the proposal count as
   published for id locking (2.3). The token also needs *Pull requests:
   read and write*.
+- **Served check** (decided 2026-10-23). GitHub Pages must be switched on
+  for the files to be served and for the ping workflow to run. On connect
+  (when the root file is already in the repository) and on demand after a
+  publish, FDPlight fetches the root file from the base URI (the storage base
+  in redirect mode). Not served: it explains how to switch Pages on. Pages
+  answers with CORS `*`; a site without Pages gives a 404 without CORS, so the
+  browser cannot tell it from being offline. No token permission is needed.
 - FDPlight checks that the branch head is still the commit it read before
   writing (and updates the ref without force), so a concurrent edit is
   detected, never overwritten.

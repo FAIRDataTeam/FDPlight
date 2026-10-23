@@ -12,6 +12,8 @@ import { parseProjectFile } from '../core/profile';
 import { entityForm } from '../core/forms';
 import { PING_WORKFLOW_PATH } from '../core/ping';
 import { planPublish, type PublishPlan } from '../core/publish';
+import { isServed, rootFileUrl, type FetchLike } from '../core/served';
+import { rootPath } from '../core/project';
 
 const TOKEN_KEY = 'fdplight.github.token';
 const { t, plural } = useI18n();
@@ -45,6 +47,7 @@ export function usePublish(
   state: ProjectState,
   makeClient: (token: string) => GitHubClient = (t) => createClient(t),
   confirmReplace: () => boolean = () => window.confirm(t('publish.replaceConfirm')),
+  fetchFn?: FetchLike,
 ) {
   const repo = ref<RepoRef>({ owner: '', repo: '', branch: 'main' });
   const token = ref(loadToken());
@@ -66,6 +69,9 @@ export function usePublish(
   /** Per entity file: triples mapped to the form, regenerated and kept (TASKS Phase 4). */
   const loadCounts = ref<LoadedProject['counts']>({});
   const loaded = ref(false);
+  /** Whether the root file is on the web (GitHub Pages), decided 2026-10-23. */
+  const served = ref<'unknown' | 'checking' | 'yes' | 'no'>('unknown');
+  const servedUrl = computed(() => rootFileUrl(state.project) ?? '');
   /** The repository has no FDPlight project: an existing FDP can be imported. */
   const canImport = computed(
     () => connected.value && !loaded.value && !remoteFiles.value.some((p) => p === 'fdplight.json' || p.endsWith('/fdplight.json')),
@@ -184,6 +190,9 @@ export function usePublish(
       await refresh();
       connected.value = true;
       if (!loaded.value && state.project.base === DEFAULT_BASE) state.setBase(pagesBase(repo.value.owner, repo.value.repo));
+      // Already published: is it on the web? (A first publish is checked after publishing.)
+      served.value = 'unknown';
+      if (remote.value.has((state.project.folder ?? '') + rootPath(state.project))) await checkServed();
     } catch (e) {
       connected.value = false;
       fail(e);
@@ -269,6 +278,12 @@ export function usePublish(
     }
   }
 
+  async function checkServed(): Promise<void> {
+    if (!servedUrl.value) return;
+    served.value = 'checking';
+    served.value = (await isServed(servedUrl.value, fetchFn)) ? 'yes' : 'no';
+  }
+
   function disconnect(): void {
     client = null;
     proposed = new Set();
@@ -279,5 +294,5 @@ export function usePublish(
     saveToken('');
   }
 
-  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, publishMode, lastPull, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
+  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, publishMode, lastPull, served, servedUrl, checkServed, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
 }
