@@ -141,6 +141,19 @@ const mode = ref<ImportMode>('keep');
         </div>
       </div>
 
+      <p v-if="pub.served.value === 'yes'" class="publish__online">
+        {{ t('publish.online') }} <a :href="pub.servedUrl.value" target="_blank" rel="noopener">{{ pub.servedUrl.value }}</a>
+      </p>
+      <div v-else-if="pub.served.value === 'no'" class="publish__offline" role="status">
+        <p>{{ t('publish.notOnline', { url: pub.servedUrl.value }) }}</p>
+        <p>{{ t('publish.enablePages', { branch: pub.repo.value.branch }) }}</p>
+        <button type="button" class="link" @click="pub.checkServed()">{{ t('publish.checkAgain') }}</button>
+      </div>
+      <p v-else-if="pub.served.value === 'checking'" class="publish__online">{{ t('publish.checkingOnline') }}</p>
+      <button v-else-if="pub.commitUrl.value && !pub.lastPull.value" type="button" class="link" @click="pub.checkServed()">
+        {{ t('publish.checkOnline') }}
+      </button>
+
       <p v-if="pub.lastPull.value" class="publish__done">
         {{ t('publish.proposed') }}
         <a :href="pub.lastPull.value.url" target="_blank" rel="noopener">{{ t('publish.pullRequest', { n: pub.lastPull.value.number }) }}</a>.
@@ -288,6 +301,21 @@ input {
 .publish__mode legend {
   font-weight: 600;
   padding: 0 4px;
+}
+.publish__online {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-lighter);
+}
+.publish__offline {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.publish__offline p {
+  margin: 0 0 4px;
 }
 .publish__blockers {
   margin: 0 0 8px;

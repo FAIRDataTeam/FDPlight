@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-23 — Owner's decisions recorded (#30). Served check after connect and publish (#31).
 - 2026-10-22 — Forms and checks from real ERDERA shapes; `ejp:` prefix (#29).
 - 2026-10-22 — SHACL finding texts translated (#28).
 - 2026-10-22 — Data-steward guide with screenshots, linked from the app
@@ -296,9 +297,11 @@ Resource plus Dataset). Contour still treats the first shape as primary
       comes with Phase 4 loading.
 - [x] "Propose changes" mode. Same commit on a new branch plus a pull request
       (#19, SPEC §7.1).
-- [ ] First-publish helper (decided 2026-10-23): check that the base URI is
+- [x] First-publish helper (decided 2026-10-23): check that the base URI is
       served and, if not, explain how to enable Pages. No repository
-      creation, no extra token permission.
+      creation, no extra token permission (#31, SPEC §7.1). Verified in a
+      browser: the live FDP reads as served, a repository without Pages as
+      not served.
 
 ## Phase 7 — Ping and Pages ✅
 
