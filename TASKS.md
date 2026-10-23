@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — w3id.org/fdplight/ requested (perma-id/w3id.org#6955); move script for FDPlight's own FDP (#47).
 - 2026-10-23 — Re-base with confirmation after publishing; w3id in the guided setup (#46).
 - 2026-10-23 — Redirect mode: w3id rules and the redirect check (#45).
 - 2026-10-23 — Guide in five more languages with localized screenshots (#43).
@@ -406,7 +407,14 @@ Resource plus Dataset). Contour still treats the first shape as primary
 ## Phase 9 — Optional 🟡
 
 - [x] Redirect mode UI and publishing (SPEC §2.4), decided 2026-10-23 to do
-      now. An end-to-end pilot needs a w3id identifier (the owner's call). The IRI rules themselves are in the Phase 1/3 core and tested in
+      now.
+  - [ ] Pilot (decided 2026-10-23): FDPlight's own FDP moves to
+        `https://w3id.org/fdplight/`. Rules submitted as perma-id/w3id.org#6955
+        (w3id's rule check passed). After it is merged:
+        `GH_TOKEN=… npx vite-node scripts/rebase-own-fdp.ts --commit` re-bases
+        and publishes (dry run: 4 entities updated, 4 profile documents added,
+        `fdplight.json` and the ping workflow updated); then check the Index
+        harvests the new root. The IRI rules themselves are in the Phase 1/3 core and tested in
       both modes.
   - [x] Storage base proposed on connect; w3id rules in w3id's style with
         the steps to submit them; redirect check in the settings and with
