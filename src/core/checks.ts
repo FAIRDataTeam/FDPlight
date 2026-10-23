@@ -5,6 +5,7 @@ import type { Store } from 'n3';
 import { rootType, typeByKey } from './profile';
 import { findByPath, iriOf, pathOf, type Project } from './project';
 import { FDP, LDP, R3D_REPOSITORY, RDF_TYPE } from './vocab';
+import { say } from './messages';
 
 export type Severity = 'error' | 'confirm';
 
@@ -35,25 +36,25 @@ export function checkProject(project: Project, graphs: Map<string, Store>): Issu
 
   // Rule 5: two entities share an IRI.
   for (const [iri, paths] of entityIris)
-    if (paths.length > 1) push(5, 'error', `${paths.length} entities share the IRI ${iri}`, paths[0]);
+    if (paths.length > 1) push(5, 'error', say('sharedIri', { n: paths.length, iri }), paths[0]);
 
   // Rule 4: every entity other than the root has a parent that may hold it.
   const rootKey = rootType(project.types).key;
   const roots = project.entities.filter((e) => e.type === rootKey);
-  if (roots.length !== 1) push(4, 'error', `the project must have exactly one root entity (found ${roots.length})`);
+  if (roots.length !== 1) push(4, 'error', say('rootCount', { n: roots.length }));
   for (const e of project.entities) {
     const path = pathOf(project, e);
     if (e.type === rootKey) {
-      if (e.parent !== null) push(4, 'error', 'the root entity cannot have a parent', path);
+      if (e.parent !== null) push(4, 'error', say('rootParent'), path);
       continue;
     }
     const parent = e.parent === null ? undefined : findByPath(project, e.parent);
     if (!parent) {
-      push(4, 'error', e.parent === null ? 'has no parent' : `its parent ${e.parent} is not in the project`, path);
+      push(4, 'error', e.parent === null ? say('noParent') : say('parentMissing', { parent: e.parent }), path);
       continue;
     }
     if (!typeByKey(project.types, parent.type).children.some((c) => c.type === e.type))
-      push(4, 'error', `a ${parent.type} cannot contain a ${e.type}`, path);
+      push(4, 'error', say('cannotContain', { parent: parent.type, child: e.type }), path);
   }
 
   const relations = new Set(project.types.flatMap((t) => t.children.map((c) => c.relation)));
@@ -69,7 +70,7 @@ export function checkProject(project: Project, graphs: Map<string, Store>): Issu
 
       // Rule 3: link targets must be entities of the project.
       if ((q.predicate.value === LDP.contains || relations.has(q.predicate.value)) && !isEntity(q.object, entityIris))
-        push(3, 'error', `links to ${q.object.value}, which has no file in the project`, path);
+        push(3, 'error', say('danglingLink', { iri: q.object.value }), path);
 
       if (q.predicate.value === RDF_TYPE && q.object.value === LDP.DirectContainer)
         containerOwners.set(q.subject.value, [...(containerOwners.get(q.subject.value) ?? []), path]);
@@ -77,18 +78,18 @@ export function checkProject(project: Project, graphs: Map<string, Store>): Issu
 
     // Rule 2: everything this file describes is under the base URI.
     for (const sub of subjects)
-      if (!sub.startsWith(project.base)) push(2, 'confirm', `describes ${sub}, which is not under the base URI`, path);
+      if (!sub.startsWith(project.base)) push(2, 'confirm', say('outsideBase', { iri: sub }), path);
 
     // Rule 6: malformed IRIs.
     for (const iri of named) {
       const problem = iriProblem(iri, project.base);
-      if (problem) push(6, 'error', `malformed IRI ${JSON.stringify(iri)}: ${problem}`, path);
+      if (problem) push(6, 'error', say('malformedIri', { iri: JSON.stringify(iri), problem }), path);
     }
   }
 
   // Rule 5: two files declare the same container.
   for (const [iri, paths] of containerOwners)
-    if (new Set(paths).size > 1) push(5, 'error', `the container ${iri} is declared in ${[...new Set(paths)].join(', ')}`, paths[0]);
+    if (new Set(paths).size > 1) push(5, 'error', say('sharedContainer', { iri, paths: [...new Set(paths)].join(', ') }), paths[0]);
 
   // Rule 7: the root is typed so the Index can read it.
   const root = roots[0];
@@ -97,7 +98,7 @@ export function checkProject(project: Project, graphs: Map<string, Store>): Issu
     const g = graphs.get(path);
     const iri = iriOf(project, root);
     const typed = g?.getQuads(iri, RDF_TYPE, null, null).some((q) => q.object.value === FDP.MetadataService || q.object.value === R3D_REPOSITORY);
-    if (!typed) push(7, 'error', 'the root must have rdf:type fdp:MetadataService or r3d:Repository', path);
+    if (!typed) push(7, 'error', say('rootUntyped'), path);
   }
 
   return issues;
@@ -112,14 +113,14 @@ function isEntity(t: { termType: string; value: string }, entityIris: Map<string
  * `base` are FDPlight's own, so an empty fragment there is an error too.
  */
 export function iriProblem(iri: string, base?: string): string | null {
-  if (/[\s<>"{}|\\^`]/.test(iri)) return 'contains characters not allowed in IRIs';
+  if (/[\s<>"{}|\\^`]/.test(iri)) return say('iriChars');
   const hashes = iri.split('#').length - 1;
-  if (hashes > 1) return 'has more than one "#"';
-  if (hashes === 1 && iri.endsWith('#') && base && iri.startsWith(base)) return 'has an empty fragment';
+  if (hashes > 1) return say('iriHashes');
+  if (hashes === 1 && iri.endsWith('#') && base && iri.startsWith(base)) return say('iriEmptyFragment');
   try {
     new URL(iri);
   } catch {
-    return 'is not an absolute IRI';
+    return say('iriNotAbsolute');
   }
   return null;
 }

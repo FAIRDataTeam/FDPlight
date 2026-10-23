@@ -3,6 +3,7 @@
 
 import { validateIriSettings, type IriMode } from './iri';
 import { validateIndex, type IndexSettings } from './ping';
+import { say } from './messages';
 
 /** A child relation of a type, from the RI resource definition (SPEC §3). */
 export interface ChildSpec {
@@ -91,9 +92,9 @@ export function typeInUse(p: Pick<ProjectFile, 'use' | 'types'>, key: string): b
 /** SPEC §4. Problems with a repository folder, empty when valid. */
 export function validateFolder(folder: string): string[] {
   if (folder === '') return [];
-  if (!/^([a-z0-9][a-z0-9._-]*\/)+$/i.test(folder)) return ['folder must be empty or like "metadata/" (path segments ending with "/")'];
-  if (folder.split('/').some((s) => s === '..' || s === '.')) return ['folder must not contain "." or ".." segments'];
-  if (folder.startsWith('.github/')) return ['folder must not be inside .github/'];
+  if (!/^([a-z0-9][a-z0-9._-]*\/)+$/i.test(folder)) return [say('folderForm')];
+  if (folder.split('/').some((s) => s === '..' || s === '.')) return [say('folderDots')];
+  if (folder.startsWith('.github/')) return [say('folderGithub')];
   return [];
 }
 
@@ -343,13 +344,13 @@ export async function importProfileFromFdp(
   const root = fdpUrl.replace(/\/+$/, '');
   const get = async (path: string, accept: string): Promise<string> => {
     const res = await fetchFn(`${root}${path}`, { headers: { Accept: accept } });
-    if (!res.ok) throw new Error(`GET ${root}${path} failed with HTTP ${res.status}`);
+    if (!res.ok) throw new Error(say('profileHttp', { url: `${root}${path}`, status: res.status }));
     return res.text();
   };
   const rds = JSON.parse(await get('/resource-definitions', 'application/json')) as RiResourceDefinition[];
   const types = typesFromResourceDefinitions(rds);
   const errors = validateTypes(types);
-  if (errors.length) throw new Error(`the FDP's resource definitions are not usable: ${errors.join('; ')}`);
+  if (errors.length) throw new Error(say('profileUnusable', { errors: errors.join('; ') }));
   const shapes: Record<string, string> = {};
   for (const t of types) shapes[t.key] = await get(t.urlPrefix === '' ? '/spec' : `/${t.urlPrefix}/spec`, 'text/turtle');
   return { types, shapes, source: { fdp: root, importedAt: now().toISOString() } };

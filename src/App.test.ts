@@ -117,6 +117,27 @@ describe('App', () => {
     }
   });
 
+  it('shows messages built by the core in the chosen language', async () => {
+    const w = mount(App);
+    try {
+      await w.find('.lang select').setValue('pt-BR');
+      const base = w.findAll('.settings__field input').find((i) => (i.element as HTMLInputElement).value.startsWith('https://example'))!;
+      await base.setValue('http://example.org/fdp');
+      await base.trigger('change');
+      await flushPromises();
+      expect(w.findAll('.settings__errors li').map((li) => li.text())).toEqual(['URI base: deve usar https', 'URI base: deve terminar com "/"']);
+      await w.find('button.tree__add').trigger('click');
+      await flushPromises();
+      const id = w.find('.entity__id input');
+      await id.setValue('Not Valid');
+      await id.trigger('change');
+      await flushPromises();
+      expect(w.find('.entity .error').text()).toBe('"Not Valid" não é um id válido (letras minúsculas, dígitos e "-")');
+    } finally {
+      setLocale('en');
+    }
+  });
+
   it('marks entities with missing required metadata', async () => {
     vi.useFakeTimers();
     const w = mount(App);

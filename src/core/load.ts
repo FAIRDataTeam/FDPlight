@@ -14,6 +14,7 @@ import { rootType, typeByKey, typeInUse, type EntityType, type ProjectFile } fro
 import { iriOf, type Entity, type Project } from './project';
 import { DATACITE_IDENTIFIER, DCT, FDP, LDP, RDF_TYPE } from './vocab';
 import { isRegenerated, pickTitle, serializeEntity } from './wiring';
+import { say } from './messages';
 
 /** What became of one file's triples (TASKS Phase 4 import report). */
 export interface FileCounts {
@@ -80,12 +81,12 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     const { path, types: candidates, parent } = queue.shift()!;
     const ttl = files.get(path);
     if (ttl === undefined) {
-      report.push(`${path}: linked from ${parent ?? 'the settings'} but not in the repository`);
+      report.push(parent === null ? say('notInRepositoryRoot', { path }) : say('notInRepository', { path, from: parent }));
       continue;
     }
     const r = parseRdf(ttl, 'turtle');
     if (r.error) {
-      report.push(`${path}: not valid Turtle (${r.error}); skipped`);
+      report.push(say('notTurtleSkipped', { path, error: r.error }));
       continue;
     }
     // Several child types can share a relation (ERDERA's dct:hasPart): the
@@ -95,14 +96,14 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     const entity = entityAt(type, path, parent);
     const iri = iriOf(project, entity);
     const on = (pred: string) => r.quads.filter((q) => q.subject.value === iri && q.predicate.value === pred);
-    if (!r.quads.some((q) => q.subject.value === iri)) report.push(`${path}: describes nothing about ${iri}`);
+    if (!r.quads.some((q) => q.subject.value === iri)) report.push(say('describesNothing', { path, iri }));
     const types = new Set(on(RDF_TYPE).map((q) => q.object.value));
     const missing = type.targetClasses.filter((c) => !types.has(c));
-    if (missing.length) report.push(`${path}: not typed as every class of ${type.name} (adding ${missing.join(', ')} on save)`);
+    if (missing.length) report.push(say('missingClasses', { path, type: type.name, classes: missing.join(', ') }));
     const up = on(DCT.isPartOf)[0]?.object.value;
     const parentIri = parent === null ? null : nodes.find((n) => n.path === parent)?.iri;
     if (up && parentIri && up !== parentIri)
-      report.push(`${path}: dct:isPartOf points to ${pathOfIri(up) ?? up} but ${parent} lists it; using ${parent}`);
+      report.push(say('isPartOfMismatch', { path, up: pathOfIri(up) ?? up, parent: parent ?? '' }));
     entity.issued = on(FDP.metadataIssued)[0]?.object.value;
     entity.modified = on(FDP.metadataModified)[0]?.object.value;
     nodes.push({ entity, path, iri, quads: r.quads, title: pickTitle(on(DCT.title).map((q) => q.object as never)) ?? '' });
@@ -111,12 +112,12 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     for (const [t, childTypes] of candidatesByTarget(childLinks(r.quads, iri, type, settings.types))) {
       const childPath = pathOfIri(t);
       if (!childPath) {
-        report.push(`${path}: links to ${t}, which is not a file under the base URI; left out`);
+        report.push(say('linkOutside', { path, target: t }));
         continue;
       }
       const already = seen.get(childPath);
       if (already !== undefined) {
-        if (already !== path) report.push(`${childPath}: listed by ${already} and ${path}; kept under ${already}`);
+        if (already !== path) report.push(say('listedTwice', { path: childPath, first: already, second: path }));
         continue;
       }
       seen.set(childPath, path);
@@ -128,7 +129,7 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
   const prefixes = settings.types.map((t) => t.urlPrefix).filter(Boolean);
   for (const p of files.keys())
     if (prefixes.some((x) => new RegExp(`^${x}/[^/]+\\.ttl$`).test(p)) && !nodes.some((n) => n.path === p))
-      report.push(`${p}: not linked from the tree; left out`);
+      report.push(say('notLinked', { path: p }));
 
   report.push(...wiringProblems(nodes, settings.base));
 
@@ -142,13 +143,13 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
       .forEach(visit);
   };
   if (nodes[0]) visit(nodes[0]);
-  else report.push(`${settings.root ?? 'fdp.ttl'}: the root could not be read`);
+  else report.push(say('rootUnreadable', { path: settings.root ?? 'fdp.ttl' }));
   project.entities = ordered.map((n) => n.entity);
   // Records of a type the settings leave out: the project uses that type after all.
   for (const key of new Set(project.entities.map((e) => e.type)))
     if (!typeInUse(project, key)) {
       project.use = [...(project.use ?? []), key];
-      report.push(`${typeByKey(project.types, key).name}: the repository has records of this type, so it is now in use`);
+      report.push(say('typeBackInUse', { type: typeByKey(project.types, key).name }));
     }
   if (project.entities[0]?.path) project.root = project.entities[0].path;
 
@@ -160,8 +161,8 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     const rec = readRecord(files.get(n.path)!, n.quads, n.iri, form);
     values[n.path] = rec.values;
     extras[n.path] = rec.extras;
-    if (!rec.found) report.push(`${n.path}: no metadata for ${n.iri} could be read`);
-    if (rec.others) report.push(`${n.path}: ${rec.others} other record(s) in the file are kept as they are`);
+    if (!rec.found) report.push(say('noMetadata', { path: n.path, iri: n.iri }));
+    if (rec.others) report.push(say('othersKept', { path: n.path, n: rec.others }));
 
     // Regenerated: wiring, or a kept triple identical to one FDPlight adds
     // anyway (default access rights, profile conformance and label).
@@ -202,14 +203,18 @@ function wiringProblems(nodes: Node[], base: string): string[] {
     const odd = nodesFor.filter((x) => x !== declared);
     const fresh = hashIri(n.iri, 'identifier');
     if (odd.length)
-      out.push(`${n.path}: identifier node ${odd.map(short).join(', ')} is not the one fdp:metadataIdentifier points to (${declared ? short(declared) : 'none'}); replaced by ${short(fresh)}`);
+      out.push(
+        declared
+          ? say('identifierReplaced', { path: n.path, nodes: odd.map(short).join(', '), declared: short(declared), fresh: short(fresh) })
+          : say('identifierReplacedNone', { path: n.path, nodes: odd.map(short).join(', '), fresh: short(fresh) }),
+      );
     else if (declared && !nodesFor.includes(declared))
-      out.push(`${n.path}: fdp:metadataIdentifier points to ${short(declared)}, which the file does not describe; replaced by ${short(fresh)}`);
+      out.push(say('identifierMissing', { path: n.path, declared: short(declared), fresh: short(fresh) }));
   }
   for (const [iri, list] of containers) {
     const paths = [...new Set(list.map((x) => x.path))];
     if (paths.length > 1 && new Set(list.map((x) => x.member)).size > 1)
-      out.push(`container ${short(iri)} is declared in ${paths.join(' and ')} for different parents; each file gets its own container on save`);
+      out.push(say('containerShared', { iri: short(iri), paths: paths.join(', ') }));
   }
   return out;
 }

@@ -63,7 +63,7 @@ describe('import the WP13.3 proqolid FDP (TASKS Phase 4 test case)', () => {
       'eprovide_distribution.ttl: identifier node eprovide_disribution.ttl#identifier is not the one fdp:metadataIdentifier points to (eprovide_distribution.ttl#identifier); replaced by eprovide_distribution.ttl#identifier',
     );
     expect(loaded.report).toContain(
-      'container catalog/datasets/ is declared in eprovide_catalog.ttl and eprovide_dataset.ttl for different parents; each file gets its own container on save',
+      'container catalog/datasets/ is declared in eprovide_catalog.ttl, eprovide_dataset.ttl for different parents; each file gets its own container on save',
     );
     expect(Object.keys(loaded.counts)).toEqual(['eprovide_fdp.ttl', 'eprovide_catalog.ttl', 'eprovide_dataset.ttl', 'eprovide_distribution.ttl']);
     for (const c of Object.values(loaded.counts)) {

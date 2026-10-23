@@ -1,6 +1,7 @@
 // Locale state and translation, the same mechanism as Contour (TASKS Phase 8).
 import { ref } from 'vue';
 import { LOCALES, messages, type Locale } from '../i18n';
+import { translateCore } from '../core/messages';
 
 const STORAGE_KEY = 'fdplight.locale';
 const DEFAULT_LOCALE: Locale = 'en';
@@ -96,5 +97,10 @@ export function useI18n() {
     return interpolate(tmpl, { n, ...params });
   }
 
-  return { t, plural, locale, setLocale };
+  /** A message built by the core (src/core/messages.ts) in the chosen language; other text as is. */
+  function tc(text: string): string {
+    return translateCore(text, t);
+  }
+
+  return { t, plural, tc, locale, setLocale };
 }

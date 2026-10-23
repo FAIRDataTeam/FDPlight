@@ -1,6 +1,8 @@
 // The GitHub Action that pings the FDP Index (SPEC §7.2). FDPlight writes it
 // with the Index and root URLs inline and regenerates it on every publish.
 
+import { say } from './messages';
+
 export const PING_WORKFLOW_PATH = '.github/workflows/fdp-ping.yml';
 
 /** GitHub's own Pages workflow when Pages deploys from a branch. */
@@ -19,8 +21,8 @@ const SAFE_NAME = /^[^\n"\\$`]+$/;
 /** Problems with the Index settings, empty when valid. */
 export function validateIndex(index: IndexSettings): string[] {
   const errors: string[] = [];
-  if (!SAFE_URL.test(index.url)) errors.push('Index URL must be an https URL');
-  if (!SAFE_NAME.test(index.pagesWorkflow.trim())) errors.push('Pages workflow name is required');
+  if (!SAFE_URL.test(index.url)) errors.push(say('indexUrl'));
+  if (!SAFE_NAME.test(index.pagesWorkflow.trim())) errors.push(say('pagesWorkflow'));
   return errors;
 }
 

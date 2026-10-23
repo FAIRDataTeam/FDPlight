@@ -21,6 +21,7 @@ import { serializeEntity, toTurtle } from '../core/wiring';
 import { validateIndex } from '../core/ping';
 import { DEFAULT_ACCESS_RIGHTS, validateFolder } from '../core/profile';
 import { PROFILES, type BundledProfile } from '../profiles';
+import { say } from '../core/messages';
 
 export const DEFAULT_BASE = 'https://example.github.io/my-fdp/';
 
@@ -120,7 +121,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
 
   function rename(path: string, newId: string): void {
     if (published.value.has(path)) {
-      lastError.value = 'This entity is published: its id is part of its IRI and can no longer change.';
+      lastError.value = say('idLocked');
       return;
     }
     const r = renameEntity(project, path, newId.trim());
@@ -145,7 +146,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     const all = project.types.filter((t) => t !== rootType(project.types)).map((t) => t.key);
     const now = new Set(project.use ?? all);
     if (!on && project.entities.some((e) => e.type === key)) {
-      lastError.value = `There are ${typeByKey(project.types, key).name.toLowerCase()} records in this project; delete them first.`;
+      lastError.value = say('typeHasRecords', { type: typeByKey(project.types, key).name.toLowerCase() });
       return;
     }
     lastError.value = '';

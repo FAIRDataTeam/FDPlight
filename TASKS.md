@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Core messages translated in the six locales (#36).
 - 2026-10-23 — Profile from local files; base proposal with the folder; custom-domain notes (#35).
 - 2026-10-22 — Repository published at github.com/FAIRDataTeam/FDPlight
   (public, MIT). SPEC v0.2 automatic IRI modes (#1). Scaffold and logo (#2).
@@ -347,9 +348,13 @@ Resource plus Dataset). Contour still treats the first shape as primary
       and the form renderer are translated (EN, PT-BR, NL, DE, ES, FR; the
       renderer keys reuse Contour's translations), with a language picker in
       the header (#25). SHACL finding texts under the fields are translated
-      too (#28). Still English: messages built by the core (import report,
-      structural checks, settings errors), and labels from the profile's
-      shapes. The translations were written without a native-speaker review.
+      too (#28). Messages built by the core (structural checks, tree and
+      settings errors, load, import and copy reports, profile files) are
+      translated by key (#36, `src/core/messages.ts`). Still English: the
+      JSON-format errors of `fdplight.json` and profiles (for profile
+      authors), errors passed on from GitHub or the browser, and labels from
+      the profile's shapes. The translations were written without a
+      native-speaker review.
 - [x] User guide for data stewards (create, fill in, publish, edit), with
       screenshots, in the style of Contour's data-steward guide
       ([docs/data-steward-guide.md](docs/data-steward-guide.md), #26; English
