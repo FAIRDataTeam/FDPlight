@@ -128,7 +128,8 @@ Differences from the plan
   the package's tests and publishes with npm trusted publishing (OIDC, no
   stored token, provenance). The trusted publisher may publish directly; it
   does not manage dist-tags. 0.2.0 itself was published by hand by the
-  owner, so it has no provenance; the workflow publishes from 0.2.1 on.
+  owner, so it has no provenance; 0.2.1 (2026-10-23, Contour #32) was the
+  first release by the workflow, with a signed provenance statement.
 - Contour's TASKS.md still says 202 tests; it has 216 now.
 
 ## 5. Decisions
