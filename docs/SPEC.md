@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.10** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.11** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
@@ -13,7 +13,8 @@ copying an FDP by its URL (4.3), `use` and type defaults (3.1, 5.2), the
 bundled ERDERA profile (3.2), child types told apart by path or `rdf:type`
 (4.1). v0.10: a profile from local files (3.3); custom domains are asked
 about, since their Pages domain cannot be read without an extra token
-permission (2.2).
+permission (2.2). v0.11: the VP Level 1 and Level 2 queries over ERDERA
+output (9.6).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -800,3 +801,39 @@ and child links, containers with `ldp:contains`, catalog `dct:issued` /
 
 Container IRIs differ by design (2.6): the RI served `http://localhost:8190/dataset/`
 as the dataset container of the catalog, an IRI every catalog would share.
+
+### 9.6 VP Level 1 and Level 2 queries (2026-10-23)
+
+The Virtual Platform lists resources with two SPARQL queries kept in
+ERDERA/WP13.3_document_based_fdp (`queries/vp_level1_query.sparql`,
+`queries/vp_level2_query.sparql`, commit 05f25ce, MIT; copied to
+`src/profiles/erdera/vp-queries/`). `src/profiles/__tests__/vpQueries.test.ts`
+runs both with Oxigraph 0.5.11 over what FDPlight writes for an ERDERA
+project with one record of every type, loaded into one store.
+
+- **Level 1** lists the root as `FAIRDataPoint` and the catalog, dataset,
+  distribution, patient registry, biobank and guideline, each with its type.
+  It needs `dcat:Resource` plus a more specific type, `dct:title` and
+  `ejp:vpConnection ejp:VPDiscoverable`, which the profile writes (3.2, 8.4).
+  Data services are left out by design.
+- **Level 2** lists both data services (under a catalog and under a
+  distribution). It requires `dct:type`, which ERDERA's data-service shape
+  leaves optional: a service without it is not listed.
+
+Problems in the queries themselves (to report to ERDERA):
+
+1. Both SELECT lists name `?resource` twice. Oxigraph rejects this as
+   invalid SPARQL; the test drops the repeat.
+2. Level 1 binds `?connection`, `?discoverable` and `?invisible` with `VALUES`
+   outside its `UNION`. Under the bottom-up evaluation of the SPARQL spec
+   they are unbound inside the `UNION`, and `FILTER NOT EXISTS { ?s
+   ?connection ?invisible }` then removes every row: on Oxigraph the query
+   returns nothing for any data. It only works on an engine that passes the
+   `VALUES` bindings into the `UNION`. The test writes the three constants in.
+3. Both queries filter with `FILTER NOT EXISTS { ?s ?connection ?invisible }`,
+   where `?s` is not `?resource`. One record marked `ejp:VPInvisible`
+   therefore removes **every** result from the graph the query runs on, not
+   only itself (checked in the test). The VP Index survey (9.2) found no
+   `ejp:VPInvisible` record, so this has not shown yet.
+4. Level 1 selects `?resourceHomepage` but binds `?resourceHomePage`, so the
+   homepage column is always empty.

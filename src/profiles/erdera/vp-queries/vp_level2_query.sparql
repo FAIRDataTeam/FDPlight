@@ -1,0 +1,64 @@
+PREFIX ejprd: <https://w3id.org/ejp-rd/vocabulary#>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX fdp: <https://w3id.org/fdp/fdp-o#>
+PREFIX ldp: <http://www.w3.org/ns/ldp#>
+ 
+ 
+SELECT DISTINCT ?resource ?fdp ?resourceName ?resource ?dataset ?serviceHomePage ?serviceURL ?openAPI ?operationType ?resourceDescription ?resourceLogo ?publisherLogo ?resourceCreated ?resourceUpdated
+ 
+WHERE { 
+  
+  VALUES ?connection { ejprd:vpConnection }
+  VALUES ?discoverable { ejprd:VPDiscoverable }
+  VALUES ?invisible { ejprd:VPInvisible }
+
+  ?resource a dcat:DataService ;
+      ?connection ?discoverable ;
+      dcterms:title ?resourceName ;
+      dcterms:type ?operationType .
+
+    OPTIONAL { ?resource dcat:landingPage ?serviceHomePage }
+    OPTIONAL { ?resource dcat:endpointURL ?serviceURL }
+    OPTIONAL { ?resource dcat:endpointDescription ?openAPI }
+    OPTIONAL { ?resource dcat:servesDataset ?dataset }
+    OPTIONAL { ?resource dcterms:description ?resourceDescription }
+    OPTIONAL { ?resource foaf:logo ?resourceLogo }
+    OPTIONAL { ?resource dcterms:publisher [ foaf:logo ?publisherLogo ] }
+
+    # deal with dates, accepting both/either the fdp-ontology or the dcterms properties
+    OPTIONAL { ?resource fdp:metadataIssued  ?fdpIssued . }
+    OPTIONAL { ?resource dcterms:issued      ?dctIssued . }
+    BIND(
+      COALESCE(
+        ?fdpIssued,
+        ?dctIssued
+      ) AS ?resourceCreated
+    )
+    OPTIONAL { ?resource fdp:metadataModified  ?fdpModified . }
+    OPTIONAL { ?resource dcterms:modified      ?dctModified . }
+    BIND(
+      COALESCE(
+        ?fdpModified,
+        ?dctModified
+      ) AS ?resourceUpdated
+    )
+
+    BIND (
+      REPLACE(
+        REPLACE(
+          IF(
+            CONTAINS(STRAFTER(str(?resource), "://"), "/"),
+            STRBEFORE(STRAFTER(str(?resource), "://"), "/"),
+            STRAFTER(str(?resource), "://")
+          ),
+          ":[0-9]+$", ""
+        ),
+        "/$", ""
+      ) AS ?fdp
+    )
+
+    FILTER NOT EXISTS { ?s ?connection ?invisible }  # if they want to be invisible, remove them
+
+}  ORDER BY ?fdp
