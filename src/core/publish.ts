@@ -85,7 +85,11 @@ export async function planPublish(input: PublishInput): Promise<PublishPlan> {
       ...(project.use ? { use: project.use } : {}),
     }),
   );
-  for (const t of project.types) files.set(folder + t.shapes, input.shapes[t.key]);
+  for (const t of project.types) {
+    files.set(folder + t.shapes, input.shapes[t.key]);
+    // SPEC §8.1: the profile document at profileIRI(T) is the type's merged SHACL.
+    files.set(`${folder}profile/${t.key}.ttl`, input.shapes[t.key]);
+  }
 
   // SPEC §7.2: the ping workflow, regenerated so it always names the current root.
   const root = rootOf(project);
@@ -104,12 +108,15 @@ export async function planPublish(input: PublishInput): Promise<PublishPlan> {
   // SPEC §4: entity files FDPlight owns that are no longer in the project.
   const prefixes = project.types.map((t) => t.urlPrefix).filter(Boolean);
   const esc = folder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const owned = (p: string) => p === `${folder}fdp.ttl` || prefixes.some((x) => new RegExp(`^${esc}${x}/[^/]+\\.ttl$`).test(p));
+  const owned = (p: string) =>
+    p === `${folder}fdp.ttl` || [...prefixes, 'profile'].some((x) => new RegExp(`^${esc}${x}/[^/]+\\.ttl$`).test(p));
   const removed = input.remoteFiles.filter((p) => owned(p) && !files.has(p));
   for (const path of removed) changes.push({ path, content: null });
 
   const entityLines = (verb: string, paths: string[]) =>
-    paths.filter((p) => p.endsWith('.ttl') && !p.startsWith(`${folder}shapes/`)).map((p) => `- ${verb} ${p}`);
+    paths
+      .filter((p) => p.endsWith('.ttl') && !p.startsWith(`${folder}shapes/`) && !p.startsWith(`${folder}profile/`))
+      .map((p) => `- ${verb} ${p}`);
   const lines = [...entityLines('add', added), ...entityLines('update', updated), ...entityLines('remove', removed)];
   const count = lines.length;
   const message = `FDPlight: ${count ? `publish ${count} ${count === 1 ? 'entity' : 'entities'}` : 'update project settings'}\n\n${lines.join('\n')}`.trim() + '\n';

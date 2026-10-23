@@ -311,6 +311,7 @@ all are fixed. Like any profile switch, it starts a new, empty project.
 ```
 /fdplight.json                      project profile and settings
 /shapes/{type}.ttl                  merged SHACL per type
+/profile/{type}.ttl                 the same SHACL, served at profileIRI(T) (8.1)
 /fdp.ttl                            root entity
 /{urlPrefix}/{id}.ttl               one file per child entity
 /.github/workflows/fdp-ping.yml     ping workflow (section 7)
@@ -322,7 +323,7 @@ all are fixed. Like any profile switch, it starts a new, empty project.
   (`metadata/fdp.ttl`, `metadata/catalog/{id}.ttl`, `metadata/fdplight.json`,
   …), and the base URI points at that folder. The workflow stays in
   `.github/workflows/`, where GitHub looks for it. FDPlight deletes only
-  entity files inside the folder.
+  entity files and profile documents inside the folder.
 - One entity per file. Each file is the complete graph the RI would serve for
   that entity (its metadata, its system triples, its LDP containers).
 - Files are written as clean Turtle with the prefixes actually used, from a
@@ -451,7 +452,9 @@ Nested `sh:node` values follow 5.3.
 
 `profileIRI(T)` is `{base}profile/{T.key}.ttl` in file mode and
 `{base}profile/{T.key}` in redirect mode. The type's merged SHACL is
-published there (8.1, decided 2026-10-23).
+published there as `profile/{T.key}.ttl` (8.1, decided 2026-10-23), so the
+link resolves; in redirect mode the generated rules map `{base}profile/{key}`
+to that file like any other.
 
 ### 5.3 Catalog-only triples
 
