@@ -245,7 +245,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
       load → publish again changes nothing.
 - [x] Open a file-only FDP **without** `fdplight.json` from its repository:
       pick the root file, keep the IRIs or migrate (SPEC §4.2, #16).
-- [ ] Same by its root URL only (no repository access). Crawl the same links the Index follows (LDP containers,
+- [ ] Same by its root URL only (no repository access). Decided 2026-10-23:
+      new IRIs under the project base, each record with
+      `prov:wasDerivedFrom` its old IRI. Crawl the same links the Index follows (LDP containers,
       else the navigation relations), infer each entity's type from its
       `rdf:type` and the chosen profile, rebuild the tree, then save a
       `fdplight.json`.
@@ -277,7 +279,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] Authentication for the pilot: fine-grained personal access token
       (contents read/write on one repository) kept in `sessionStorage` (#12).
       CORS of api.github.com verified (SPEC §9.2).
-- [ ] Then evaluate a GitHub App. Checked 2026-10-22: its device flow does
+- [x] ~~Then evaluate a GitHub App.~~ Not pursued (decided 2026-10-23). Checked 2026-10-22: its device flow does
       **not** work from a browser without a proxy. `github.com/login/device/code`
       answers 200 without `Access-Control-Allow-Origin`, and the preflight
       returns 404 (SPEC §9.2). A GitHub App therefore needs a small token
@@ -294,8 +296,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
       comes with Phase 4 loading.
 - [x] "Propose changes" mode. Same commit on a new branch plus a pull request
       (#19, SPEC §7.1).
-- [ ] First-publish helper. Create the repository if needed and explain how
-      to enable Pages (or enable it through the API when the token allows).
+- [ ] First-publish helper (decided 2026-10-23): check that the base URI is
+      served and, if not, explain how to enable Pages. No repository
+      creation, no extra token permission.
 
 ## Phase 7 — Ping and Pages ✅
 
@@ -340,7 +343,11 @@ Resource plus Dataset). Contour still treats the first shape as primary
       only; screenshots from `scripts/shoot.cjs`). Linked from the app
       header. Translations of the guide are still open.
 - [ ] Bundled ERDERA profile, verified against the current ERDERA schemas and
-      the VP Level 1 / Level 2 queries in WP13.3.
+      the VP Level 1 / Level 2 queries in WP13.3. Decided 2026-10-23: all
+      ERDERA types (FDP → catalog → dataset → distribution, plus patient
+      registry, biobank, guideline, data services); the user ticks the types
+      in use; `ejp:vpConnection ejp:VPDiscoverable` unless hidden and
+      `fdp:conformsToFdpSpec` on the root are written by the profile.
 - [ ] Accessibility pass. Keyboard tree navigation done (#24): arrow keys,
       Home and End, Left to the parent, Right to the first child; only the
       selected node is a Tab stop; visible focus ring. A full pass (screen
@@ -368,9 +375,15 @@ See also SPEC §8.
 2. ~~Licence of FDPlight.~~ Decided 2026-10-22: MIT, like Contour.
 3. ~~Where FDPlight itself is hosted.~~ Decided 2026-10-22: GitHub Pages of
    this repository at https://fdplight.fairdatapoint.org/ (item 6).
-4. GitHub authentication beyond the pilot (Phase 6). Evidence 2026-10-22:
-   the GitHub App device flow needs a proxy (no CORS); recommendation is to
-   keep fine-grained tokens.
+4. ~~GitHub authentication beyond the pilot (Phase 6).~~ Decided
+   2026-10-23: fine-grained tokens only; a GitHub App would need a proxy.
+7. ~~Import by URL: IRIs.~~ Decided 2026-10-23: new IRIs plus
+   `prov:wasDerivedFrom` to the old IRI.
+8. ~~First publish and Pages.~~ Decided 2026-10-23: Pages stays the default,
+   FDPlight checks that the base URI is served (no extra token permission).
+9. ~~ERDERA profile.~~ Decided 2026-10-23: all ERDERA types, the user ticks
+   the types in use; VP visibility and `fdp:conformsToFdpSpec` written by the
+   profile (SPEC §8.4).
 5. ~~Where the entity tree is stored.~~ Decided 2026-10-22: not stored,
    derived from the files on open (SPEC §4.1).
 6. ~~Custom domain for the app.~~ Done 2026-10-22: https://fdplight.fairdatapoint.org/
