@@ -235,6 +235,16 @@ The import report lists anything FDPlight had to fix or could not read,
 for example a container shared by two files or an identifier that does not
 match its record. The first publish fixes the wiring; all metadata is kept.
 
+### Copying a FAIR Data Point from its address
+
+If the FDP runs somewhere else (a FAIR Data Point server, a w3id address, a
+website), use **Copy a FAIR Data Point by its URL…** in the project
+settings. Set the base URI first: every record gets a new IRI under it, and
+keeps a link to its old IRI (`prov:wasDerivedFrom`). The original is not
+changed. FDPlight leaves out what the old server generated about itself
+(its metrics, profiles and API description) and writes its own. Review the
+forms afterwards: records often miss fields your profile requires.
+
 ## 6. Profiles: which forms you get
 
 The **Profile** setting decides which entity types exist, how they nest,

@@ -65,7 +65,7 @@ export function importExistingFdp(input: ImportInput): ImportResult {
   return { ok: true, loaded: input.mode === 'migrate' ? migrate(loaded) : loaded };
 }
 
-const slug = (name: string) =>
+export const slug = (name: string) =>
   name
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, '-')
@@ -95,37 +95,41 @@ export function migrate(loaded: LoadedProject): LoadedProject {
   const iriMap = new Map(before.map((b, i) => [b.iri, iriOf(project, moved[i])]));
   for (const e of moved) if (e.parent !== null) e.parent = pathMap.get(e.parent) ?? e.parent;
 
-  const rewrite = (v: string): string => {
+  const rw = iriRewriter(iriMap);
+  const values: Record<string, RecordNode> = {};
+  const extras: Record<string, Quad[]> = {};
+  const counts: LoadedProject['counts'] = {};
+  for (const [old, now] of pathMap) {
+    if (loaded.counts[old]) counts[now] = loaded.counts[old];
+    values[now] = rw.node(loaded.values[old] ?? {});
+    extras[now] = (loaded.extras[old] ?? []).map(rw.quad);
+  }
+  const left = before.filter((b) => b.path !== pathMap.get(b.path)).map((b) => b.path);
+  const report = [...loaded.report];
+  if (left.length) report.push(`Migrated to new IRIs. The old files stay in the repository until you delete them: ${left.join(', ')}`);
+  return { project, values, extras, report, counts };
+}
+
+/**
+ * SPEC §4.2. Rewrites old entity IRIs to new ones: exact IRIs, their hash
+ * IRIs, and literals that are exactly an old IRI (e.g. `dct:identifier`).
+ */
+export function iriRewriter(iriMap: Map<string, string>) {
+  const iri = (v: string): string => {
     const exact = iriMap.get(v);
     if (exact) return exact;
     const hash = v.indexOf('#');
     const base = hash < 0 ? undefined : iriMap.get(v.slice(0, hash));
     return base ? base + v.slice(hash) : v;
   };
-  const rewriteNode = (node: RecordNode): RecordNode =>
-    Object.fromEntries(
-      Object.entries(node).map(([k, list]) => [k, list.map((x) => ({ ...x, value: rewrite(x.value), ...(x.node ? { node: rewriteNode(x.node) } : {}) }))]),
-    );
-  // Literals that are exactly an old entity IRI (e.g. dct:identifier) follow too.
+  const node = (n: RecordNode): RecordNode =>
+    Object.fromEntries(Object.entries(n).map(([k, list]) => [k, list.map((x) => ({ ...x, value: iri(x.value), ...(x.node ? { node: node(x.node) } : {}) }))]));
   const term = <T extends Quad['subject'] | Quad['object']>(t: T): T =>
     (t.termType === 'NamedNode'
-      ? DataFactory.namedNode(rewrite(t.value))
+      ? DataFactory.namedNode(iri(t.value))
       : t.termType === 'Literal' && iriMap.has(t.value)
         ? DataFactory.literal(iriMap.get(t.value)!, (t as unknown as { language: string }).language || (t as unknown as { datatype: never }).datatype)
         : t) as T;
-
-  const values: Record<string, RecordNode> = {};
-  const extras: Record<string, Quad[]> = {};
-  const counts: LoadedProject['counts'] = {};
-  for (const [old, now] of pathMap) {
-    if (loaded.counts[old]) counts[now] = loaded.counts[old];
-    values[now] = rewriteNode(loaded.values[old] ?? {});
-    extras[now] = (loaded.extras[old] ?? []).map(
-      (q) => DataFactory.quad(term(q.subject), q.predicate as never, term(q.object), q.graph as never) as unknown as Quad,
-    );
-  }
-  const left = before.filter((b) => b.path !== pathMap.get(b.path)).map((b) => b.path);
-  const report = [...loaded.report];
-  if (left.length) report.push(`Migrated to new IRIs. The old files stay in the repository until you delete them: ${left.join(', ')}`);
-  return { project, values, extras, report, counts };
+  const quad = (q: Quad): Quad => DataFactory.quad(term(q.subject), q.predicate as never, term(q.object), q.graph as never) as unknown as Quad;
+  return { iri, node, quad };
 }

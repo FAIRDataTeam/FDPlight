@@ -104,21 +104,8 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     nodes.push({ entity, path, iri, quads: r.quads, title: pickTitle(on(DCT.title).map((q) => q.object as never)) ?? '' });
     project.entities.push(entity);
 
-    // Children: containers this entity is the membership resource of, then
-    // its direct child relations (the Index's fallback).
-    for (const spec of type.children) {
-      const childType = typeByKey(settings.types, spec.type);
-      const containers = new Set(
-        r.quads
-          .filter((q) => q.predicate.value === LDP.membershipResource && q.object.value === iri)
-          .map((q) => q.subject.value)
-          .filter((c) => r.quads.some((q) => q.subject.value === c && q.predicate.value === LDP.hasMemberRelation && q.object.value === spec.relation)),
-      );
-      const targets = [
-        ...r.quads.filter((q) => containers.has(q.subject.value) && q.predicate.value === LDP.contains).map((q) => q.object.value),
-        ...on(spec.relation).map((q) => q.object.value),
-      ];
-      for (const t of [...new Set(targets)]) {
+    for (const { childType, targets } of childLinks(r.quads, iri, type, settings.types)) {
+      for (const t of targets) {
         const childPath = pathOfIri(t);
         if (!childPath) {
           report.push(`${path}: links to ${t}, which is not a file under the base URI; left out`);
@@ -162,19 +149,11 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
   const counts: Record<string, FileCounts> = {};
   for (const n of ordered) {
     const form = forms[n.entity.type];
-    // The record engine reads subjects typed with the form's primary class:
-    // assert it on the entity, so hand-made files typed otherwise still map.
-    const primary = expandTerm(form.targetClass, form.prefixes);
-    const text = files.get(n.path)! + (primary ? `\n<${n.iri}> <${RDF_TYPE}> <${primary}> .\n` : '');
-    const imp = importRecords(text, 'turtle', form);
-    const rec = imp.records.find((x) => x.subject === n.iri);
-    values[n.path] = rec ? rec.values : normalizeRecord(form, {});
-    if (!rec) report.push(`${n.path}: no metadata for ${n.iri} could be read`);
-    // Other records of the same class are not this entity's metadata: keep them.
-    const others = new Set(imp.records.filter((x) => x.subject !== n.iri && x.subject).map((x) => x.subject));
-    if (others.size) report.push(`${n.path}: ${others.size} other record(s) in the file are kept as they are`);
-    const kept = new Set(imp.unmappedQuads);
-    extras[n.path] = [...imp.unmappedQuads, ...n.quads.filter((q) => others.has(q.subject.value) && !kept.has(q))];
+    const rec = readRecord(files.get(n.path)!, n.quads, n.iri, form);
+    values[n.path] = rec.values;
+    extras[n.path] = rec.extras;
+    if (!rec.found) report.push(`${n.path}: no metadata for ${n.iri} could be read`);
+    if (rec.others) report.push(`${n.path}: ${rec.others} other record(s) in the file are kept as they are`);
 
     // Regenerated: wiring, or a kept triple identical to one FDPlight adds
     // anyway (default access rights, profile conformance and label).
@@ -230,4 +209,46 @@ function wiringProblems(nodes: Node[], base: string): string[] {
 function quadKey(q: { subject: { value: string }; predicate: { value: string }; object: { termType: string; value: string } }): string {
   const o = q.object as { termType: string; value: string; language?: string; datatype?: { value: string } };
   return [q.subject.value, q.predicate.value, o.termType, o.value, o.language ?? '', o.datatype?.value ?? ''].join('\u0000');
+}
+
+/**
+ * SPEC §4.1. The children an entity lists, per child type of its profile type:
+ * members of the containers it is the membership resource of, then the
+ * objects of its child relations (the Index's fallback), without duplicates.
+ */
+export function childLinks(quads: Quad[], iri: string, type: EntityType, types: EntityType[]): { childType: EntityType; targets: string[] }[] {
+  return type.children.map((spec) => {
+    const containers = new Set(
+      quads
+        .filter((q) => q.predicate.value === LDP.membershipResource && q.object.value === iri)
+        .map((q) => q.subject.value)
+        .filter((c) => quads.some((q) => q.subject.value === c && q.predicate.value === LDP.hasMemberRelation && q.object.value === spec.relation)),
+    );
+    const targets = [
+      ...quads.filter((q) => containers.has(q.subject.value) && q.predicate.value === LDP.contains).map((q) => q.object.value),
+      ...quads.filter((q) => q.subject.value === iri && q.predicate.value === spec.relation).map((q) => q.object.value),
+    ];
+    return { childType: typeByKey(types, spec.type), targets: [...new Set(targets)] };
+  });
+}
+
+/**
+ * SPEC §5.7. One entity's form values from its file, and the triples the form
+ * has no place for (kept verbatim), including other records in the file.
+ */
+export function readRecord(text: string, quads: Quad[], iri: string, form: Schema): { values: RecordNode; extras: Quad[]; found: boolean; others: number } {
+  // The record engine reads subjects typed with the form's primary class:
+  // assert it on the entity, so hand-made files typed otherwise still map.
+  const primary = expandTerm(form.targetClass, form.prefixes);
+  const imp = importRecords(text + (primary ? `\n<${iri}> <${RDF_TYPE}> <${primary}> .\n` : ''), 'turtle', form);
+  const rec = imp.records.find((x) => x.subject === iri);
+  // Other records of the same class are not this entity's metadata: keep them.
+  const others = new Set(imp.records.filter((x) => x.subject !== iri && x.subject).map((x) => x.subject));
+  const kept = new Set(imp.unmappedQuads);
+  return {
+    values: rec ? rec.values : normalizeRecord(form, {}),
+    extras: [...imp.unmappedQuads, ...quads.filter((q) => others.has(q.subject.value) && !kept.has(q))],
+    found: !!rec,
+    others: others.size,
+  };
 }
