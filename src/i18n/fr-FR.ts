@@ -51,6 +51,13 @@ const frFR = {
     ping: 'Notifier (ping) un FDP Index après chaque déploiement Pages (écrit .github/workflows/fdp-ping.yml)',
     indexUrl: 'URL de l’Index',
     pagesWorkflow: 'Nom du workflow Pages',
+    copyFromUrl: 'Copier un FAIR Data Point à partir de son URL…',
+    copyUrl: 'Adresse du FAIR Data Point à copier',
+    copyHint: 'Ses enregistrements reçoivent de nouveaux IRI sous l’URI de base ci-dessus, et chacun renvoie à son ancien IRI (prov:wasDerivedFrom). Définissez d’abord l’URI de base. Le FDP d’origine n’est pas modifié.',
+    copy: 'Copier',
+    copying: 'Copie en cours…',
+    copyFailed: 'Impossible de copier : {error}',
+    copyConfirm: 'La copie remplace le projet actuel. Continuer ?',
   },
   index: {
     title: 'État dans l’Index',

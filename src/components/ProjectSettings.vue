@@ -6,6 +6,7 @@ import type { ProjectState } from '../composables/useProject';
 import type { IriMode } from '../core/iri';
 import { BRANCH_PAGES_WORKFLOW } from '../core/ping';
 import { importProfileFromFdp } from '../core/profile';
+import { importFromUrl } from '../core/importUrl';
 import { PROFILES } from '../profiles';
 import { useI18n } from '../composables/useI18n';
 
@@ -48,6 +49,30 @@ async function importProfile() {
     importing.value = false;
   } catch (err) {
     importError.value = t('settings.importFailed', { error: err instanceof Error ? err.message : String(err) });
+  } finally {
+    busy.value = false;
+  }
+}
+
+// SPEC §4.3: copy a running FDP by its URL, with new IRIs under the base URI.
+const copying = ref(false);
+const copyUrl = ref('');
+const copyError = ref('');
+const copyReport = ref<string[]>([]);
+async function copyFdp() {
+  copyError.value = '';
+  copyReport.value = [];
+  busy.value = true;
+  try {
+    const r = await importFromUrl({ rootUrl: copyUrl.value.trim(), settings: p, forms: props.state.forms });
+    if (!r.ok) {
+      copyError.value = t('settings.copyFailed', { error: r.error });
+      return;
+    }
+    if (hasContent() && !window.confirm(t('settings.copyConfirm'))) return;
+    props.state.load(r.loaded, props.state.shapes);
+    copyReport.value = r.loaded.report;
+    copying.value = false;
   } finally {
     busy.value = false;
   }
@@ -123,6 +148,22 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
         <input v-model.trim="p.index.pagesWorkflow" spellcheck="false" />
       </label>
     </div>
+    <button v-if="!copying" type="button" class="link settings__copy-toggle" @click="copying = true">{{ t('settings.copyFromUrl') }}</button>
+    <form v-else class="settings__import" @submit.prevent="copyFdp">
+      <label class="settings__field">
+        <span>{{ t('settings.copyUrl') }}</span>
+        <input v-model="copyUrl" type="url" required spellcheck="false" placeholder="https://w3id.org/my-org/fdp" />
+      </label>
+      <p class="settings__hint">{{ t('settings.copyHint') }}</p>
+      <div class="settings__import-actions">
+        <button type="submit" class="primary" :disabled="busy || state.settingsErrors.value.length > 0">{{ busy ? t('settings.copying') : t('settings.copy') }}</button>
+        <button type="button" class="link" @click="copying = false">{{ t('settings.cancel') }}</button>
+      </div>
+      <p v-if="copyError" class="settings__error" role="alert">{{ copyError }}</p>
+    </form>
+    <ul v-if="copyReport.length" class="settings__report">
+      <li v-for="r in copyReport" :key="r">{{ r }}</li>
+    </ul>
     <ul v-if="state.settingsErrors.value.length" class="settings__errors">
       <li v-for="e in state.settingsErrors.value" :key="e">{{ e }}</li>
     </ul>
@@ -185,6 +226,22 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
   display: flex;
   gap: 8px;
   align-items: center;
+}
+.link.settings__copy-toggle {
+  justify-self: start;
+  font-size: 0.85rem;
+  padding: 0;
+}
+.settings__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-lighter);
+}
+.settings__report {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  color: var(--color-text-lighter);
 }
 .settings__error {
   margin: 0;

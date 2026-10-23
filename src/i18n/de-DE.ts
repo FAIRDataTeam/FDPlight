@@ -51,6 +51,13 @@ const deDE = {
     ping: 'Nach jedem Pages-Deployment einen FDP Index anpingen (schreibt .github/workflows/fdp-ping.yml)',
     indexUrl: 'Index-URL',
     pagesWorkflow: 'Name des Pages-Workflows',
+    copyFromUrl: 'Einen FAIR Data Point über seine URL kopieren…',
+    copyUrl: 'Adresse des zu kopierenden FAIR Data Point',
+    copyHint: 'Die Datensätze erhalten neue IRIs unter dem Basis-URI oben, und jeder verweist auf seinen alten IRI (prov:wasDerivedFrom). Legen Sie zuerst den Basis-URI fest. Der ursprüngliche FDP wird nicht verändert.',
+    copy: 'Kopieren',
+    copying: 'Kopiere…',
+    copyFailed: 'Kopieren fehlgeschlagen: {error}',
+    copyConfirm: 'Das Kopieren ersetzt das aktuelle Projekt. Fortfahren?',
   },
   index: {
     title: 'Status im Index',

@@ -343,6 +343,31 @@ file (decided 2026-10-22: the user chooses the mode per import).
   triple identical to one FDPlight adds anyway (the default access rights,
   `dct:conformsTo` the profile) counts as regenerated.
 
+### 4.3 Copying an FDP by its URL
+
+Decided 2026-10-23: a running FDP (any host that allows browser access,
+e.g. a reference implementation, a w3id address, GitHub Pages) can be copied
+into the project without access to its repository.
+
+- FDPlight crawls from the root URL as the Index does: the parent's LDP
+  containers, else the profile's child relations; a child's type is the one
+  its parent's relation implies. The record is the subject equal to the URL
+  asked for, or to the address a redirect led to. Children linked by a
+  relation the profile has no type for are left out and reported.
+- Every record gets a new IRI under the project base in FDPlight's layout;
+  its id is the slug of the old IRI's last path segment (made unique per
+  type). Old IRIs, their hash IRIs and literals equal to an old IRI are
+  rewritten.
+- Each record gets `prov:wasDerivedFrom <old IRI>` (kept with the record's
+  other triples, so it survives later edits).
+- What the source server generated about itself is left out and counted in
+  the report: its metric nodes (`{old}/metrics/…`), its profile IRIs and
+  their labels, and on the root its `dcat:endpointDescription`. FDPlight
+  writes its own wiring (5.2 to 5.5).
+- `fdp:metadataIssued` is not copied: the copy is a new record, issued at its
+  first publish.
+- The original FDP is not changed.
+
 ---
 
 ## 5. Triples per entity

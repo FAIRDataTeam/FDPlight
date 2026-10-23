@@ -31,7 +31,7 @@ file tracks how we build it.
 | 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | ✅ default and ERDERA shapes tested |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ✅ matches the RI (SPEC §9.5) |
-| 4 — Import and edit | open an existing file-only FDP, lossless round trip | 🟡 imports from a repository done, with report; import by URL open |
+| 4 — Import and edit | open an existing file-only FDP, lossless round trip | ✅ repository import, report, copy by URL |
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish, PR mode and conflict check done |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-23 — Copy an FDP by its URL, with `prov:wasDerivedFrom` (#32).
 - 2026-10-23 — Owner's decisions recorded (#30). Served check after connect and publish (#31).
 - 2026-10-22 — Forms and checks from real ERDERA shapes; `ejp:` prefix (#29).
 - 2026-10-22 — SHACL finding texts translated (#28).
@@ -237,7 +238,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
       so the RI itself shares container IRIs across parents (SPEC §2.6
       corrected).
 
-## Phase 4 — Import and edit 🟡
+## Phase 4 — Import and edit ✅
 
 - [x] Open a project from a repository with `fdplight.json`; the tree is
       rebuilt from the files (SPEC §4.1): containers win, `dct:isPartOf` as
@@ -246,9 +247,12 @@ Resource plus Dataset). Contour still treats the first shape as primary
       load → publish again changes nothing.
 - [x] Open a file-only FDP **without** `fdplight.json` from its repository:
       pick the root file, keep the IRIs or migrate (SPEC §4.2, #16).
-- [ ] Same by its root URL only (no repository access). Decided 2026-10-23:
+- [x] Same by its root URL only (no repository access). Decided 2026-10-23:
       new IRIs under the project base, each record with
-      `prov:wasDerivedFrom` its old IRI. Crawl the same links the Index follows (LDP containers,
+      `prov:wasDerivedFrom` its old IRI (#32, SPEC §4.3,
+      `src/core/importUrl.ts`). Verified live on
+      https://w3id.org/simpathic/fdp (RI behind w3id, 7 records) in a browser;
+      `scripts/import-url.ts` is a dry run. Crawl the same links the Index follows (LDP containers,
       else the navigation relations), infer each entity's type from its
       `rdf:type` and the chosen profile, rebuild the tree, then save a
       `fdplight.json`.
