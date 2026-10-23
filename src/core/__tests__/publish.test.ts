@@ -46,16 +46,27 @@ describe('planPublish (SPEC §4, §5.2, §7.1)', () => {
       'dataset/empty-set.ttl',
       'distribution/registry-csv.ttl',
       'fdplight.json',
-      'shapes/fdp.ttl',
-      'shapes/catalog.ttl',
-      'shapes/dataset.ttl',
-      'shapes/distribution.ttl',
+      ...['fdp', 'catalog', 'dataset', 'distribution'].flatMap((k) => [`shapes/${k}.ttl`, `profile/${k}.ttl`]),
     ]);
     expect(plan.entities.every((e) => e.issued === T1.toISOString() && e.modified === T1.toISOString())).toBe(true);
     expect(plan.message).toMatch(/^FDPlight: publish 5 entities\n\n- add fdp.ttl\n/);
     const json = JSON.parse(plan.changes.find((c) => c.path === 'fdplight.json')!.content!);
     expect(json.entities).toBeUndefined(); // the tree is derived from the files (SPEC §4.1)
     expect(json.base).toBe(FILE_MODE.base);
+  });
+
+  it('publishes each type\'s merged SHACL at its profile IRI (SPEC §8.1)', async () => {
+    const { project, values } = fresh();
+    const plan = await run(project, values, new Map(), T1);
+    const file = (p: string) => plan.changes.find((c) => c.path === p)?.content;
+    expect(file('profile/catalog.ttl')).toBe(file('shapes/catalog.ttl'));
+    // dct:conformsTo of a catalog points at that file.
+    expect(file('catalog/rare-diseases.ttl')).toContain(`dct:conformsTo <${FILE_MODE.base}profile/catalog.ttl>`);
+    // A profile document of a type no longer in the profile is removed.
+    const remote = new Map(plan.changes.map((c) => [c.path, c.content]));
+    const again = await planPublish({ project, forms, values, shapes: FDP_DEFAULT.shapes, remote, remoteFiles: [...remote.keys(), 'profile/old.ttl'], now: T1 });
+    expect(again.removed).toEqual(['profile/old.ttl']);
+    expect(again.message).not.toContain('profile/');
   });
 
   it('publishing again without edits changes nothing', async () => {

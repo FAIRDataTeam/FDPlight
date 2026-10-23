@@ -78,7 +78,7 @@ export function usePublish(
     () => connected.value && !loaded.value && !remoteFiles.value.some((p) => p === 'fdplight.json' || p.endsWith('/fdplight.json')),
   );
   /** Turtle files that could be the root of an existing FDP. */
-  const importCandidates = computed(() => remoteFiles.value.filter((p) => p.endsWith('.ttl') && !p.includes('shapes/')));
+  const importCandidates = computed(() => remoteFiles.value.filter((p) => p.endsWith('.ttl') && !p.includes('shapes/') && !/(^|\/)profile\//.test(p)));
 
   let client: GitHubClient | null = null;
 
@@ -116,6 +116,7 @@ export function usePublish(
         rel === 'fdp.ttl' ||
         rel === 'fdplight.json' ||
         rel.startsWith('shapes/') ||
+        /^profile\/[^/]+\.ttl$/.test(rel) ||
         prefixes.some((x) => new RegExp(`^${x}/[^/]+\\.ttl$`).test(rel))
       );
     });
