@@ -13,6 +13,7 @@ import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { useI18n } from './useI18n';
 import { rootType, typeByKey, typeInUse, type EntityType, type ImportedProfile } from '../core/profile';
 import type { FileProfile } from '../core/profileFiles';
+import { iriRewriter } from '../core/import';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
@@ -241,17 +242,48 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     loadProfile();
   }
 
-  function setBase(base: string): void {
-    project.base = base.trim();
-    const mode = detectedMode.value;
-    if (mode !== 'ask') setMode(mode);
+  /**
+   * SPEC §2.5. Re-base: apply a change of base URI or IRI mode, and move the
+   * user's own references to the project's IRIs (in the forms and in the
+   * kept triples) to the new IRIs. After the first publish the interface asks
+   * first (`rebaseNeedsConfirm`).
+   */
+  function rebase(change: () => void): void {
+    const before = new Map(project.entities.map((e) => [pathOf(project, e), iriOf(project, e)]));
+    const oldBase = project.base;
+    change();
+    const map = new Map<string, string>();
+    for (const e of project.entities) {
+      const old = before.get(pathOf(project, e));
+      const now = iriOf(project, e);
+      if (old && old !== now) map.set(old, now);
+    }
+    if (!map.size && oldBase === project.base) return;
+    const rw = iriRewriter(map, oldBase !== project.base ? { from: oldBase, to: project.base } : undefined);
+    for (const k of Object.keys(values)) values[k] = rw.node(values[k]);
+    extras.value = Object.fromEntries(Object.entries(extras.value).map(([k, qs]) => [k, qs.map(rw.quad)]));
   }
 
-  function setMode(mode: IriMode): void {
+  function applyMode(mode: IriMode): void {
     project.iriMode = mode;
     if (mode === 'file') project.storageBase = null;
     else if (!project.storageBase) project.storageBase = '';
   }
+
+  function setBase(base: string): void {
+    rebase(() => {
+      project.base = base.trim();
+      const mode = detectedMode.value;
+      if (mode !== 'ask') applyMode(mode);
+    });
+  }
+
+  function setMode(mode: IriMode): void {
+    rebase(() => applyMode(mode));
+  }
+
+  /** SPEC §2.5. Changing every IRI of a published FDP needs the user's go-ahead. */
+  const rebaseNeedsConfirm = computed(() => published.value.size > 0);
 
   // ---- derived output ----
   const graphs = shallowRef(new Map<string, Store>());
@@ -347,6 +379,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     root,
     setBase,
     setMode,
+    rebaseNeedsConfirm,
     detectedMode,
     settingsErrors,
     graphs,

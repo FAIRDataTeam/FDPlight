@@ -92,12 +92,13 @@ et le fichier généré** (à droite).
 
 **Configuration guidée (facultative).** Lors de votre première visite,
 FDPlight vous propose une configuration guidée. Elle vous demande le dépôt
-(propriétaire, nom, branche, dossier), affiche l’URI de base qui en découle,
-vous laisse choisir un profil et décider s’il faut notifier un FDP Index, puis
-remplit les paramètres et le formulaire de connexion quand vous cliquez sur
-*Terminer*. *Passer* laisse tout tel quel. Vous pouvez la rouvrir avec
-*Configuration guidée* dans l’en-tête, ou suivre à la main les étapes 1 à 7
-ci-dessous.
+(propriétaire, nom, branche, dossier) et où vivent les IRI (l’adresse GitHub
+Pages, un domaine personnalisé ou w3id.org), affiche l’URI de base qui en
+découle, vous laisse choisir un profil et décider s’il faut notifier un FDP
+Index, puis remplit les paramètres et le formulaire de connexion quand vous
+cliquez sur *Terminer*. *Passer* laisse tout tel quel. Vous pouvez la rouvrir
+avec *Configuration guidée* dans l’en-tête, ou suivre à la main les étapes 1
+à 7 ci-dessous.
 
 ### Étape 1 — Paramètres du projet
 
@@ -228,6 +229,29 @@ publication ; le moissonnage prend encore quelques secondes. Un FDP qui n’est
 pas notifié pendant une semaine devient *inactive* dans l’Index ; le workflow
 de ping l’évite.
 
+### IRI pérennes avec w3id.org (facultatif)
+
+Un URI de base sur GitHub Pages lie chaque IRI au dépôt : si vous renommez
+celui-ci ou déplacez les fichiers plus tard, tous les IRI changent. Avec un
+URI de base sous [w3id.org](https://w3id.org/), comme
+`https://w3id.org/my-org/my-fdp/`, les IRI restent les mêmes et w3id les redirige vers les fichiers sur GitHub
+Pages (*mode redirection*).
+
+- Saisissez l’URI de base w3id dans les paramètres. FDPlight passe en mode
+  redirection et demande la **base de stockage**, l’adresse Pages des
+  fichiers ; quand vous vous connectez au dépôt, il la remplit pour vous.
+- Sous **Règles de redirection w3id**, saisissez votre nom, votre e-mail et
+  votre nom d’utilisateur GitHub (w3id demande une personne responsable), puis
+  copiez les règles. Forkez
+  [perma-id/w3id.org](https://github.com/perma-id/w3id.org), créez le fichier
+  que FDPlight indique (par exemple `ids/my-org/my-fdp/.htaccess`) avec les
+  règles, et ouvrez une pull request. Les règles ne changent pas quand vous
+  ajoutez des enregistrements.
+- Tant que w3id n’a pas fusionné la pull request, les IRI ne fonctionnent pas.
+  **Vérifier la redirection w3id** vous indique s’ils fonctionnent ; après la
+  publication, FDPlight la vérifie aussi en même temps que *Vérifier si c’est
+  en ligne*.
+
 ## 4. Modifier plus tard
 
 Ouvrez FDPlight, connectez-vous au même dépôt, et le projet se charge depuis
@@ -243,6 +267,14 @@ les fichiers. FDPlight montre ce qu’il a lu dans chaque fichier :
 
 Modifiez, puis cliquez sur **Vérifier les modifications** et publiez comme
 avant. Republier sans modification ne change rien.
+
+**Changer l’URI de base plus tard.** Une fois le FDP publié, un nouvel URI
+de base (ou un passage entre le mode fichier et le mode redirection) change
+tous les IRI. FDPlight vous demande confirmation avant de le faire, et met à
+jour vos propres références aux enregistrements du projet. Les liens vers les
+anciens IRI ailleurs cessent de fonctionner, et le FDP Index voit un nouveau
+FAIR Data Point. Si vous risquez de déplacer les fichiers un jour, choisissez
+dès le départ des IRI pérennes avec w3id.org.
 
 ## 5. Importer un FAIR Data Point existant
 

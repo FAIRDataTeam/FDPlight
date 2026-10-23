@@ -36,12 +36,13 @@ file tracks how we build it.
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | ✅ fine-grained token, one-commit publish, PR mode, conflict check, served check |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ✅ six locales, guide in six languages, ERDERA, accessibility |
-| 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | 🟡 profile documents done (#41); redirect mode, VP Index auth and CSV open |
+| 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | 🟡 profile documents (#41) and redirect mode with w3id (#45, #46) done; VP Index auth and CSV open |
 
 Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Re-base with confirmation after publishing; w3id in the guided setup (#46).
 - 2026-10-23 — Redirect mode: w3id rules and the redirect check (#45).
 - 2026-10-23 — Guide in five more languages with localized screenshots (#43).
 - 2026-10-23 — Optional guided setup for new projects (#42).
@@ -404,16 +405,16 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 9 — Optional 🟡
 
-- [ ] Redirect mode UI and publishing (SPEC §2.4), decided 2026-10-23 to do
-      now. The IRI rules themselves are in the Phase 1/3 core and tested in
+- [x] Redirect mode UI and publishing (SPEC §2.4), decided 2026-10-23 to do
+      now. An end-to-end pilot needs a w3id identifier (the owner's call). The IRI rules themselves are in the Phase 1/3 core and tested in
       both modes.
   - [x] Storage base proposed on connect; w3id rules in w3id's style with
         the steps to submit them; redirect check in the settings and with
         the served check (#45). Rules verified with w3id's checker and its
         local Apache (SPEC §9.2).
-  - [ ] Re-base after the first publish (base or mode change) with a
+  - [x] Re-base after the first publish (base or mode change) with a
         warning, rewriting the user's own IRIs; w3id option in the guided
-        setup.
+        setup (#46).
 - [ ] VP Index authorization in the ping workflow, once the mechanism is
       documented.
 - [ ] Bulk creation from CSV (overlaps with ejp-rd-vp/fdp-populator).

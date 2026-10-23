@@ -115,13 +115,18 @@ export function migrate(loaded: LoadedProject): LoadedProject {
  * SPEC §4.2. Rewrites old entity IRIs to new ones: exact IRIs, their hash
  * IRIs, and literals that are exactly an old IRI (e.g. `dct:identifier`).
  */
-export function iriRewriter(iriMap: Map<string, string>) {
+export function iriRewriter(iriMap: Map<string, string>, prefix?: { from: string; to: string }) {
   const iri = (v: string): string => {
     const exact = iriMap.get(v);
     if (exact) return exact;
     const hash = v.indexOf('#');
     const base = hash < 0 ? undefined : iriMap.get(v.slice(0, hash));
-    return base ? base + v.slice(hash) : v;
+    if (base) return base + v.slice(hash);
+    // SPEC §2.5: other IRIs under the old base (profile IRIs, …) move with it,
+    // unless they are already under a new base that extends the old one.
+    if (prefix && v.startsWith(prefix.from) && !(prefix.to.startsWith(prefix.from) && v.startsWith(prefix.to)))
+      return prefix.to + v.slice(prefix.from.length);
+    return v;
   };
   const node = (n: RecordNode): RecordNode =>
     Object.fromEntries(Object.entries(n).map(([k, list]) => [k, list.map((x) => ({ ...x, value: iri(x.value), ...(x.node ? { node: node(x.node) } : {}) }))]));

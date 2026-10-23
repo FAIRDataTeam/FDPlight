@@ -163,4 +163,27 @@ describe('useProject', () => {
     s.selected.value = 'fdp.ttl';
     expect(s.hiddenFromVp.value).toBe(false);
   });
+
+  it('re-bases: a new base URI or mode moves the user\'s references to project IRIs (SPEC §2.5)', async () => {
+    const { DataFactory } = await import('n3');
+    const s = useProject();
+    s.add('fdp.ttl', 'catalog');
+    const catalog = s.selected.value;
+    s.add(catalog, 'dataset');
+    const dataset = s.selected.value;
+    const oldIri = `https://example.github.io/my-fdp/${dataset}`;
+    // A reference in a form field and one in the kept triples.
+    const form = s.forms.catalog;
+    const f = shapeFields(form).find((x) => x.nodeKind === 'sh:IRI' && !x.inValues?.length && !x.node)!;
+    s.values[catalog][fieldKey(f)][0].value = `${oldIri}#distribution`;
+    s.extras.value = { [catalog]: [DataFactory.quad(DataFactory.namedNode('https://example.github.io/my-fdp/' + catalog), DataFactory.namedNode('http://example.org/see'), DataFactory.namedNode(oldIri)) as never] };
+    s.setBase('https://w3id.org/erdera/my-fdp/');
+    expect(s.project.iriMode).toBe('redirect');
+    const newIri = `https://w3id.org/erdera/my-fdp/${dataset.replace(/\.ttl$/, '')}`;
+    expect(s.values[catalog][fieldKey(f)][0].value).toBe(`${newIri}#distribution`);
+    expect((s.extras.value[catalog][0] as unknown as { object: { value: string } }).object.value).toBe(newIri);
+    expect(s.rebaseNeedsConfirm.value).toBe(false);
+    s.published.value = new Set([catalog]);
+    expect(s.rebaseNeedsConfirm.value).toBe(true);
+  });
 });

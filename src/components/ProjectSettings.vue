@@ -118,6 +118,24 @@ function toggleIndex(on: boolean) {
 const base = ref(p.base);
 watch(() => p.base, (b) => (base.value = b));
 
+// SPEC §2.5: after the first publish, a new base URI or mode changes every IRI.
+const confirmRebase = () => !props.state.rebaseNeedsConfirm.value || window.confirm(t('settings.rebaseConfirm'));
+function changeBase(): void {
+  if (base.value.trim() === p.base) return;
+  if (!confirmRebase()) {
+    base.value = p.base;
+    return;
+  }
+  props.state.setBase(base.value);
+}
+function changeMode(e: Event, mode: IriMode): void {
+  if (!confirmRebase()) {
+    (e.target as HTMLInputElement).checked = false;
+    return;
+  }
+  props.state.setMode(mode);
+}
+
 const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', redirect: 'settings.modeRedirect', ask: 'settings.modeAsk' };
 </script>
 
@@ -174,13 +192,13 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
     </fieldset>
     <label class="settings__field">
       <span>{{ t('settings.baseUri') }}</span>
-      <input v-model="base" type="url" spellcheck="false" @change="state.setBase(base)" @keyup.enter="state.setBase(base)" />
+      <input v-model="base" type="url" spellcheck="false" @change="changeBase" @keyup.enter="changeBase" />
     </label>
     <div class="settings__mode">
       <span>{{ t(MODE_TEXT[state.detectedMode.value]) }}</span>
       <span v-if="state.detectedMode.value === 'ask'" class="settings__choice">
-        <label><input type="radio" :checked="p.iriMode === 'file'" @change="state.setMode('file')" /> file</label>
-        <label><input type="radio" :checked="p.iriMode === 'redirect'" @change="state.setMode('redirect')" /> redirect</label>
+        <label><input type="radio" :checked="p.iriMode === 'file'" @change="changeMode($event, 'file')" /> file</label>
+        <label><input type="radio" :checked="p.iriMode === 'redirect'" @change="changeMode($event, 'redirect')" /> redirect</label>
       </span>
     </div>
     <label v-if="p.iriMode === 'redirect'" class="settings__field">

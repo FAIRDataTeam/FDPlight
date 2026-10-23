@@ -93,10 +93,11 @@ het gegenereerde bestand** (rechts).
 
 **Begeleide instelling (optioneel).** Bij uw eerste bezoek biedt FDPlight
 een begeleide instelling aan. Die vraagt naar de repository (eigenaar, naam,
-branch, map), toont de basis-URI die daaruit volgt, laat u een profiel kiezen
-en of u een FDP Index wilt pingen, en vult de instellingen en het
-verbindingsformulier in als u op *Voltooien* klikt. *Overslaan* laat alles
-zoals het was. U kunt de begeleide instelling opnieuw openen via
+branch, map) en waar de IRI's staan (op het adres van GitHub Pages, op een
+eigen domein of onder w3id.org), toont de basis-URI die daaruit volgt, laat
+u een profiel kiezen en of u een FDP Index wilt pingen, en vult de
+instellingen en het verbindingsformulier in als u op *Voltooien* klikt.
+*Overslaan* laat alles zoals het was. U kunt de begeleide instelling opnieuw openen via
 *Begeleide instelling* in de kopbalk, of de stappen 1 tot en met 7 hieronder
 met de hand volgen.
 
@@ -227,6 +228,30 @@ De eerste ping volgt na de eerste Pages-deployment na uw publicatie; het
 oogsten duurt daarna nog enkele seconden. Een FDP dat een week lang niet
 wordt gepingd, wordt in de Index *inactive*; de ping-workflow voorkomt dat.
 
+### Persistente IRI's met w3id.org (optioneel)
+
+Een basis-URI op GitHub Pages koppelt elke IRI aan de repository: geeft u
+die later een andere naam of verplaatst u de bestanden, dan veranderen alle
+IRI's. Met een basis-URI onder [w3id.org](https://w3id.org/), zoals
+`https://w3id.org/my-org/my-fdp/`, blijven de IRI's gelijk en verwijst w3id
+ze door naar de bestanden op GitHub Pages (*doorverwijsmodus*).
+
+- Vul de w3id-basis-URI in bij de instellingen. FDPlight schakelt over naar
+  de doorverwijsmodus en vraagt om de **Opslagbasis (waar de .ttl-bestanden
+  worden aangeboden)**, het Pages-adres van de bestanden; maakt u verbinding
+  met de repository, dan vult FDPlight die voor u in.
+- Vul onder **Doorverwijsregels voor w3id** uw naam, e-mailadres en
+  GitHub-gebruikersnaam in (w3id vraagt om een beheerder) en kopieer daarna
+  de regels. Maak een fork van
+  [perma-id/w3id.org](https://github.com/perma-id/w3id.org), maak daarin het
+  bestand dat FDPlight noemt (bijvoorbeeld `ids/my-org/my-fdp/.htaccess`)
+  met de regels, en open een pull request. De regels veranderen niet als u
+  records toevoegt.
+- Zolang w3id de pull request niet heeft samengevoegd, werken de IRI's niet.
+  **w3id-doorverwijzing controleren** laat zien of ze werken; na het
+  publiceren controleert FDPlight dit ook, samen met *Controleren of het
+  online is*.
+
 ## 4. Later bewerken
 
 Open FDPlight, maak verbinding met dezelfde repository, en het project wordt
@@ -243,6 +268,14 @@ gelezen:
 
 Bewerk, klik dan op **Wijzigingen bekijken** en publiceer zoals eerder.
 Opnieuw publiceren zonder bewerkingen verandert niets.
+
+**De basis-URI later wijzigen.** Is het FDP eenmaal gepubliceerd, dan
+verandert een nieuwe basis-URI (of een overstap tussen bestandsmodus en
+doorverwijsmodus) elke IRI. FDPlight vraagt dit eerst, en past uw eigen
+verwijzingen naar de records van het project mee aan. Links elders naar de
+oude IRI's werken dan niet meer, en de FDP Index ziet een nieuw FAIR Data
+Point. Verplaatst u de bestanden misschien ooit, kies dan vanaf het begin
+voor persistente IRI's met w3id.org.
 
 ## 5. Een bestaand FAIR Data Point importeren
 
