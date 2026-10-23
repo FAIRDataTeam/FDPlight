@@ -129,8 +129,11 @@ Differences from the plan
   stored token, provenance). The trusted publisher may publish directly; it
   does not manage dist-tags. 0.2.0 itself was published by hand by the
   owner, so it has no provenance; 0.2.1 (2026-10-23, Contour #32) was the
-  first release by the workflow, with a signed provenance statement.
-- Contour's TASKS.md still says 202 tests; it has 216 now.
+  first release by the workflow, with a signed provenance statement. 0.2.2
+  (2026-10-23, Contour #33): form controls named by their label
+  (`aria-labelledby`), `aria-invalid`, and a higher-contrast cardinality
+  badge.
+- Contour's TASKS.md still says 202 tests; it has 226 now.
 
 ## 5. Decisions
 

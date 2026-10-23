@@ -35,13 +35,14 @@ file tracks how we build it.
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish, PR mode and conflict check done |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
-| 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ⬜ |
+| 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | 🟡 all done but translations of the guide |
 | 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | ⬜ |
 
 Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Accessibility: record-core 0.2.2 names form controls by their label; axe-core finds no violations (#38, Contour #33).
 - 2026-10-23 — VP Level 1 / Level 2 queries run in a test over ERDERA output; four problems in the queries recorded (#37).
 - 2026-10-23 — Core messages translated in the six locales (#36).
 - 2026-10-23 — Profile from local files; base proposal with the folder; custom-domain notes (#35).
@@ -343,7 +344,7 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] Show the Index status of the project in FDPlight (read-only, public
       endpoints): state, last update, harvested vs missing entities (#15).
 
-## Phase 8 — Polish and docs ⬜
+## Phase 8 — Polish and docs 🟡
 
 - [ ] i18n with Contour's mechanism and the same six locales. The interface
       and the form renderer are translated (EN, PT-BR, NL, DE, ES, FR; the
@@ -371,10 +372,14 @@ Resource plus Dataset). Contour still treats the first shape as primary
       registry, biobank, guideline, data services); the user ticks the types
       in use; `ejp:vpConnection ejp:VPDiscoverable` unless hidden and
       `fdp:conformsToFdpSpec` on the root are written by the profile.
-- [ ] Accessibility pass. Keyboard tree navigation done (#24): arrow keys,
+- [x] Accessibility pass. Keyboard tree navigation (#24): arrow keys,
       Home and End, Left to the parent, Right to the first child; only the
-      selected node is a Tab stop; visible focus ring. A full pass (screen
-      reader labels, contrast, the form renderer) is still to do.
+      selected node is a Tab stop; visible focus ring. Automated check with
+      axe-core 4.13 in Chromium over five states (initial, a catalog, the
+      three settings forms, ERDERA): the only violations were in the shared
+      form renderer (controls without a name, a low-contrast badge), fixed in
+      record-core 0.2.2 with `aria-invalid` added (Contour #33, #38). Now no
+      violations. Not done: a test with a screen reader.
 
 ## Phase 9 — Optional ⬜
 
