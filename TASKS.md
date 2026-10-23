@@ -28,7 +28,7 @@ file tracks how we build it.
 | Phase | Theme | Status |
 |---|---|---|
 | 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, on npm, used by FDPlight |
-| 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 all steps in the UI; a guided first-run flow not built |
+| 1 — Project model and profile | base URI, profile format, import from an FDP | ✅ settings, connect form and the optional guided setup |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | ✅ default and ERDERA shapes tested |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ✅ matches the RI (SPEC §9.5) |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ✅ repository import, report, copy by URL |
@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Optional guided setup for new projects (#42).
 - 2026-10-23 — Profile documents: each type's merged SHACL at its profile IRI (#41).
 - 2026-10-23 — ERDERA data services need `dct:type`; a hidden record shows a warning (#40).
 - 2026-10-23 — Owner's decisions on the wizard, guide translations, profile documents, metrics and ERDERA follow-ups recorded (#39).
@@ -155,14 +156,17 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 - [x] Scaffold imports the shared package and renders the default-profile
       forms, with a live preview of the generated Turtle (#8).
 
-## Phase 1 — Project model and profile 🟡
+## Phase 1 — Project model and profile ✅
 
 - [x] `Project` type (base URI, IRI mode, defaults, profile, entities) and its
       JSON form `fdplight.json` (SPEC §3.1) — `src/core/profile.ts`,
       `src/core/project.ts`. The entity tree is not yet persisted (open
       decision 5).
-- [ ] New-project wizard, optional (decided 2026-10-23): a guided
-      first-run flow the user may follow or skip. The steps also stay in the
+- [x] New-project wizard, optional (decided 2026-10-23): a guided
+      first-run flow the user may follow or skip (#42). Offered once on a
+      first visit, always available from the header; four steps
+      (repository and folder with the base URI, profile, Index ping,
+      summary); nothing changes before *Finish*. The steps also stay in the
       settings bar and the connect form.
   - [x] target repository (owner/name, branch): the connect form (#12);
   - [x] **base URI**, proposed as `https://{owner}.github.io/{repo}/` plus
