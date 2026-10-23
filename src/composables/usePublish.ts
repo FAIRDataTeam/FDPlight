@@ -189,7 +189,7 @@ export function usePublish(
       await loadFromRepository();
       await refresh();
       connected.value = true;
-      if (!loaded.value && state.project.base === DEFAULT_BASE) state.setBase(pagesBase(repo.value.owner, repo.value.repo));
+      if (!loaded.value && state.project.base === DEFAULT_BASE) state.setBase(pagesBase(repo.value.owner, repo.value.repo) + (state.project.folder ?? ''));
       // Already published: is it on the web? (A first publish is checked after publishing.)
       served.value = 'unknown';
       if (remote.value.has((state.project.folder ?? '') + rootPath(state.project))) await checkServed();

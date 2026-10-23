@@ -28,7 +28,7 @@ file tracks how we build it.
 | Phase | Theme | Status |
 |---|---|---|
 | 0 — Shared core | extract Contour's record engine into a package | ✅ package in Contour, on npm, used by FDPlight |
-| 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 core done, UI open |
+| 1 — Project model and profile | base URI, profile format, import from an FDP | 🟡 all steps in the UI; a guided first-run flow not built |
 | 2 — Multi-shape forms | merged shapes per type, form per entity | ✅ default and ERDERA shapes tested |
 | 3 — Tree and wiring | entity tree, IRI minting, system triples, LDP | ✅ matches the RI (SPEC §9.5) |
 | 4 — Import and edit | open an existing file-only FDP, lossless round trip | ✅ repository import, report, copy by URL |
@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Profile from local files; base proposal with the folder; custom-domain notes (#35).
 - 2026-10-22 — Repository published at github.com/FAIRDataTeam/FDPlight
   (public, MIT). SPEC v0.2 automatic IRI modes (#1). Scaffold and logo (#2).
   SPEC v0.3 timestamp correction (#3).
@@ -154,15 +155,18 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       JSON form `fdplight.json` (SPEC §3.1) — `src/core/profile.ts`,
       `src/core/project.ts`. The entity tree is not yet persisted (open
       decision 5).
-- [ ] New-project wizard
-  - [ ] target repository (owner/name, branch);
-  - [ ] **base URI**, proposed as `https://{owner}.github.io/{repo}/`,
-        editable, validated (absolute https, ends with `/`). Editing,
-        validation and mode detection are in the settings bar (#9); the
-        proposal from the repository comes with the wizard;
-  - [ ] profile source (bundled, import from an FDP URL, or a local file).
-        Choosing between the bundled profiles (#13) and importing from an
-        FDP URL (#20) are in the settings bar; a local file is still open.
+- [ ] New-project wizard. The steps exist in the settings bar and the
+      connect form; a separate guided first-run flow is not built (to ask
+      the owner).
+  - [x] target repository (owner/name, branch): the connect form (#12);
+  - [x] **base URI**, proposed as `https://{owner}.github.io/{repo}/` plus
+        the project folder on connect, editable, validated (absolute https,
+        ends with `/`) (#9, #35). A custom domain cannot be proposed: reading
+        it needs *Pages: read* on the token (SPEC §2.2, §9.2). The mode
+        question and the "not online" note now explain custom domains (#35);
+  - [x] profile source: bundled (#13), import from an FDP URL (#20), or
+        local files, a JSON with the types and the shape files it names
+        (#35, SPEC §3.3).
 - [x] Profile import from a running FDP (`importProfileFromFdp`, tested on
       recorded home.fairdatapoint.org responses). Read `/resource-definitions`, fetch
       `/{prefix}/spec` (`/spec` for the root), store the merged shapes under

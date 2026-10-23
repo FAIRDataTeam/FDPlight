@@ -12,6 +12,7 @@ import { entityForm, userGraphFromForm } from '../core/forms';
 import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { useI18n } from './useI18n';
 import { rootType, typeByKey, typeInUse, type EntityType, type ImportedProfile } from '../core/profile';
+import type { FileProfile } from '../core/profileFiles';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
@@ -47,6 +48,8 @@ export const SHACL_DELAY_MS = 300;
 
 export function useProject(initial?: Project, profileKey = 'fdp-default') {
   const profile = ref(profileKey);
+  /** Name of a profile opened from local files (SPEC §3.3). */
+  const fileProfileName = ref('');
   let shapes = PROFILES[profileKey].shapes;
   const project = reactive(initial ?? newProject(DEFAULT_BASE, PROFILES[profileKey])) as Project;
   let forms: Record<string, Schema> = {};
@@ -203,6 +206,14 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     project.source = imported.source;
   }
 
+  /** Start over with a profile opened from local files (SPEC §3.3). */
+  function useFileProfile(p: FileProfile): void {
+    startOver('file', p.types, p.shapes);
+    delete project.source;
+    fileProfileName.value = p.name;
+    if (p.use) project.use = [...p.use];
+  }
+
   function startOver(key: string, types: EntityType[], newShapes: Record<string, string>): void {
     profile.value = key;
     shapes = newShapes;
@@ -298,6 +309,8 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     },
     switchProfile,
     useImportedProfile,
+    useFileProfile,
+    fileProfileName,
     load,
     hasLocalWork,
     extras,

@@ -4,6 +4,7 @@ import { expandTerm, fieldKey, shapeFields } from '@fairdatateam/record-core/rec
 import { DCT } from '../../core/vocab';
 import { importProfileFromFdp } from '../../core/profile';
 import { recordedFdpFetch } from '../../test/recordedFdp';
+import { PROFILES } from '../../profiles';
 import { useProject } from '../useProject';
 
 function setTitle(s: ReturnType<typeof useProject>, path: string, title: string) {
@@ -137,5 +138,17 @@ describe('useProject', () => {
     expect(s.lastError.value).toBe('');
     s.switchProfile('fdp-default');
     expect([s.profile.value, s.project.source]).toEqual(['fdp-default', undefined]);
+  });
+
+  it('starts over with a profile opened from files (SPEC §3.3), with its types in use', () => {
+    const s = useProject();
+    s.add('fdp.ttl', 'catalog');
+    const erdera = PROFILES.erdera;
+    s.useFileProfile({ name: 'ERDERA copy', types: erdera.types, shapes: erdera.shapes, use: ['catalog', 'biobank'] });
+    expect([s.profile.value, s.fileProfileName.value]).toEqual(['file', 'ERDERA copy']);
+    expect(s.project.entities).toEqual([{ type: 'fdp', id: '', parent: null }]);
+    expect(s.project.use).toEqual(['catalog', 'biobank']);
+    expect(s.typeInUse('dataset')).toBe(false);
+    expect(Object.keys(s.forms)).toHaveLength(erdera.types.length);
   });
 });

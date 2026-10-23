@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.9** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.10** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
@@ -11,7 +11,9 @@ FDPlight did not make, keeping or migrating their IRIs (§4.2). v0.8: the RI
 cross-check (9.5) and a correction of the RI's container IRIs (2.6). v0.9:
 copying an FDP by its URL (4.3), `use` and type defaults (3.1, 5.2), the
 bundled ERDERA profile (3.2), child types told apart by path or `rdf:type`
-(4.1).
+(4.1). v0.10: a profile from local files (3.3); custom domains are asked
+about, since their Pages domain cannot be read without an extra token
+permission (2.2).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -70,9 +72,16 @@ FDPlight picks the IRI mode from the host of the base URI.
 | Base URI host | Mode |
 |---|---|
 | `*.github.io` | file |
-| a custom domain equal to the target repository's Pages CNAME (GitHub API `GET /repos/{owner}/{repo}/pages`, field `cname`) | file |
 | `w3id.org`, `purl.org` and other known redirectors | redirect |
-| anything else | FDPlight asks the user once |
+| anything else, including a GitHub Pages custom domain | FDPlight asks the user once |
+
+A custom domain equal to the repository's Pages domain would mean file mode,
+but FDPlight cannot learn that domain. `GET /repos/{owner}/{repo}/pages`
+needs a token with *Pages: read*, which FDPlight does not ask for (7.1), and
+the browser cannot follow GitHub's redirect from the `github.io` address to
+the custom domain (9.2). The question therefore says that a Pages custom
+domain serves the files as they are (file mode). The core still accepts the
+domain (`detectIriMode(base, pagesCname)`) for when it is known.
 
 - The user can override the detected mode.
 - The mode is stored in `fdplight.json` (`iriMode`, see 3.1).
@@ -278,6 +287,19 @@ The values in the example are those currently served by home.fairdatapoint.org.
   get two mechanical syntax fixes; `ejp:vpConnection` accepts
   `ejp:VPDiscoverable` as well as `ejp:VPInvisible`. `ejp:VPContentDiscovery`
   is deprecated (owner, 2026-10-23) and stays out.
+
+### 3.3 A profile from local files
+
+A profile can also be opened from files on the user's computer (TASKS
+Phase 1): exactly one JSON file whose `types` follow 3.1 (a project's
+`fdplight.json` will do, or a file with only `types`), plus the Turtle files
+its `types[].shapes` entries name, matched by file name. A `shapes` entry
+that is an `http(s)` URL and has no matching local file is fetched. Only
+`types` and, if present, `use` are taken; the project's base URI, IRI mode,
+folder and Index stay. Each type's `shapes` becomes `shapes/{key}.ttl`, so
+the project keeps its own copy (as for an imported profile). Every missing
+file, Turtle syntax error and type error is listed; nothing is applied until
+all are fixed. Like any profile switch, it starts a new, empty project.
 
 ---
 
@@ -568,6 +590,9 @@ Rules 3 to 6 are the classes of hand-written errors seen in the WP13.3 files
   in redirect mode). Not served: it explains how to switch Pages on. Pages
   answers with CORS `*`; a site without Pages gives a 404 without CORS, so the
   browser cannot tell it from being offline. No token permission is needed.
+  A Pages site with a custom domain answers the `github.io` address with a
+  301 without CORS, so it also reads as not served; for a `github.io` base
+  FDPlight adds that a custom domain belongs in the base URI.
 - FDPlight checks that the branch head is still the commit it read before
   writing (and updates the ref without force), so a concurrent edit is
   detected, never overwritten.
@@ -722,6 +747,14 @@ jobs:
   anyway): `VPDiscoverable` alone on 41, with the deprecated
   `VPContentDiscovery` on 17. No `fdp:conformsToFdpSpec` in the harvested
   data.
+- **Pages custom domains** (2026-10-23). `GET
+  /repos/FAIRDataTeam/FDPlight/pages` without a token answers 404, though the
+  repository is public and has Pages.
+  `https://fairdatateam.github.io/FDPlight/metadata/fdp.ttl` answers 301 to
+  `https://fdplight.fairdatapoint.org/metadata/fdp.ttl` without
+  `access-control-allow-origin`; in Chromium, `fetch` of the `github.io`
+  address from another origin fails ("Failed to fetch"), while the
+  custom-domain address returns 200.
 
 ### 9.3 RI issue noticed
 
