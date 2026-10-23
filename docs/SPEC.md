@@ -572,10 +572,10 @@ jobs:
 2. ~~**Container IRI form in file mode.**~~ Decided 2026-10-22: hash
    (`E#dataset`) in file mode, RI style (`E/dataset/`) in redirect mode (2.6).
 3. **Default metrics.** Emit none (proposed) or mirror the RI defaults.
-4. **ERDERA specifics.** `ejp:vpConnection ejp:VPDiscoverable` and
-   `fdp:conformsToFdpSpec` appear in the WP13.3 files. Decide whether they are
-   form fields (from the ERDERA shapes) or system triples of the ERDERA
-   profile.
+4. ~~**ERDERA specifics.**~~ Decided 2026-10-23: system triples of the
+   ERDERA profile. `ejp:vpConnection ejp:VPDiscoverable` on every entity
+   unless the user hides it (`ejp:VPInvisible`, the ERDERA shapes' field),
+   and `fdp:conformsToFdpSpec` on the root.
 5. **Redirect mode timing.** The rules are specified (2.2 to 2.4). The
    implementation stays in Phase 9 unless a pilot needs it earlier.
 
