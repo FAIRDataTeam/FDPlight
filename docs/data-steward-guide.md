@@ -46,7 +46,7 @@ maintaining an FDP server.
 | **Entity** | One record in that tree. Each entity is **one Turtle file** in your repository, e.g. `catalog/rare-diseases.ttl`. |
 | **Base URI** | Where your files are served, e.g. `https://my-org.github.io/my-fdp/`. Every entity's IRI starts with it. |
 | **IRI** | The identifier of an entity. In the usual *file mode* it is simply the URL of its file, e.g. `https://my-org.github.io/my-fdp/catalog/rare-diseases.ttl`. |
-| **Profile** | The set of entity types and their forms (SHACL shapes). The default is the FAIR Data Point's own profile; you can also import the profile of a running FDP. |
+| **Profile** | The set of entity types and their forms (SHACL shapes). The default is the FAIR Data Point's own profile; you can also import the profile of a running FDP, or open one from files. |
 | **Wiring** | The links an FDP needs between records: parent and child links, LDP containers, identifiers, timestamps. FDPlight **writes all of it for you**; you only fill in the forms. |
 | **FDP Index** | A service, such as [home.fairdatapoint.org](https://home.fairdatapoint.org/), that lists FDPs and harvests their metadata. FDPlight can set up an automatic *ping* that keeps your FDP listed. |
 
@@ -60,7 +60,9 @@ You need:
 - **GitHub Pages switched on** for that repository (*Settings → Pages*).
   The usual choice is *Deploy from a branch*, branch `main`, folder `/`.
   Your base URI is then `https://{owner}.github.io/{repository}/`, plus the
-  folder if you use one.
+  folder if you use one. If the Pages site has a custom domain (for example
+  `https://fdp.example.org/`), use that domain instead, and choose *file*
+  when FDPlight asks how the host serves the files.
 - **A fine-grained personal access token** for that repository only
   ([create one](https://github.com/settings/personal-access-tokens/new)):
   - *Contents: read and write* — always;
@@ -259,12 +261,17 @@ and which fields their forms have.
   Every record says it is visible to the Virtual Platform
   (`ejp:vpConnection ejp:VPDiscoverable`) unless you choose to hide it.
 
-**Types in use.** When a profile has optional types, tick the ones you need
-under *Types in use*; the others are not offered in the tree. A type that
-already has records stays ticked until you delete them.
 - **Import from a FAIR Data Point…** — enter the address of a running FDP
   (for example `https://home.fairdatapoint.org`); FDPlight takes its entity
   types and their shapes, so your files follow the same profile.
+- **Open from files…** — choose a profile kept on your computer: one JSON
+  file with the types (another project's `fdplight.json` will do) and the
+  Turtle shape files it names. FDPlight lists any file that is missing or
+  broken.
+
+**Types in use.** When a profile has optional types, tick the ones you need
+under *Types in use*; the others are not offered in the tree. A type that
+already has records stays ticked until you delete them.
 
 Switching the profile starts a new, empty project. The profile is saved in
 the repository with your files, so everyone who connects later gets the

@@ -147,6 +147,7 @@ const mode = ref<ImportMode>('keep');
       <div v-else-if="pub.served.value === 'no'" class="publish__offline" role="status">
         <p>{{ t('publish.notOnline', { url: pub.servedUrl.value }) }}</p>
         <p>{{ t('publish.enablePages', { branch: pub.repo.value.branch }) }}</p>
+        <p v-if="/^https:\/\/[^/]+\.github\.io\//.test(pub.servedUrl.value)">{{ t('publish.customDomain') }}</p>
         <button type="button" class="link" @click="pub.checkServed()">{{ t('publish.checkAgain') }}</button>
       </div>
       <p v-else-if="pub.served.value === 'checking'" class="publish__online">{{ t('publish.checkingOnline') }}</p>

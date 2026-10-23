@@ -7,6 +7,7 @@ import type { IriMode } from '../core/iri';
 import { BRANCH_PAGES_WORKFLOW } from '../core/ping';
 import { importProfileFromFdp } from '../core/profile';
 import { importFromUrl } from '../core/importUrl';
+import { profileFromFiles } from '../core/profileFiles';
 import { PROFILES } from '../profiles';
 import { useI18n } from '../composables/useI18n';
 
@@ -19,7 +20,9 @@ const optionalTypes = computed(() => p.types.filter((ty) => ty.urlPrefix !== '')
 const hasRecords = (key: string) => p.entities.some((e) => e.type === key);
 
 const IMPORT = '__import';
+const FILES = '__files';
 const importing = ref(false);
+const openingFiles = ref(false);
 const fdpUrl = ref('');
 const importError = ref('');
 const busy = ref(false);
@@ -29,8 +32,11 @@ const confirmStartOver = () => !hasContent() || window.confirm(t('settings.switc
 
 function chooseProfile(e: Event) {
   const select = e.target as HTMLSelectElement;
-  if (select.value === IMPORT) {
-    importing.value = true;
+  if (select.value === IMPORT || select.value === FILES) {
+    importing.value = select.value === IMPORT;
+    openingFiles.value = select.value === FILES;
+    importError.value = '';
+    fileErrors.value = [];
     select.value = props.state.profile.value;
     return;
   }
@@ -39,6 +45,7 @@ function chooseProfile(e: Event) {
     return;
   }
   importing.value = false;
+  openingFiles.value = false;
   props.state.switchProfile(select.value);
 }
 
@@ -53,6 +60,27 @@ async function importProfile() {
     importing.value = false;
   } catch (err) {
     importError.value = t('settings.importFailed', { error: err instanceof Error ? err.message : String(err) });
+  } finally {
+    busy.value = false;
+  }
+}
+
+// SPEC §3.3: a profile from local files, a JSON with the types and the shapes it names.
+const chosenFiles = ref<File[]>([]);
+const fileErrors = ref<string[]>([]);
+async function openFiles() {
+  fileErrors.value = [];
+  busy.value = true;
+  try {
+    const files = await Promise.all(chosenFiles.value.map(async (f) => ({ name: f.name, text: await f.text() })));
+    const r = await profileFromFiles(files);
+    if (!r.ok) {
+      fileErrors.value = r.errors;
+      return;
+    }
+    if (!confirmStartOver()) return;
+    props.state.useFileProfile(r.value);
+    openingFiles.value = false;
   } finally {
     busy.value = false;
   }
@@ -100,9 +128,31 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
         <option v-for="(prof, key) in PROFILES" :key="key" :value="key">{{ prof.name }}</option>
         <option v-if="state.profile.value === 'repository'" value="repository">{{ t('settings.fromRepository') }}</option>
         <option v-if="state.profile.value === 'imported'" value="imported">{{ t('settings.fromFdp', { url: p.source?.fdp ?? '' }) }}</option>
+        <option v-if="state.profile.value === 'file'" value="file">{{ t('settings.fromFiles', { name: state.fileProfileName.value }) }}</option>
         <option :value="IMPORT">{{ t('settings.importFromFdp') }}</option>
+        <option :value="FILES">{{ t('settings.openFiles') }}</option>
       </select>
     </label>
+    <form v-if="openingFiles" class="settings__import" @submit.prevent="openFiles">
+      <label class="settings__field">
+        <span>{{ t('settings.profileFiles') }}</span>
+        <input
+          type="file"
+          multiple
+          required
+          accept=".json,.ttl,application/json,text/turtle"
+          @change="chosenFiles = [...(($event.target as HTMLInputElement).files ?? [])]"
+        />
+      </label>
+      <p class="settings__hint">{{ t('settings.profileFilesHint') }}</p>
+      <div class="settings__import-actions">
+        <button type="submit" class="primary" :disabled="busy || !chosenFiles.length">{{ t('settings.useProfile') }}</button>
+        <button type="button" class="link" @click="openingFiles = false">{{ t('settings.cancel') }}</button>
+      </div>
+      <ul v-if="fileErrors.length" class="settings__errors" role="alert">
+        <li v-for="e in fileErrors" :key="e">{{ e }}</li>
+      </ul>
+    </form>
     <form v-if="importing" class="settings__import" @submit.prevent="importProfile">
       <label class="settings__field">
         <span>{{ t('settings.fdpUrl') }}</span>

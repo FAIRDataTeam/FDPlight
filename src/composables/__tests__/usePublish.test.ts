@@ -79,6 +79,15 @@ describe('usePublish (TASKS Phase 6)', () => {
     expect(pub.blockers.value).toEqual(['Fix the 3 metadata problems first.']);
   });
 
+  it('proposes the Pages base with the project folder', async () => {
+    const s = useProject();
+    s.project.folder = 'metadata/';
+    const pub = usePublish(s, () => fakeRepo().client);
+    pub.repo.value = { owner: 'FAIRDataTeam', repo: 'FDPlight', branch: 'main' };
+    await pub.connect();
+    expect(s.project.base).toBe('https://fairdatateam.github.io/FDPlight/metadata/');
+  });
+
   it('publishes in one commit, stamps the entities and locks published ids', async () => {
     const s = useProject();
     const gh = fakeRepo({ 'README.md': '# my-fdp' });
