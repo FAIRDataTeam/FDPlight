@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Redirect mode: w3id rules and the redirect check (#45).
 - 2026-10-23 — Guide in five more languages with localized screenshots (#43).
 - 2026-10-23 — Optional guided setup for new projects (#42).
 - 2026-10-23 — Profile documents: each type's merged SHACL at its profile IRI (#41).
@@ -403,10 +404,16 @@ Resource plus Dataset). Contour still treats the first shape as primary
 
 ## Phase 9 — Optional 🟡
 
-- [ ] Redirect mode UI and publishing (SPEC §2.4): storage base, generated
-      w3id `.htaccess` rules, check that `{base}` resolves before publishing.
-      The IRI rules themselves are in the Phase 1/3 core and tested in both
-      modes.
+- [ ] Redirect mode UI and publishing (SPEC §2.4), decided 2026-10-23 to do
+      now. The IRI rules themselves are in the Phase 1/3 core and tested in
+      both modes.
+  - [x] Storage base proposed on connect; w3id rules in w3id's style with
+        the steps to submit them; redirect check in the settings and with
+        the served check (#45). Rules verified with w3id's checker and its
+        local Apache (SPEC §9.2).
+  - [ ] Re-base after the first publish (base or mode change) with a
+        warning, rewriting the user's own IRIs; w3id option in the guided
+        setup.
 - [ ] VP Index authorization in the ping workflow, once the mechanism is
       documented.
 - [ ] Bulk creation from CSV (overlaps with ejp-rd-vp/fdp-populator).

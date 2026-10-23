@@ -79,6 +79,26 @@ describe('usePublish (TASKS Phase 6)', () => {
     expect(pub.blockers.value).toEqual(['Fix the 3 metadata problems first.']);
   });
 
+  it('redirect mode: storage base from the repository, and the w3id redirect checked (SPEC §2.4)', async () => {
+    const s = useProject();
+    s.setBase('https://w3id.org/erdera/my-fdp/');
+    expect(s.project.iriMode).toBe('redirect');
+    const gh = fakeRepo();
+    const landed: string[] = [];
+    const pub = usePublish(s, () => gh.client, () => true, async () => ({ ok: true }), async (url) => {
+      landed.push(url);
+      return { ok: true, status: 200, redirected: true, url: 'https://erdera.github.io/my-fdp/fdp.ttl' };
+    });
+    pub.repo.value = { owner: 'ERDERA', repo: 'my-fdp', branch: 'main' };
+    await pub.connect();
+    expect(s.project.storageBase).toBe('https://erdera.github.io/my-fdp/');
+    expect(s.project.base).toBe('https://w3id.org/erdera/my-fdp/');
+    await pub.checkServed();
+    expect(pub.served.value).toBe('yes');
+    expect(landed).toEqual(['https://w3id.org/erdera/my-fdp/']);
+    expect(pub.redirect.value).toEqual({ state: 'ok' });
+  });
+
   it('proposes the Pages base with the project folder', async () => {
     const s = useProject();
     s.project.folder = 'metadata/';

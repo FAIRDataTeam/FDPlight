@@ -154,6 +154,10 @@ const mode = ref<ImportMode>('keep');
       <button v-else-if="pub.commitUrl.value && !pub.lastPull.value" type="button" class="link" @click="pub.checkServed()">
         {{ t('publish.checkOnline') }}
       </button>
+      <p v-if="pub.served.value === 'yes' && pub.redirect.value" class="publish__redirect" :class="`is-${pub.redirect.value.state}`" role="status">
+        <template v-if="pub.redirect.value.state === 'elsewhere'">{{ t('w3id.elsewhere', { url: pub.redirect.value.url }) }}</template>
+        <template v-else>{{ t(`w3id.${pub.redirect.value.state}`) }}</template>
+      </p>
 
       <p v-if="pub.lastPull.value" class="publish__done">
         {{ t('publish.proposed') }}
@@ -302,6 +306,14 @@ input {
 .publish__mode legend {
   font-weight: 600;
   padding: 0 4px;
+}
+.publish__redirect {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--color-warning);
+}
+.publish__redirect.is-ok {
+  color: var(--color-success);
 }
 .publish__online {
   margin: 0 0 8px;
