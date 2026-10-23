@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — VP Level 1 / Level 2 queries run in a test over ERDERA output; four problems in the queries recorded (#37).
 - 2026-10-23 — Core messages translated in the six locales (#36).
 - 2026-10-23 — Profile from local files; base proposal with the folder; custom-domain notes (#35).
 - 2026-10-22 — Repository published at github.com/FAIRDataTeam/FDPlight
@@ -362,8 +363,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
       header. Translations of the guide are still open.
 - [x] Bundled ERDERA profile (#33, `src/profiles/erdera/`, SPEC §3.2):
       types, shapes, type defaults, types in use, child types told apart by
-      path or `rdf:type`. Checked against the VP Index (SPEC §9.2). Still
-      open: the VP Level 1 / Level 2 queries in WP13.3. Decided 2026-10-23: all
+      path or `rdf:type`. Checked against the VP Index (SPEC §9.2) and, by a
+      test, against the VP Level 1 / Level 2 queries of WP13.3 (#37, SPEC
+      §9.6): every type is listed; problems found in the queries are listed
+      there. Decided 2026-10-23: all
       ERDERA types (FDP → catalog → dataset → distribution, plus patient
       registry, biobank, guideline, data services); the user ticks the types
       in use; `ejp:vpConnection ejp:VPDiscoverable` unless hidden and

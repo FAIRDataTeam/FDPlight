@@ -22,6 +22,12 @@ Changes to ERDERA's shapes, all made by the generator:
    `ejp:VPInvisible`, because the profile writes `ejp:VPDiscoverable` unless a
    record is hidden (SPEC §8.4).
 
+Checked against the Virtual Platform's Level 1 and Level 2 queries
+(`vp-queries/`, SPEC §9.6): every type is listed. Data services are listed by
+Level 2 only with a `dct:type` ("Ontological Type of your service"), which the
+shape leaves optional. Because of how the queries filter, one record marked
+`ejp:VPInvisible` hides every result of the graph they run on.
+
 Note: ERDERA's dataset shape requires `healthdcatap:hdab` to be
 `<http://example.org/hdab/national-health-authority-de>` (`sh:hasValue`, "Germany
 is selected as an example default"), so every dataset needs that value.

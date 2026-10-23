@@ -1,0 +1,152 @@
+PREFIX fd: <http://foodable.co/ns/>
+PREFIX fdp: <https://w3id.org/fdp/fdp-o#>
+PREFIX ejprd: <https://w3id.org/ejp-rd/vocabulary#>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX ldp: <http://www.w3.org/ns/ldp#>
+ 
+SELECT DISTINCT ?resource ?fdp ?resourceName ?resource ?resourceTypeURI ?ResourceType ?resourceCreated ?resourceUpdated ?resourceHomepage ?resourceDescription ?resourceLogo ?publisherLogo
+ 
+WHERE { 
+    VALUES ?connection { ejprd:vpConnection }
+    VALUES ?discoverable { ejprd:VPDiscoverable }
+    VALUES ?invisible { ejprd:VPInvisible }
+
+    {  # top-level FDPs only
+    
+      BIND(fdp:FAIRDataPoint AS ?resourceTypeURI)
+
+      ?resource a fdp:FAIRDataPoint ;
+      	dcterms:title ?resourceName .
+    
+   	  ?resource	?connection ?discoverable .
+
+	  	# deal with dates, accepting both/either the fdp-ontology or the dcterms properties
+      OPTIONAL { ?resource fdp:metadataIssued  ?fdpIssued . }
+      OPTIONAL { ?resource dcterms:issued            ?dctIssued . }
+      BIND(
+          COALESCE(
+            ?fdpIssued,
+            ?dctIssued
+          ) AS ?resourceCreated
+        )
+      OPTIONAL { ?resource fdp:metadataModified  ?fdpModified . }
+      OPTIONAL { ?resource dcterms:modified      ?dctModified . }
+      BIND(
+          COALESCE(
+            ?fdpModified,
+            ?dctModified
+          ) AS ?resourceUpdated
+        )
+
+
+      OPTIONAL { ?resource dcat:landingPage ?resourceHomePage }
+      OPTIONAL { ?resource dcterms:description ?resourceDescription }
+      OPTIONAL { ?resource foaf:logo ?resourceLogo }
+      OPTIONAL { ?resource dcterms:publisher [ foaf:logo ?publisherLogo ] }
+
+    BIND (
+      REPLACE(
+        REPLACE(
+          IF(
+            CONTAINS(STRAFTER(str(?resource), "://"), "/"),
+            STRBEFORE(STRAFTER(str(?resource), "://"), "/"),
+            STRAFTER(str(?resource), "://")
+          ),
+          ":[0-9]+$", ""
+        ),
+        "/$", ""
+      ) AS ?fdp
+    )
+
+    BIND (
+      IF(
+        CONTAINS(str(?resourceTypeURI), "#"),
+        strafter(str(?resourceTypeURI), "#"),
+        REPLACE(str(?resourceTypeURI), "^.*/", "")
+      ) AS ?ResourceType
+    )
+
+    FILTER NOT EXISTS { ?s ?connection ?invisible }  # if they want to be invisible, remove them
+
+   }  
+        
+        
+UNION 
+  
+  
+  {  # everything that is a dcat:Resource, and a more specific type, but NOT an FDP  
+     # (note that VP resources must type themselves as dcat:Resource to be visible!!
+     # this is pretty normal... FDP reference implementation does this, and so does Linked Data Platform.)
+    ?resource a dcat:Resource ;
+		 a ?resourceTypeURI .
+    # Exclude if ONLY typed as dcat:Resource
+    FILTER EXISTS {
+      ?resource a ?other .
+      FILTER (?other != dcat:Resource)
+    }
+
+    ?resource	?connection ?discoverable .
+    ?resource dcterms:title ?resourceName .
+    
+  	# deal with dates, accepting both/either the fdp-o or the dcterms properties
+    OPTIONAL { ?resource fdp:metadataIssued  ?fdpIssued . }
+    OPTIONAL { ?resource dcterms:issued      ?dctIssued . }
+    BIND(
+      COALESCE(
+        ?fdpIssued,
+        ?dctIssued
+      ) AS ?resourceCreated
+    )
+    OPTIONAL { ?resource fdp:metadataModified  ?fdpModified . }
+    OPTIONAL { ?resource dcterms:modified            ?dctModified . }
+    BIND(
+      COALESCE(
+        ?fdpModified,
+        ?dctModified
+      ) AS ?resourceUpdated
+    )
+
+    OPTIONAL { ?resource dcat:landingPage ?resourceHomePage }
+    OPTIONAL { ?resource dcterms:description ?resourceDescription }
+    OPTIONAL { ?resource foaf:logo ?resourceLogo }
+    OPTIONAL { ?resource dcterms:publisher [ foaf:logo ?publisherLogo ] }
+
+    BIND (
+      REPLACE(
+        REPLACE(
+          IF(
+            CONTAINS(STRAFTER(str(?resource), "://"), "/"),
+            STRBEFORE(STRAFTER(str(?resource), "://"), "/"),
+            STRAFTER(str(?resource), "://")
+          ),
+          ":[0-9]+$", ""
+        ),
+        "/$", ""
+      ) AS ?fdp
+    )
+
+    BIND (
+      IF(
+        CONTAINS(str(?resourceTypeURI), "#"),
+        strafter(str(?resourceTypeURI), "#"),
+        REPLACE(str(?resourceTypeURI), "^.*/", "")
+      ) AS ?ResourceType
+    )
+
+    FILTER NOT EXISTS { ?s ?connection ?invisible }  # if the user wants to be invisible, remove them from the search results
+    FILTER NOT EXISTS { ?resource a fdp:FAIRDataPoint }  # FDPs are often tagged as dataservices, which is a pain in the ass!
+    
+	FILTER( ?resourceTypeURI NOT IN (
+      dcat:Resource,
+      fdp:MetadataService,
+      ldp:Container,
+      ldp:BasicContainer,
+	  dcat:DataService 
+    ) )    #  We filter out data services here, only because the VP has a specific call for data services
+    # FILTER CONTAINS(LCASE(str(?resourceDescription)), LCASE("proqolid"))
+	}	
+}
+ORDER BY ?fdp
+ 
