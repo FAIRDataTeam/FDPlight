@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-23 — record-core 0.2.1 (Contour #32, first release by the npm workflow, with provenance): IRIs outside an `sh:in` list stay IRIs (#34).
 - 2026-10-23 — Bundled ERDERA profile, types in use, type defaults (#33).
 - 2026-10-23 — Copy an FDP by its URL, with `prov:wasDerivedFrom` (#32).
 - 2026-10-23 — Owner's decisions recorded (#30). Served check after connect and publish (#31).

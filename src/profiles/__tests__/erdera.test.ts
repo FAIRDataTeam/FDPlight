@@ -3,7 +3,8 @@
 // @vitest-environment node
 import { expandTerm, fieldKey, normalizeRecord, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
 import { entityForm, userGraphFromForm } from '../../core/forms';
-import { loadProject } from '../../core/load';
+import { loadProject, readRecord } from '../../core/load';
+import { Parser } from 'n3';
 import { parseProjectFile, typeByKey, validateTypes } from '../../core/profile';
 import { iriOf, pathOf, stamp, type Project } from '../../core/project';
 import { planPublish } from '../../core/publish';
@@ -112,5 +113,16 @@ describe('ERDERA profile', () => {
     expect(loaded.project.entities.map((e) => e.type)).toEqual(['fdp', 'catalog', 'biobank']);
     expect(loaded.project.use).toEqual(['catalog', 'biobank']);
     expect(loaded.report).toContain('Biobank: the repository has records of this type, so it is now in use');
+  });
+
+  it('keeps the deprecated ejp:VPContentDiscovery an IRI when a record carries it (record-core 0.2.1)', async () => {
+    const E = 'https://erdera.github.io/my-fdp/catalog/c.ttl';
+    const ttl = `<${E}> a <http://www.w3.org/ns/dcat#Catalog> ; <${EJP}vpConnection> <${EJP}VPContentDiscovery>, <${EJP}VPDiscoverable> .`;
+    const r = readRecord(ttl, new Parser().parse(ttl) as never, E, forms.catalog);
+    const g = userGraphFromForm(forms.catalog, E, r.values);
+    expect(g.getQuads(E, `${EJP}vpConnection`, null, null).map((q) => `${q.object.termType} ${q.object.value}`).sort()).toEqual([
+      `NamedNode ${EJP}VPContentDiscovery`,
+      `NamedNode ${EJP}VPDiscoverable`,
+    ]);
   });
 });
