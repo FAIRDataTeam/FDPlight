@@ -5,7 +5,7 @@
 import { DataFactory, Store, Writer, type Quad, type Term } from 'n3';
 import { containerIri, hashIri, profileIri } from './iri';
 import { md5Hex } from './md5';
-import { DEFAULT_ACCESS_RIGHTS, isCatalog, typeByKey, type EntityType } from './profile';
+import { DEFAULT_ACCESS_RIGHTS, isCatalog, typeByKey, typeInUse, type EntityType } from './profile';
 import { childrenOf, entityType, findByPath, iriOf, iriSettings, type Entity, type Project } from './project';
 import { DATACITE_IDENTIFIER, DCAT, DCT, FDP, LDP, NS, RDFS_LABEL, RDF_TYPE, SIO, XSD_DATETIME } from './vocab';
 import { FDPLIGHT_VERSION } from './version';
@@ -61,6 +61,8 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
   const d = project.defaults;
   if (d.language && !userHas(DCT.language)) add(e, DCT.language, namedNode(d.language));
   if (d.license && !userHas(DCT.license)) add(e, DCT.license, namedNode(d.license));
+  // The profile's default triples for this type, unless the user gave a value.
+  for (const x of type.defaults ?? []) if (!userHas(x.predicate)) add(e, x.predicate, namedNode(x.object));
   if (!userHas(DCT.accessRights)) {
     const ar = namedNode(hashIri(E, 'accessRights'));
     add(e, DCT.accessRights, ar);
@@ -103,6 +105,8 @@ export function serializeEntity(project: Project, entity: Entity, user: Store, o
 
   // ---- SPEC §5.5 child links and one LDP container per child type ----
   type.children.forEach((child, i) => {
+    // Types the project does not use get no container (SPEC §3.1 `use`).
+    if (!typeInUse(project, child.type) && childrenOf(project, entity, child.type).length === 0) return;
     const container = namedNode(containerIri(s, E, childPrefixes[i]));
     add(container, RDF_TYPE, namedNode(LDP.DirectContainer));
     add(container, DCT.title, literal(child.title));

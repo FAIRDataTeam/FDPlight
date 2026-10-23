@@ -24,6 +24,18 @@ export interface EntityType {
   /** Path of the merged SHACL in the repository, or a URL. */
   shapes: string;
   children: ChildSpec[];
+  /**
+   * SPEC §5.2. Triples the profile writes on every entity of this type unless
+   * the user gave a value for the predicate, e.g. ERDERA's
+   * `ejp:vpConnection ejp:VPDiscoverable`.
+   */
+  defaults?: TypeDefault[];
+}
+
+/** A default triple `E predicate object` (object is an IRI). */
+export interface TypeDefault {
+  predicate: string;
+  object: string;
 }
 
 /** A FAIR metric as configured in the RI settings (SPEC §5.2). */
@@ -64,6 +76,16 @@ export interface ProjectFile {
   index?: IndexSettings;
   /** Root file path when it is not `fdp.ttl` (an FDP imported with its IRIs, SPEC §4.2). */
   root?: string;
+  /**
+   * SPEC §3.1. Keys of the non-root types the project uses; absent means all.
+   * Unused types are not offered and get no containers.
+   */
+  use?: string[];
+}
+
+/** SPEC §3.1. Whether the project uses a type (the root always). */
+export function typeInUse(p: Pick<ProjectFile, 'use' | 'types'>, key: string): boolean {
+  return !p.use || p.use.includes(key) || rootType(p.types).key === key;
 }
 
 /** SPEC §4. Problems with a repository folder, empty when valid. */
@@ -139,6 +161,8 @@ export function validateTypes(types: unknown): string[] {
       errors.push(`${at}.targetClasses must be a non-empty list of IRIs`);
     if (!isStr(t.shapes) || !t.shapes) errors.push(`${at}.shapes is required`);
     if (!Array.isArray(t.children)) errors.push(`${at}.children must be an array`);
+    if (t.defaults !== undefined && (!Array.isArray(t.defaults) || !t.defaults.every((d) => d && isAbsIri(d.predicate) && isAbsIri(d.object))))
+      errors.push(`${at}.defaults must be a list of {predicate, object} IRIs`);
   });
   const roots = types.filter((t: Partial<EntityType>) => t.urlPrefix === '');
   if (roots.length !== 1) errors.push(`exactly one type must have urlPrefix "" (found ${roots.length})`);
@@ -200,6 +224,11 @@ export function parseProjectFile(input: string | unknown): Result<ProjectFile> {
   if (index !== undefined && (typeof index !== 'object' || !index || !isStr(index.url) || !isStr(index.pagesWorkflow)))
     errors.push('index must be {url, pagesWorkflow}');
   else if (index) errors.push(...validateIndex(index));
+  const use = o.use;
+  if (use !== undefined) {
+    const keys = Array.isArray(o.types) ? new Set((o.types as Partial<EntityType>[]).map((t) => t.key)) : new Set();
+    if (!Array.isArray(use) || !use.every((k) => isStr(k) && keys.has(k))) errors.push('use must be a list of type keys');
+  }
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -215,6 +244,7 @@ export function parseProjectFile(input: string | unknown): Result<ProjectFile> {
       ...(folder ? { folder: folder as string } : {}),
       ...(index ? { index } : {}),
       ...(isStr(o.root) && o.root !== 'fdp.ttl' ? { root: o.root } : {}),
+      ...(Array.isArray(use) ? { use: use as string[] } : {}),
     },
   };
 }
@@ -233,6 +263,7 @@ export function stringifyProjectFile(p: ProjectFile): string {
     ...(p.folder ? { folder: p.folder } : {}),
     ...(p.index ? { index: p.index } : {}),
     ...(p.root && p.root !== 'fdp.ttl' ? { root: p.root } : {}),
+    ...(p.use ? { use: p.use } : {}),
   };
   return JSON.stringify(out, null, 2) + '\n';
 }

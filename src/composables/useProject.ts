@@ -11,7 +11,7 @@ import type { LoadedProject } from '../core/load';
 import { entityForm, userGraphFromForm } from '../core/forms';
 import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { useI18n } from './useI18n';
-import { rootType, typeByKey, type EntityType, type ImportedProfile } from '../core/profile';
+import { rootType, typeByKey, typeInUse, type EntityType, type ImportedProfile } from '../core/profile';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
@@ -37,6 +37,7 @@ export function newProject(base = DEFAULT_BASE, profile: BundledProfile = PROFIL
       metrics: [],
     },
     types: profile.types,
+    ...(profile.use ? { use: [...profile.use] } : {}),
     entities: [{ type: 'fdp', id: '', parent: null }],
   };
 }
@@ -136,6 +137,20 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     });
   }
 
+  /** SPEC §3.1. Tick or untick a type; a type with records stays in use. */
+  function setTypeInUse(key: string, on: boolean): void {
+    const all = project.types.filter((t) => t !== rootType(project.types)).map((t) => t.key);
+    const now = new Set(project.use ?? all);
+    if (!on && project.entities.some((e) => e.type === key)) {
+      lastError.value = `There are ${typeByKey(project.types, key).name.toLowerCase()} records in this project; delete them first.`;
+      return;
+    }
+    lastError.value = '';
+    if (on) now.add(key);
+    else now.delete(key);
+    project.use = all.filter((k) => now.has(k));
+  }
+
   // ---- settings (SPEC §2.2) ----
   const detectedMode = computed<IriMode | 'ask'>(() => {
     try {
@@ -179,6 +194,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     if (!next || key === profile.value) return;
     startOver(key, next.types, next.shapes);
     delete project.source;
+    if (next.use) project.use = [...next.use];
   }
 
   /** Start over with a profile imported from a running FDP (SPEC §3, TASKS Phase 1). */
@@ -192,6 +208,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     shapes = newShapes;
     project.types = types;
     delete project.root;
+    delete project.use;
     project.entities = [{ type: rootType(types).key, id: '', parent: null }];
     extras.value = {};
     published.value = new Set();
@@ -295,6 +312,8 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     add,
     remove,
     rename,
+    setTypeInUse,
+    typeInUse: (key: string) => typeInUse(project, key),
     move,
     moveOptions,
     root,

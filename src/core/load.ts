@@ -10,7 +10,7 @@ import { parseRdf, type Quad } from '@fairdatateam/record-core/rdf';
 import type { Schema } from '@fairdatateam/record-core/types';
 import { Store } from 'n3';
 import { filePath, hashIri, isValidId } from './iri';
-import { rootType, typeByKey, type EntityType, type ProjectFile } from './profile';
+import { rootType, typeByKey, typeInUse, type EntityType, type ProjectFile } from './profile';
 import { iriOf, type Entity, type Project } from './project';
 import { DATACITE_IDENTIFIER, DCT, FDP, LDP, RDF_TYPE } from './vocab';
 import { isRegenerated, pickTitle, serializeEntity } from './wiring';
@@ -73,11 +73,11 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     return settings.iriMode === 'file' ? (rel.endsWith('.ttl') ? rel : null) : `${rel}.ttl`;
   };
 
-  const queue: { path: string; type: EntityType; parent: string | null }[] = [
-    { path: settings.root ?? 'fdp.ttl', type: rootType(settings.types), parent: null },
+  const queue: { path: string; types: EntityType[]; parent: string | null }[] = [
+    { path: settings.root ?? 'fdp.ttl', types: [rootType(settings.types)], parent: null },
   ];
   while (queue.length) {
-    const { path, type, parent } = queue.shift()!;
+    const { path, types: candidates, parent } = queue.shift()!;
     const ttl = files.get(path);
     if (ttl === undefined) {
       report.push(`${path}: linked from ${parent ?? 'the settings'} but not in the repository`);
@@ -88,6 +88,10 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
       report.push(`${path}: not valid Turtle (${r.error}); skipped`);
       continue;
     }
+    // Several child types can share a relation (ERDERA's dct:hasPart): the
+    // file's path prefix decides, else its rdf:type (SPEC §4.1).
+    const probe = iriOf(project, entityAt(candidates[0], path, parent));
+    const type = pickType(candidates, path, new Set(r.quads.filter((q) => q.subject.value === probe && q.predicate.value === RDF_TYPE).map((q) => q.object.value)));
     const entity = entityAt(type, path, parent);
     const iri = iriOf(project, entity);
     const on = (pred: string) => r.quads.filter((q) => q.subject.value === iri && q.predicate.value === pred);
@@ -104,21 +108,19 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
     nodes.push({ entity, path, iri, quads: r.quads, title: pickTitle(on(DCT.title).map((q) => q.object as never)) ?? '' });
     project.entities.push(entity);
 
-    for (const { childType, targets } of childLinks(r.quads, iri, type, settings.types)) {
-      for (const t of targets) {
-        const childPath = pathOfIri(t);
-        if (!childPath) {
-          report.push(`${path}: links to ${t}, which is not a file under the base URI; left out`);
-          continue;
-        }
-        const already = seen.get(childPath);
-        if (already !== undefined) {
-          if (already !== path) report.push(`${childPath}: listed by ${already} and ${path}; kept under ${already}`);
-          continue;
-        }
-        seen.set(childPath, path);
-        queue.push({ path: childPath, type: childType, parent: path });
+    for (const [t, childTypes] of candidatesByTarget(childLinks(r.quads, iri, type, settings.types))) {
+      const childPath = pathOfIri(t);
+      if (!childPath) {
+        report.push(`${path}: links to ${t}, which is not a file under the base URI; left out`);
+        continue;
       }
+      const already = seen.get(childPath);
+      if (already !== undefined) {
+        if (already !== path) report.push(`${childPath}: listed by ${already} and ${path}; kept under ${already}`);
+        continue;
+      }
+      seen.set(childPath, path);
+      queue.push({ path: childPath, types: childTypes, parent: path });
     }
   }
 
@@ -142,6 +144,12 @@ export function loadProject(settings: ProjectFile, files: Map<string, string>, f
   if (nodes[0]) visit(nodes[0]);
   else report.push(`${settings.root ?? 'fdp.ttl'}: the root could not be read`);
   project.entities = ordered.map((n) => n.entity);
+  // Records of a type the settings leave out: the project uses that type after all.
+  for (const key of new Set(project.entities.map((e) => e.type)))
+    if (!typeInUse(project, key)) {
+      project.use = [...(project.use ?? []), key];
+      report.push(`${typeByKey(project.types, key).name}: the repository has records of this type, so it is now in use`);
+    }
   if (project.entities[0]?.path) project.root = project.entities[0].path;
 
   const values: Record<string, RecordNode> = {};
@@ -251,4 +259,28 @@ export function readRecord(text: string, quads: Quad[], iri: string, form: Schem
     found: !!rec,
     others: others.size,
   };
+}
+
+/** Child IRIs with the types their parent's relations allow, in profile order. */
+export function candidatesByTarget(links: { childType: EntityType; targets: string[] }[]): Map<string, EntityType[]> {
+  const out = new Map<string, EntityType[]>();
+  for (const { childType, targets } of links)
+    for (const t of targets) out.set(t, [...(out.get(t) ?? []), childType]);
+  return out;
+}
+
+/**
+ * SPEC §4.1. The type of a child among the candidates its parent's relation
+ * allows: the one whose URL prefix the file path uses (FDPlight's layout),
+ * else the most specific one whose target classes the record has, else the
+ * first.
+ */
+export function pickType(candidates: EntityType[], path: string | null, classes: Set<string>): EntityType {
+  if (candidates.length === 1) return candidates[0];
+  const byPath = path && candidates.find((t) => t.urlPrefix && path.startsWith(`${t.urlPrefix}/`));
+  if (byPath) return byPath;
+  const typed = candidates
+    .filter((t) => t.targetClasses.every((c) => classes.has(c)))
+    .sort((a, b) => b.targetClasses.length - a.targetClasses.length);
+  return typed[0] ?? candidates[0];
 }

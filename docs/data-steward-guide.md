@@ -253,6 +253,15 @@ and which fields their forms have.
 - **FDP default** — the FAIR Data Point's own profile: FAIR Data Point →
   catalogs → datasets → distributions.
 - **Software** — FAIR Data Point → catalogs → software → source code.
+- **ERDERA** — the profile of the ERDERA / EJP RD Virtual Platform: FAIR Data
+  Point → catalogs → datasets → distributions → access services, and under a
+  catalog also patient registries, biobanks, guidelines and data services.
+  Every record says it is visible to the Virtual Platform
+  (`ejp:vpConnection ejp:VPDiscoverable`) unless you choose to hide it.
+
+**Types in use.** When a profile has optional types, tick the ones you need
+under *Types in use*; the others are not offered in the tree. A type that
+already has records stays ticked until you delete them.
 - **Import from a FAIR Data Point…** — enter the address of a running FDP
   (for example `https://home.fairdatapoint.org`); FDPlight takes its entity
   types and their shapes, so your files follow the same profile.

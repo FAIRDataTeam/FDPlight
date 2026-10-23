@@ -53,6 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
   approved, app hosted on this repository's Pages (#6).
 - 2026-10-22 — App live at https://fdplight.fairdatapoint.org/ (Pages from
   `deploy-pages.yml` on every merge to main) (#7).
+- 2026-10-23 — Bundled ERDERA profile, types in use, type defaults (#33).
 - 2026-10-23 — Copy an FDP by its URL, with `prov:wasDerivedFrom` (#32).
 - 2026-10-23 — Owner's decisions recorded (#30). Served check after connect and publish (#31).
 - 2026-10-22 — Forms and checks from real ERDERA shapes; `ejp:` prefix (#29).
@@ -349,8 +350,10 @@ Resource plus Dataset). Contour still treats the first shape as primary
       ([docs/data-steward-guide.md](docs/data-steward-guide.md), #26; English
       only; screenshots from `scripts/shoot.cjs`). Linked from the app
       header. Translations of the guide are still open.
-- [ ] Bundled ERDERA profile, verified against the current ERDERA schemas and
-      the VP Level 1 / Level 2 queries in WP13.3. Decided 2026-10-23: all
+- [x] Bundled ERDERA profile (#33, `src/profiles/erdera/`, SPEC §3.2):
+      types, shapes, type defaults, types in use, child types told apart by
+      path or `rdf:type`. Checked against the VP Index (SPEC §9.2). Still
+      open: the VP Level 1 / Level 2 queries in WP13.3. Decided 2026-10-23: all
       ERDERA types (FDP → catalog → dataset → distribution, plus patient
       registry, biobank, guideline, data services); the user ticks the types
       in use; `ejp:vpConnection ejp:VPDiscoverable` unless hidden and
