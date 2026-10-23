@@ -120,6 +120,7 @@ function removeSelected() {
           </div>
           <p v-if="state.lastError.value" class="error" role="alert">{{ tc(state.lastError.value) }}</p>
         </div>
+        <p v-if="state.hiddenFromVp.value" class="vp-hidden" role="status">{{ t('app.vpHidden') }}</p>
         <EntityForm
           :key="selected"
           :schema="state.forms[entity.type]"
@@ -287,6 +288,14 @@ function removeSelected() {
 .error {
   margin: 6px 0 0;
   color: var(--color-danger);
+  font-size: 0.85rem;
+}
+.vp-hidden {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--color-warning);
+  border-radius: 6px;
+  background: var(--color-warning-tint);
   font-size: 0.85rem;
 }
 .checks {

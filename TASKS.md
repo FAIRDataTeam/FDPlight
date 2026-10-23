@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — ERDERA data services need `dct:type`; a hidden record shows a warning (#40).
 - 2026-10-23 — Owner's decisions on the wizard, guide translations, profile documents, metrics and ERDERA follow-ups recorded (#39).
 - 2026-10-23 — Accessibility: record-core 0.2.2 names form controls by their label; axe-core finds no violations (#38, Contour #33).
 - 2026-10-23 — VP Level 1 / Level 2 queries run in a test over ERDERA output; four problems in the queries recorded (#37).
@@ -360,9 +361,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
       native-speaker review.
 - [ ] Translations of the guide in the five other locales (decided
       2026-10-23: now, marked as not reviewed by a native speaker).
-- [ ] ERDERA profile follow-ups (decided 2026-10-23, SPEC §8.6): require
+- [x] ERDERA profile follow-ups (decided 2026-10-23, SPEC §8.6): require
       `dct:type` on data services (a third change to ERDERA's shapes) and
-      warn when a record is set to `ejp:VPInvisible`.
+      warn when a record is set to `ejp:VPInvisible` (#40).
 - [ ] Profile documents at `{base}profile/{type}.ttl` (decided 2026-10-23,
       SPEC §8.1): the type's merged SHACL.
 - [x] User guide for data stewards (create, fill in, publish, edit), with

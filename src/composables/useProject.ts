@@ -16,7 +16,7 @@ import type { FileProfile } from '../core/profileFiles';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
 import { checkEntity, shapesGraph, type ShaclFinding } from '../core/validation';
-import { DCT } from '../core/vocab';
+import { DCT, EJP_VP_CONNECTION, EJP_VP_INVISIBLE } from '../core/vocab';
 import { serializeEntity, toTurtle } from '../core/wiring';
 import { validateIndex } from '../core/ping';
 import { DEFAULT_ACCESS_RIGHTS, validateFolder } from '../core/profile';
@@ -89,6 +89,19 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     const filled = list.filter((v) => v.value.trim());
     return (filled.find((v) => (v.lang || '').startsWith('en')) ?? filled[0])?.value.trim() ?? '';
   }
+
+  /**
+   * SPEC §8.6. Whether the selected record is set to ejp:VPInvisible: with the
+   * VP's current queries one hidden record can hide others, so the app warns.
+   */
+  const hiddenFromVp = computed(() => {
+    const form = forms[entity.value.type];
+    const node = values[selected.value];
+    if (!form || !node) return false;
+    return shapeFields(form)
+      .filter((f) => expandTerm(f.path, form.prefixes) === EJP_VP_CONNECTION)
+      .some((f) => (node[fieldKey(f)] ?? []).some((v) => v.value && expandTerm(v.value, form.prefixes) === EJP_VP_INVISIBLE));
+  });
 
   function apply(r: TreeResult, from?: string): boolean {
     if (!r.ok) {
@@ -318,6 +331,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     values,
     selected,
     entity,
+    hiddenFromVp,
     lastError,
     typeOf,
     titleOf,

@@ -284,10 +284,11 @@ The values in the example are those currently served by home.fairdatapoint.org.
   user ticks the other types (3.1 `use`). Type defaults:
   `ejp:vpConnection ejp:VPDiscoverable` on every type, `fdp:conformsToFdpSpec
   <https://w3id.org/fdp/fdp-o/1.2>` on the root (8.4; the value WP13.3 uses).
-  Two changes to ERDERA's shapes, made by `scripts/build-erdera-profile.ts`:
+  Changes to ERDERA's shapes, made by `scripts/build-erdera-profile.ts`:
   the dataset and distribution files are not valid Turtle at that commit and
   get two mechanical syntax fixes; `ejp:vpConnection` accepts
-  `ejp:VPDiscoverable` as well as `ejp:VPInvisible`. `ejp:VPContentDiscovery`
+  `ejp:VPDiscoverable` as well as `ejp:VPInvisible`; a data service's
+  `dct:type` is required (8.6). `ejp:VPContentDiscovery`
   is deprecated (owner, 2026-10-23) and stays out.
 
 ### 3.3 A profile from local files

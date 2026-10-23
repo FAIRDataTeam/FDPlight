@@ -27,6 +27,7 @@ const en = {
     },
     metadataComplete: 'Metadata complete',
     structureOk: 'Structure OK',
+    vpHidden: "Hidden from the Virtual Platform. With the Virtual Platform's current queries, one hidden record can also hide other records, possibly the whole FAIR Data Point. Hide records only when you need to.",
   },
   tree: {
     root: 'FAIR Data Point',

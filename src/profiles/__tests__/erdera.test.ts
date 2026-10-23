@@ -125,4 +125,11 @@ describe('ERDERA profile', () => {
       `NamedNode ${EJP}VPDiscoverable`,
     ]);
   });
+
+  it('requires a dct:type on data services, for the VP Level 2 query (SPEC §8.6)', () => {
+    for (const key of ['dataservice', 'dataservice2']) {
+      const f = shapeFields(forms[key]).find((x) => expandTerm(x.path, forms[key].prefixes) === 'http://purl.org/dc/terms/type')!;
+      expect([key, f.minCount]).toEqual([key, 1]);
+    }
+  });
 });

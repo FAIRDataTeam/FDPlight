@@ -259,11 +259,11 @@ and which fields their forms have.
   Point → catalogs → datasets → distributions → access services, and under a
   catalog also patient registries, biobanks, guidelines and data services.
   Every record says it is visible to the Virtual Platform
-  (`ejp:vpConnection ejp:VPDiscoverable`) unless you choose to hide it. Give
-  each data service its *Ontological Type*: the Virtual Platform lists data
+  (`ejp:vpConnection ejp:VPDiscoverable`) unless you choose to hide it. Each
+  data service needs its *Ontological Type*: the Virtual Platform lists data
   services only when they have one. Hide records with care: with the Virtual
   Platform’s current queries, one hidden record can hide other records as
-  well.
+  well, and FDPlight shows a warning on a hidden record.
 
 - **Import from a FAIR Data Point…** — enter the address of a running FDP
   (for example `https://home.fairdatapoint.org`); FDPlight takes its entity

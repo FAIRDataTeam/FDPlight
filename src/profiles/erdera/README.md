@@ -21,12 +21,16 @@ Changes to ERDERA's shapes, all made by the generator:
 2. `ejp:vpConnection` accepts `ejp:VPDiscoverable` as well as
    `ejp:VPInvisible`, because the profile writes `ejp:VPDiscoverable` unless a
    record is hidden (SPEC §8.4).
+3. `dct:type` of a data service is required (`sh:minCount 1`), because the
+   VP's Level 2 query lists data services only with one (SPEC §8.6, decided
+   2026-10-23).
 
 Checked against the Virtual Platform's Level 1 and Level 2 queries
 (`vp-queries/`, SPEC §9.6): every type is listed. Data services are listed by
-Level 2 only with a `dct:type` ("Ontological Type of your service"), which the
-shape leaves optional. Because of how the queries filter, one record marked
-`ejp:VPInvisible` hides every result of the graph they run on.
+Level 2 only with a `dct:type` ("Ontological Type of your service"), which
+ERDERA's shape leaves optional and this profile requires (change 3). Because
+of how the queries filter, one record marked `ejp:VPInvisible` hides every
+result of the graph they run on; the app warns when a record is hidden.
 
 Note: ERDERA's dataset shape requires `healthdcatap:hdab` to be
 `<http://example.org/hdab/national-health-authority-de>` (`sh:hasValue`, "Germany
