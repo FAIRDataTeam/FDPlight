@@ -26,6 +26,8 @@ async function main() {
   const settle = () => page.waitForTimeout(700);
 
   // ---- a new project ----
+  // The guided-setup offer is shown on a first visit only; the guide shows the editor.
+  await page.addInitScript(() => localStorage.setItem('fdplight.setup.offered', '1'));
   await page.goto(APP);
   await settle();
   await shot('start');

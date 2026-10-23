@@ -85,6 +85,13 @@ of the selected entity (middle), and the **checks and the generated file**
 
 ![FDPlight when it opens: settings, publishing, tree, form and generated file](images/start.png)
 
+**Guided setup (optional).** On your first visit FDPlight offers a guided
+setup. It asks for the repository (owner, name, branch, folder), shows the
+base URI that follows from it, lets you pick a profile and whether to ping an
+FDP Index, and fills in the settings and the connect form when you click
+*Finish*. *Skip* leaves everything as it was. You can open it again from
+*Guided setup* in the header, or follow Steps 1 to 7 below by hand.
+
 ### Step 1 — Project settings
 
 ![Project settings with the Index ping switched on](images/settings.png)

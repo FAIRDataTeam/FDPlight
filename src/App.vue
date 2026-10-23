@@ -6,6 +6,7 @@ import EntityTree from './components/EntityTree.vue';
 import IndexStatus from './components/IndexStatus.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
 import PublishPanel from './components/PublishPanel.vue';
+import SetupWizard from './components/SetupWizard.vue';
 import { useI18n } from './composables/useI18n';
 import { usePublish } from './composables/usePublish';
 import { LOCALES } from './i18n';
@@ -24,6 +25,37 @@ watch(locale, (l) => (document.documentElement.lang = l), { immediate: true });
 const isRoot = computed(() => entity.value.parent === null);
 const iri = computed(() => (state.settingsErrors.value.length ? '' : iriOf(project, entity.value)));
 const type = computed(() => state.typeOf(entity.value));
+
+// The optional guided setup (TASKS Phase 1): offered once on a first visit,
+// always available from the header.
+const SETUP_KEY = 'fdplight.setup.offered';
+function setupOffered(): boolean {
+  try {
+    return localStorage.getItem(SETUP_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+const offerSetup = ref(!setupOffered() && !state.hasLocalWork());
+const wizardOpen = ref(false);
+let opener: HTMLElement | null = null;
+function dismissOffer(): void {
+  offerSetup.value = false;
+  try {
+    localStorage.setItem(SETUP_KEY, '1');
+  } catch {
+    /* storage unavailable: offered again next time */
+  }
+}
+function openWizard(): void {
+  opener = document.activeElement as HTMLElement | null;
+  dismissOffer();
+  wizardOpen.value = true;
+}
+function closeWizard(): void {
+  wizardOpen.value = false;
+  nextTick(() => opener?.focus());
+}
 
 // The id field edits a draft; the rename happens on change / Enter.
 const idDraft = ref(entity.value.id);
@@ -67,6 +99,7 @@ function removeSelected() {
       <p class="tagline">{{ t('app.tagline') }}</p>
     </div>
     <p class="wip">{{ t('app.wip') }}</p>
+    <button type="button" class="guide setup-link" @click="openWizard">{{ t('wizard.open') }}</button>
     <a class="guide" :href="GUIDE_URL" target="_blank" rel="noopener" :title="t('app.guideTitle')">{{ t('app.guide') }}</a>
     <label class="lang">
       <select :value="locale" :aria-label="t('app.language')" @change="setLocale(($event.target as HTMLSelectElement).value as never)">
@@ -76,6 +109,11 @@ function removeSelected() {
   </header>
 
   <main class="main">
+    <section v-if="offerSetup" class="card offer" :aria-label="t('wizard.title')">
+      <p>{{ t('wizard.offer') }}</p>
+      <button type="button" class="offer__start" @click="openWizard">{{ t('wizard.start') }}</button>
+      <button type="button" class="offer__dismiss" @click="dismissOffer">{{ t('wizard.noThanks') }}</button>
+    </section>
     <div class="top">
       <section class="card">
         <ProjectSettings :state="state" />
@@ -147,6 +185,7 @@ function removeSelected() {
       </section>
     </div>
   </main>
+  <SetupWizard v-if="wizardOpen" :state="state" :pub="pub" @close="closeWizard" />
 </template>
 
 <style scoped>
@@ -180,6 +219,43 @@ function removeSelected() {
 .guide {
   font-size: 0.85rem;
   color: var(--color-accent);
+}
+.setup-link {
+  font: inherit;
+  font-size: 0.85rem;
+  border: none;
+  background: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.offer p {
+  margin: 0;
+  flex: 1 1 20rem;
+  font-size: 0.9rem;
+}
+.offer__start {
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+}
+.offer__dismiss {
+  font: inherit;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  cursor: pointer;
 }
 .lang select {
   font: inherit;

@@ -138,6 +138,55 @@ describe('App', () => {
     }
   });
 
+  it('offers an optional guided setup that fills in the settings on Finish', async () => {
+    localStorage.removeItem('fdplight.setup.offered');
+    const w = mount(App, { attachTo: document.body });
+    try {
+      expect(w.find('.offer').exists()).toBe(true);
+      await w.find('.offer__start').trigger('click');
+      expect(w.find('.offer').exists()).toBe(false);
+      expect(localStorage.getItem('fdplight.setup.offered')).toBe('1');
+      const dialog = () => w.find('[role="dialog"]');
+      const inputs = () => dialog().findAll('input');
+      await inputs()[0].setValue('erdera');
+      await inputs()[1].setValue('my-fdp');
+      await inputs()[3].setValue('metadata');
+      expect(dialog().find('.wizard__base code').text()).toBe('https://erdera.github.io/my-fdp/metadata/');
+      const next = () => dialog().findAll('button').find((b) => b.text() === 'Next')!.trigger('click');
+      await next();
+      await dialog().find('input[value="erdera"]').setValue(true);
+      await next();
+      await dialog().find('input[type="checkbox"]').setValue(true);
+      await next();
+      expect(dialog().text()).toContain('Repository erdera/my-fdp, branch main');
+      await dialog().findAll('button').find((b) => b.text() === 'Finish')!.trigger('click');
+      await flushPromises();
+      expect(w.find('[role="dialog"]').exists()).toBe(false);
+      expect(w.find('.settings select').element as HTMLSelectElement).toHaveProperty('value', 'erdera');
+      const values = w.findAll('.settings__field input').map((i) => (i.element as HTMLInputElement).value);
+      expect(values).toContain('https://erdera.github.io/my-fdp/metadata/');
+      expect(values).toContain('metadata/');
+      expect(values).toContain('https://home.fairdatapoint.org');
+      expect(w.findAll('.publish input').map((i) => (i.element as HTMLInputElement).value).slice(0, 2)).toEqual(['erdera', 'my-fdp']);
+    } finally {
+      w.unmount();
+      localStorage.setItem('fdplight.setup.offered', '1');
+    }
+  });
+
+  it('can skip the guided setup and remembers it', async () => {
+    localStorage.removeItem('fdplight.setup.offered');
+    const w = mount(App);
+    await w.find('.offer__dismiss').trigger('click');
+    expect(w.find('.offer').exists()).toBe(false);
+    expect(mount(App).find('.offer').exists()).toBe(false);
+    await w.find('.setup-link').trigger('click');
+    expect(w.find('[role="dialog"]').exists()).toBe(true);
+    await w.findAll('[role="dialog"] button').find((b) => b.text() === 'Skip')!.trigger('click');
+    expect(w.find('[role="dialog"]').exists()).toBe(false);
+    expect(w.find('.settings__field input').exists()).toBe(true);
+  });
+
   it('marks entities with missing required metadata', async () => {
     vi.useFakeTimers();
     const w = mount(App);
