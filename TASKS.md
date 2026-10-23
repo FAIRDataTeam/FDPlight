@@ -35,13 +35,14 @@ file tracks how we build it.
 | 5 — Validation | SHACL plus structural checks before publish | 🟡 both checks live in the editor; publish gating comes with Phase 6 |
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | 🟡 token, one-commit publish, PR mode and conflict check done |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
-| 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | 🟡 all done but translations of the guide |
+| 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ✅ six locales, guide in six languages, ERDERA, accessibility |
 | 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | ⬜ |
 
 Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Guide in five more languages with localized screenshots (#43).
 - 2026-10-23 — Optional guided setup for new projects (#42).
 - 2026-10-23 — Profile documents: each type's merged SHACL at its profile IRI (#41).
 - 2026-10-23 — ERDERA data services need `dct:type`; a hidden record shows a warning (#40).
@@ -351,9 +352,9 @@ Resource plus Dataset). Contour still treats the first shape as primary
 - [x] Show the Index status of the project in FDPlight (read-only, public
       endpoints): state, last update, harvested vs missing entities (#15).
 
-## Phase 8 — Polish and docs 🟡
+## Phase 8 — Polish and docs ✅
 
-- [ ] i18n with Contour's mechanism and the same six locales. The interface
+- [x] i18n with Contour's mechanism and the same six locales. The interface
       and the form renderer are translated (EN, PT-BR, NL, DE, ES, FR; the
       renderer keys reuse Contour's translations), with a language picker in
       the header (#25). SHACL finding texts under the fields are translated
@@ -364,8 +365,12 @@ Resource plus Dataset). Contour still treats the first shape as primary
       authors), errors passed on from GitHub or the browser, and labels from
       the profile's shapes. The translations were written without a
       native-speaker review.
-- [ ] Translations of the guide in the five other locales (decided
-      2026-10-23: now, marked as not reviewed by a native speaker).
+- [x] Translations of the guide in the five other locales (decided
+      2026-10-23: now, marked as not reviewed by a native speaker) (#43):
+      `docs/data-steward-guide.{locale}.md` with screenshots of the app in
+      that language (`docs/images-{lang}/`, `LOCALE=… scripts/shoot.cjs`,
+      whose selectors no longer depend on the language). The app's Guide
+      link opens the guide in the chosen language.
 - [x] ERDERA profile follow-ups (decided 2026-10-23, SPEC §8.6): require
       `dct:type` on data services (a third change to ERDERA's shapes) and
       warn when a record is set to `ejp:VPInvisible` (#40).

@@ -18,7 +18,10 @@ const state = useProject();
 const pub = usePublish(state);
 const { project, selected, entity } = state;
 const { t, plural, tc, locale, setLocale } = useI18n();
-const GUIDE_URL = 'https://github.com/FAIRDataTeam/FDPlight/blob/main/docs/data-steward-guide.md';
+// The guide in the chosen language (docs/data-steward-guide.{locale}.md).
+const GUIDE_URL = computed(() =>
+  `https://github.com/FAIRDataTeam/FDPlight/blob/main/docs/data-steward-guide${locale.value === 'en' ? '' : `.${locale.value}`}.md`,
+);
 // The page's language follows the chosen locale (screen readers, hyphenation).
 watch(locale, (l) => (document.documentElement.lang = l), { immediate: true });
 

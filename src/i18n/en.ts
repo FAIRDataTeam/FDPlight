@@ -11,7 +11,7 @@ const en = {
     wip: 'Work in progress: pilot version.',
     language: 'Language',
     guide: 'Guide',
-    guideTitle: 'Open the data-steward guide (in English) in a new tab',
+    guideTitle: 'Open the data-steward guide in a new tab',
     entities: 'Entities (arrow keys move between entities)',
     metadata: 'Metadata',
     generatedFile: 'Generated file',
