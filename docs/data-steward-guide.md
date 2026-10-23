@@ -216,6 +216,26 @@ The first ping happens after the first Pages deployment that follows your
 publish; harvesting takes a few more seconds. An FDP that is not pinged for
 a week becomes *inactive* in the Index; the ping workflow prevents that.
 
+### Persistent IRIs with w3id.org (optional)
+
+A base URI on GitHub Pages ties every IRI to the repository: renaming it or
+moving the files later changes all IRIs. With a base URI under
+[w3id.org](https://w3id.org/), such as `https://w3id.org/my-org/my-fdp/`, the
+IRIs stay the same and w3id redirects them to the files on GitHub Pages
+(*redirect mode*).
+
+- Enter the w3id base URI in the settings. FDPlight switches to redirect mode
+  and asks for the **storage base**, the Pages address of the files; when you
+  connect to the repository it fills that in for you.
+- Under **w3id redirect rules**, enter your name, email and GitHub username
+  (w3id asks for a maintainer), then copy the rules. Fork
+  [perma-id/w3id.org](https://github.com/perma-id/w3id.org), create the file
+  FDPlight names (for example `ids/my-org/my-fdp/.htaccess`) with the rules,
+  and open a pull request. The rules do not change when you add records.
+- Until w3id has merged the pull request, the IRIs do not work. **Check the
+  w3id redirect** tells you whether they do; after publishing, FDPlight also
+  checks it together with *Check whether it is online*.
+
 ## 4. Editing later
 
 Open FDPlight, connect to the same repository, and the project loads from

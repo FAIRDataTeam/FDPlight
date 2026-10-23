@@ -9,6 +9,7 @@ import { importProfileFromFdp } from '../core/profile';
 import { importFromUrl } from '../core/importUrl';
 import { profileFromFiles } from '../core/profileFiles';
 import { PROFILES } from '../profiles';
+import W3idPanel from './W3idPanel.vue';
 import { useI18n } from '../composables/useI18n';
 
 const props = defineProps<{ state: ProjectState }>();
@@ -186,6 +187,7 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
       <span>{{ t('settings.storageBase') }}</span>
       <input v-model="p.storageBase" type="url" spellcheck="false" placeholder="https://owner.github.io/repo/" />
     </label>
+    <W3idPanel v-if="p.iriMode === 'redirect'" :state="state" />
     <label class="settings__field">
       <span>{{ t('settings.folder') }}</span>
       <input

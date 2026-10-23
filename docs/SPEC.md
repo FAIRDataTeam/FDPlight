@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.12** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.13** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
@@ -15,7 +15,7 @@ bundled ERDERA profile (3.2), child types told apart by path or `rdf:type`
 about, since their Pages domain cannot be read without an extra token
 permission (2.2). v0.11: the VP Level 1 and Level 2 queries over ERDERA
 output (9.6). v0.12: decisions on the profile document, metrics and ERDERA
-follow-ups (8.1, 8.3, 8.6).
+follow-ups (8.1, 8.3, 8.6). v0.13: w3id rules and the redirect check (2.4).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -120,18 +120,32 @@ note in 9.3) but other clients would not.
 Redirect mode needs a second URI, the **storage base** `{storage}` (absolute
 `https`, ending in `/`), normally `https://{owner}.github.io/{repo}/`.
 
-- FDPlight generates the w3id `.htaccess` rules, roughly
+- When connecting to a repository, an empty storage base becomes that
+  repository's Pages address (with the folder).
+- For a base under `https://w3id.org/{path}/`, FDPlight writes the rules for
+  `ids/{path}/.htaccess` in perma-id/w3id.org (`src/core/w3id.ts`), in w3id's
+  style: a header naming the identifier and its maintainer (name, email,
+  GitHub username, which w3id asks for), then
 
   ```apache
   RewriteEngine on
-  RewriteRule ^$      {storage}fdp.ttl [R=302,L]
-  RewriteRule ^(.+)$  {storage}$1.ttl  [R=302,L]
+  RewriteRule ^$ {storage}{rootFile} [R=302,L]
+  RewriteRule ^(.*[^/])$ {storage}$1.ttl [R=302,L]
   ```
 
-  relative to the directory of `{base}` in the w3id repository.
-- Before publishing, FDPlight checks that `{base}` resolves to the root file.
-  w3id changes go through a reviewed pull request, so the IRIs work only
-  after it is merged. Until then publishing warns.
+  The second rule covers records and profile documents (8.1); IRIs ending in
+  `/` (LDP containers, 2.6) are not redirected. The rules do not depend on the
+  entities, so they are written once. FDPlight shows them with the steps to
+  submit them (fork, add the file, pull request); it never opens the pull
+  request, and they are not stored in the project's repository. Other
+  redirectors (purl.org) get a description of the mapping only.
+- FDPlight checks the redirect from the browser: the root IRI must end at the
+  root file under the storage base. It tells apart *missing* (w3id answers
+  404: the rules are not merged), *elsewhere* (redirects to another URL) and
+  *unreachable* (no readable answer: offline, or the files are not served).
+  The check runs with the served check (7.1) and on demand. w3id changes go
+  through a reviewed pull request, so the IRIs work only after it is merged;
+  until then the publish panel says so. It does not block publishing.
 - The Index follows w3id redirects at every level. home.fairdatapoint.org
   has ACTIVE entries `https://w3id.org/duchenne-fdp` and
   `https://w3id.org/simpathic/fdp` whose harvested data contains catalogs
@@ -316,7 +330,6 @@ all are fixed. Like any profile switch, it starts a new, empty project.
 /{urlPrefix}/{id}.ttl               one file per child entity
 /.github/workflows/fdp-ping.yml     ping workflow (section 7)
 /README.md                          generated, links to the root and the Index entry
-/w3id/.htaccess                     redirect mode only, to copy into the w3id PR
 ```
 
 - With a `folder` (3.1), every path above except the workflow is inside it
@@ -755,6 +768,18 @@ jobs:
   ACTIVE, and `GET /index/entries/{uuid}/data` returned the root, catalog,
   dataset and distribution (147 lines of Turtle).
 
+- **w3id** (2026-10-23). w3id.org sends `Access-Control-Allow-Origin: *` on
+  its redirects (`https://w3id.org/simpathic/fdp`, 307;
+  `https://w3id.org/ERKNet/fdp/`, 301) and on its 404s, although neither
+  `.htaccess` sets it. In Chromium, `fetch` of `https://w3id.org/simpathic/fdp`
+  from another origin follows the redirect and reports the final URL; an
+  unknown identifier gives a readable 404. Identifiers live in
+  `ids/{path}/` of perma-id/w3id.org (default branch `master`). Rules generated
+  for a test identifier passed w3id's own checker (`tools/check`, 42 rules, no
+  findings) and, in w3id's local Apache (`tools/server`), redirected the root,
+  a record and a profile document to their `.ttl` files and left a container
+  IRI at 404. GitHub does not document query parameters that pre-fill a new
+  file, so FDPlight does not link to one.
 - **VP Index survey** (https://index.vp.ejprarediseases.org, read-only, 2026-10-23):
   32 entries, 12 ACTIVE, all 12 readable. Harvested records: 818 patient
   registries, 186 biobanks, 121 datasets, 114 distributions, 30 data

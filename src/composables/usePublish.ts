@@ -14,6 +14,7 @@ import { PING_WORKFLOW_PATH } from '../core/ping';
 import { planPublish, type PublishPlan } from '../core/publish';
 import { isServed, rootFileUrl, type FetchLike } from '../core/served';
 import { rootPath } from '../core/project';
+import { checkRedirect, w3idPath, type RedirectFetch, type RedirectStatus } from '../core/w3id';
 import { say } from '../core/messages';
 
 const TOKEN_KEY = 'fdplight.github.token';
@@ -49,6 +50,7 @@ export function usePublish(
   makeClient: (token: string) => GitHubClient = (t) => createClient(t),
   confirmReplace: () => boolean = () => window.confirm(t('publish.replaceConfirm')),
   fetchFn?: FetchLike,
+  redirectFetch?: RedirectFetch,
 ) {
   const repo = ref<RepoRef>({ owner: '', repo: '', branch: 'main' });
   const token = ref(loadToken());
@@ -73,6 +75,8 @@ export function usePublish(
   /** Whether the root file is on the web (GitHub Pages), decided 2026-10-23. */
   const served = ref<'unknown' | 'checking' | 'yes' | 'no'>('unknown');
   const servedUrl = computed(() => rootFileUrl(state.project) ?? '');
+  /** SPEC §2.4. In redirect mode with w3id: does the root IRI lead to the root file? */
+  const redirect = ref<RedirectStatus | null>(null);
   /** The repository has no FDPlight project: an existing FDP can be imported. */
   const canImport = computed(
     () => connected.value && !loaded.value && !remoteFiles.value.some((p) => p === 'fdplight.json' || p.endsWith('/fdplight.json')),
@@ -191,7 +195,10 @@ export function usePublish(
       await loadFromRepository();
       await refresh();
       connected.value = true;
-      if (!loaded.value && state.project.base === DEFAULT_BASE) state.setBase(pagesBase(repo.value.owner, repo.value.repo) + (state.project.folder ?? ''));
+      const pages = pagesBase(repo.value.owner, repo.value.repo) + (state.project.folder ?? '');
+      if (!loaded.value && state.project.base === DEFAULT_BASE) state.setBase(pages);
+      // Redirect mode: the files are on this repository's Pages unless set otherwise (SPEC §2.4).
+      if (state.project.iriMode === 'redirect' && !state.project.storageBase) state.project.storageBase = pages;
       // Already published: is it on the web? (A first publish is checked after publishing.)
       served.value = 'unknown';
       if (remote.value.has((state.project.folder ?? '') + rootPath(state.project))) await checkServed();
@@ -284,6 +291,7 @@ export function usePublish(
     if (!servedUrl.value) return;
     served.value = 'checking';
     served.value = (await isServed(servedUrl.value, fetchFn)) ? 'yes' : 'no';
+    redirect.value = state.project.iriMode === 'redirect' && w3idPath(state.project.base) ? await checkRedirect(state.project, redirectFetch) : null;
   }
 
   function disconnect(): void {
@@ -296,5 +304,5 @@ export function usePublish(
     saveToken('');
   }
 
-  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, publishMode, lastPull, served, servedUrl, checkServed, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
+  return { repo, token, connected, busy, error, head, remoteFiles, plan, blockers, lastCommit, commitUrl, publishMode, lastPull, served, servedUrl, checkServed, redirect, loadReport, loadCounts, loaded, canImport, importCandidates, importExisting, connect, prepare, publish, disconnect };
 }
