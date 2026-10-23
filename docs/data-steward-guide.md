@@ -1,5 +1,10 @@
 # Publishing a FAIR Data Point with FDPlight — A Guide for Data Stewards
 
+*Also in:* [Português (Brasil)](data-steward-guide.pt-BR.md) ·
+[Nederlands](data-steward-guide.nl-NL.md) · [Deutsch](data-steward-guide.de-DE.md) ·
+[Español](data-steward-guide.es-ES.md) · [Français](data-steward-guide.fr-FR.md)
+(translations not yet reviewed by native speakers).
+
 **FDPlight** publishes a [FAIR Data Point](https://www.fairdatapoint.org/)
 (FDP) without a server. You describe your catalogs, datasets and
 distributions in forms; FDPlight writes one Turtle file per description,
