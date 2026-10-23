@@ -42,6 +42,7 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-10-23 — Owner's decisions on the wizard, guide translations, profile documents, metrics and ERDERA follow-ups recorded (#39).
 - 2026-10-23 — Accessibility: record-core 0.2.2 names form controls by their label; axe-core finds no violations (#38, Contour #33).
 - 2026-10-23 — VP Level 1 / Level 2 queries run in a test over ERDERA output; four problems in the queries recorded (#37).
 - 2026-10-23 — Core messages translated in the six locales (#36).
@@ -158,9 +159,9 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done.
       JSON form `fdplight.json` (SPEC §3.1) — `src/core/profile.ts`,
       `src/core/project.ts`. The entity tree is not yet persisted (open
       decision 5).
-- [ ] New-project wizard. The steps exist in the settings bar and the
-      connect form; a separate guided first-run flow is not built (to ask
-      the owner).
+- [ ] New-project wizard, optional (decided 2026-10-23): a guided
+      first-run flow the user may follow or skip. The steps also stay in the
+      settings bar and the connect form.
   - [x] target repository (owner/name, branch): the connect form (#12);
   - [x] **base URI**, proposed as `https://{owner}.github.io/{repo}/` plus
         the project folder on connect, editable, validated (absolute https,
@@ -357,6 +358,13 @@ Resource plus Dataset). Contour still treats the first shape as primary
       authors), errors passed on from GitHub or the browser, and labels from
       the profile's shapes. The translations were written without a
       native-speaker review.
+- [ ] Translations of the guide in the five other locales (decided
+      2026-10-23: now, marked as not reviewed by a native speaker).
+- [ ] ERDERA profile follow-ups (decided 2026-10-23, SPEC §8.6): require
+      `dct:type` on data services (a third change to ERDERA's shapes) and
+      warn when a record is set to `ejp:VPInvisible`.
+- [ ] Profile documents at `{base}profile/{type}.ttl` (decided 2026-10-23,
+      SPEC §8.1): the type's merged SHACL.
 - [x] User guide for data stewards (create, fill in, publish, edit), with
       screenshots, in the style of Contour's data-steward guide
       ([docs/data-steward-guide.md](docs/data-steward-guide.md), #26; English
@@ -387,7 +395,6 @@ Resource plus Dataset). Contour still treats the first shape as primary
       w3id `.htaccess` rules, check that `{base}` resolves before publishing.
       The IRI rules themselves are in the Phase 1/3 core and tested in both
       modes.
-- [ ] Profile documents at `{base}profile/{type}.ttl` (SPEC §8.1).
 - [ ] VP Index authorization in the ping workflow, once the mechanism is
       documented.
 - [ ] Bulk creation from CSV (overlaps with ejp-rd-vp/fdp-populator).
@@ -397,6 +404,14 @@ Resource plus Dataset). Contour still treats the first shape as primary
 ## Open decisions
 
 See also SPEC §8.
+
+10. ~~Wizard, guide translations, profile documents, metrics, ERDERA.~~
+    Decided 2026-10-23: optional wizard; translate the guide now; publish
+    the merged SHACL as profile document; no default metrics (the metric
+    triples are expected to leave the FDP specification); ERDERA data
+    services need `dct:type` and hiding a record warns. The issues found in
+    ERDERA's queries and shapes (SPEC §9.6, §3.2) are for later, with
+    ERDERA; many can be fixed directly. Redirect mode stays in Phase 9.
 
 1. ~~Packaging of the shared core (Phase 0).~~ Decided 2026-10-22: option (a),
    a `packages/record-core` workspace in the Contour repo.
