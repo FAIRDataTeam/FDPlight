@@ -96,6 +96,12 @@ export const CORE_MESSAGES = {
   copyServerTriples:
     '{n} triple(s) the source server generated about itself (metrics, profiles, API description) were left out; FDPlight writes its own',
   copied: 'Copied {n} record(s) from {iri}. They get new IRIs under {base}; each links to its old IRI with prov:wasDerivedFrom.',
+  // reading a spreadsheet (SPEC §4.4)
+  sheetNoFiles: 'Choose the spreadsheet: one .xlsx workbook or one .tsv file per sheet',
+  sheetChooseFiles: 'Choose one .xlsx workbook, or one .tsv file per sheet',
+  sheetNotXlsx: '{file} is not an .xlsx workbook',
+  sheetUnreadable: '{file} could not be read: {error}',
+  sheetTwoFiles: '{other}: {file} is already the {sheet} sheet; not read',
   // profiles (SPEC §3)
   profileHttp: 'GET {url} failed with HTTP {status}',
   profileUnusable: "the FDP's resource definitions are not usable: {errors}",
