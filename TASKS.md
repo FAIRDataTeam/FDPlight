@@ -36,12 +36,13 @@ file tracks how we build it.
 | 6 — GitHub publish | auth, single-commit publish, PR mode, conflict check | ✅ fine-grained token, one-commit publish, PR mode, conflict check, served check |
 | 7 — Ping and Pages | workflow generation, pilot against home.fairdatapoint.org | ✅ pilot ACTIVE, 4/4 harvested |
 | 8 — Polish and docs | i18n, user guide, bundled ERDERA profile | ✅ six locales, guide in six languages, ERDERA, accessibility |
-| 9 — Optional | redirect mode (w3id), profile documents, VP Index auth | 🟡 profile documents (#41) and redirect mode with w3id (#45, #46) done; VP Index auth and CSV open |
+| 9 — Optional | redirect mode (w3id), profile documents, VP Index auth, bulk import | 🟡 profile documents (#41), redirect mode with w3id (#45, #46) and the ERDERA spreadsheet import done; VP Index auth and generic CSV open |
 
 Legend: ⬜ not started · 🟡 in progress · ✅ done.
 
 ### Log
 
+- 2026-11-06 — Import of the ERDERA resource metadata spreadsheet (.xlsx or one .tsv per sheet), SPEC v0.14 §4.4 (branch `spreadsheet-import`). Verified: type-check, 252 tests (212 before), build 1,242 kB (425 kB gzip; 930 kB / 326 kB before, +312 kB for SheetJS 0.20.3's mini build), and in Chromium on the built file: fixture 1 as workbook and as TSV gives 2 records with no red counts.
 - 2026-10-23 — w3id.org/fdplight/ requested (perma-id/w3id.org#6955); move script for FDPlight's own FDP (#47).
 - 2026-10-23 — Re-base with confirmation after publishing; w3id in the guided setup (#46).
 - 2026-10-23 — Redirect mode: w3id rules and the redirect check (#45).
@@ -425,7 +426,22 @@ Resource plus Dataset). Contour still treats the first shape as primary
         setup (#46).
 - [ ] VP Index authorization in the ping workflow, once the mechanism is
       documented.
-- [ ] Bulk creation from CSV (overlaps with ejp-rd-vp/fdp-populator).
+- [x] Bulk creation from the ERDERA resource metadata spreadsheet, for the
+      ERDERA D11 demonstrator (SPEC §4.4, 9.7): "Import spreadsheet…" in the
+      profile menu of an ERDERA project takes the filled template as one
+      .xlsx workbook (SheetJS 0.20.3 from the SheetJS CDN) or one .tsv file
+      per sheet. Every row becomes a record under the root, with references by
+      title (publisher, catalog → datasets, dataset → distributions, access
+      services, served datasets) and by URL (contact points) resolved; a
+      record no catalog lists goes into a catalog named after its
+      organisation. A report above the forms lists rows per sheet, records
+      created, placement, references not found, defaults, what was not
+      imported and duplicate titles; what the sheet left out shows as red
+      counts. Tested on fixture 1 of the D11 demonstrator (synthetic): no red
+      counts, TSV identical to the workbook, every record's Turtle passes the
+      ERDERA shapes. Verified 2026-11-06: type-check, 252 tests, build
+      1,242 kB (425 kB gzip).
+- [ ] Bulk creation from a generic CSV (overlaps with ejp-rd-vp/fdp-populator).
 
 ---
 
