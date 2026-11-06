@@ -3,7 +3,9 @@
 // per sheet its header row and its non-empty data rows, every cell trimmed.
 // What the sheets mean is the mapper's business (spreadsheetMap.ts).
 
-import { read, SSF, utils, type CellObject, type WorkSheet } from 'xlsx';
+// SheetJS's "mini" build reads .xlsx like the full one, without the formats and
+// code pages FDPlight does not need: about 100 kB less in the single-file app.
+import { read, SSF, utils, type CellObject, type WorkSheet } from 'xlsx/dist/xlsx.mini.min.js';
 import { say } from './messages';
 
 /** The sheets of the ERDERA resource metadata template, in workbook order. */
