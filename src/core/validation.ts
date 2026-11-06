@@ -2,7 +2,7 @@
 // FDPlight would write for the entity, against the shapes of its type, with
 // the shared record-core engine (shacl-engine, SHACL Core).
 
-import type { RecordNode } from '@fairdatateam/record-core/record';
+import { expandTerm, nestedShapeOf, shapeFields, type RecordNode } from '@fairdatateam/record-core/record';
 import { parseRdf, type Quad } from '@fairdatateam/record-core/rdf';
 import { checkRecordShacl, type ShaclFinding } from '@fairdatateam/record-core/shaclCheck';
 import type { Schema } from '@fairdatateam/record-core/types';
@@ -25,10 +25,36 @@ export function shapesGraph(ttl: string): Quad[] {
  * place the findings on form fields.
  */
 export async function checkEntity(form: Schema, iri: string, values: RecordNode, graph: Store, shapes: Quad[]): Promise<ShaclFinding[]> {
-  const extra = graph.getQuads(null, null, null, null) as unknown as Quad[];
+  const extra = withoutFormBlankNodes(form, iri, graph.getQuads(null, null, null, null) as unknown as Quad[]);
   // The same values the file was built from, so both describe the same nodes.
   const r = await checkRecordShacl(form, iri, withHashNodes(form, iri, values), extra, shapes);
   return r.findings;
+}
+
+/**
+ * SPEC §5.6, §6 rule 1. Sub-form values that stay blank nodes (e.g. ERDERA's
+ * population coverage) are in the form values and in the file graph, under
+ * different blank-node labels. Check them once, from the values, where the
+ * findings land on the form: leave out of the graph the blank nodes the
+ * entity links through a sub-form field, and everything below them.
+ */
+function withoutFormBlankNodes(form: Schema, iri: string, quads: Quad[]): Quad[] {
+  const subForms = new Set(
+    shapeFields(form)
+      .filter((f) => !f.inversePath && nestedShapeOf(form, f))
+      .map((f) => expandTerm(f.path, form.prefixes)),
+  );
+  const fromForm = (q: Quad) => q.subject.value === iri && q.subject.termType === 'NamedNode' && q.object.termType === 'BlankNode' && subForms.has(q.predicate.value);
+  const drop = new Set(quads.filter(fromForm).map((q) => q.object.value));
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const q of quads)
+      if (q.subject.termType === 'BlankNode' && drop.has(q.subject.value) && q.object.termType === 'BlankNode' && !drop.has(q.object.value)) {
+        drop.add(q.object.value);
+        grew = true;
+      }
+  }
+  return quads.filter((q) => !fromForm(q) && !(q.subject.termType === 'BlankNode' && drop.has(q.subject.value)));
 }
 
 const TEXT: Record<string, string> = {
