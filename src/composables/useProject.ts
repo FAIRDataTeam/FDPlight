@@ -13,6 +13,7 @@ import { detectIriMode, validateIriSettings, type IriMode } from '../core/iri';
 import { useI18n } from './useI18n';
 import { rootType, typeByKey, typeInUse, type EntityType, type ImportedProfile } from '../core/profile';
 import type { FileProfile } from '../core/profileFiles';
+import type { SpreadsheetImportResult, SpreadsheetReport } from '../core/spreadsheetImport';
 import { iriRewriter } from '../core/import';
 import { findByPath, iriOf, pathOf, rootPath, stamp, type Entity, type Project } from '../core/project';
 import { addChild, moveEntity, moveTargets, removeEntity, renameEntity, type TreeResult } from '../core/tree';
@@ -183,6 +184,26 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     ...(project.index ? validateIndex(project.index) : []),
   ]);
 
+  /** What the last spreadsheet import did (SPEC §4.4), shown until dismissed. */
+  const sheetReport = shallowRef<SpreadsheetReport | null>(null);
+
+  /**
+   * SPEC §4.4. Add the records of an imported spreadsheet under the root,
+   * with their form values; the types they use come into use.
+   */
+  function addImported(r: Extract<SpreadsheetImportResult, { ok: true }>): void {
+    project.entities = [...project.entities, ...r.entities];
+    if (r.use) project.use = r.use;
+    Object.assign(values, r.values);
+    for (const e of r.entities) {
+      const p = pathOf(project, e);
+      if (!values[p]) values[p] = normalizeRecord(forms[e.type], {});
+    }
+    sheetReport.value = r.report;
+    lastError.value = '';
+    if (r.entities[0]) selected.value = pathOf(project, r.entities[0]);
+  }
+
   /** Whether the user has entered anything that loading a project would replace. */
   const hasLocalWork = () => project.entities.length > 1 || Object.values(values).some(recordHasContent);
 
@@ -204,6 +225,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     extras.value = loaded.extras;
     selected.value = rootPath(project);
     lastError.value = '';
+    sheetReport.value = null;
   }
 
   /** Start over with another bundled profile, keeping base URI, folder and Index. */
@@ -238,6 +260,7 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     project.entities = [{ type: rootType(types).key, id: '', parent: null }];
     extras.value = {};
     published.value = new Set();
+    sheetReport.value = null;
     selected.value = rootPath(project);
     loadProfile();
   }
@@ -358,6 +381,8 @@ export function useProject(initial?: Project, profileKey = 'fdp-default') {
     useFileProfile,
     fileProfileName,
     load,
+    addImported,
+    sheetReport,
     hasLocalWork,
     extras,
     values,

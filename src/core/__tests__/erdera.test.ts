@@ -90,6 +90,17 @@ describe('ERDERA patient registry (Resource + PatientRegistry shapes)', () => {
     expect(await required(project(null))).toContain(`${NS.dct}license`);
   });
 
+  it('reports a population coverage outside the list once, on its field (a blank node in the form and in the file)', async () => {
+    const values = normalizeRecord(form, {});
+    const cov = field(`${EJP}populationCoverage`)!;
+    const node = values[fieldKey(cov)][0].node!;
+    node[Object.keys(node)[0]][0].value = 'Worldwide';
+    const { findings } = await check(project(null), values);
+    expect(findings.filter((f) => f.component === 'In').map((f) => [f.loc, f.value])).toEqual([[`${fieldKey(cov)}/0/rdfs:label`, 'Worldwide']]);
+    node[Object.keys(node)[0]][0].value = 'National';
+    expect((await check(project(null), values)).findings.filter((f) => f.component === 'In')).toEqual([]);
+  });
+
   it('writes the registry as a child of its catalog through dct:hasPart', async () => {
     const values = normalizeRecord(form, {});
     setValue(values, form, DCT.title, 'ePROVIDE', 'en');

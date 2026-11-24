@@ -1,6 +1,6 @@
 # FDPlight — Specification of the generated RDF
 
-Status: **draft v0.13** (2026-10-23). v0.2 adds automatic IRI modes (§2.2).
+Status: **draft v0.14** (2026-11-06). v0.2 adds automatic IRI modes (§2.2).
 v0.3 corrects the timestamp predicates (§5.2, 5.3) and the literal forms of
 the label and identifier, after checking the RI code and live RI output.
 v0.4 pins metrics as metric/resource pairs and says which input triples the
@@ -16,6 +16,7 @@ about, since their Pages domain cannot be read without an extra token
 permission (2.2). v0.11: the VP Level 1 and Level 2 queries over ERDERA
 output (9.6). v0.12: decisions on the profile document, metrics and ERDERA
 follow-ups (8.1, 8.3, 8.6). v0.13: w3id rules and the redirect check (2.4).
+v0.14: importing the ERDERA resource metadata spreadsheet (4.4, 9.7).
 
 This document pins down exactly which files, IRIs, containers and system
 triples FDPlight writes for a file-only FAIR Data Point. The goal is that the
@@ -438,6 +439,144 @@ into the project without access to its repository.
 - `fdp:metadataIssued` is not copied: the copy is a new record, issued at its
   first publish.
 - The original FDP is not changed.
+
+### 4.4 Importing the ERDERA resource metadata spreadsheet
+
+Added 2026-11-06 for the ERDERA D11 demonstrator. A data steward fills the
+official ERDERA resource metadata template (ejp-rd-vp/resource-metadata-schema,
+`template/`, 9.7) and gives it to FDPlight, which turns every row of a
+resource sheet into a record. The import only fills the editor (entities and
+form values, as if typed); wiring, checks and publishing are unchanged.
+Code: `src/core/spreadsheet.ts` (reader), `src/core/spreadsheetMap.ts`
+(columns and values), `src/core/spreadsheetImport.ts` (references, tree,
+report).
+
+- **Only with the ERDERA profile.** The project must have the ERDERA types
+  (3.2); otherwise the menu entry explains that the ERDERA profile is
+  needed. The records are added under the project's existing root; the
+  root's metadata does not change. Types of imported records come into use
+  (3.1 `use`).
+- **Input.** One `.xlsx` workbook (read with SheetJS) or one `.tsv` file per
+  sheet. A TSV file is the template sheet its name ends with
+  (`EJPRD Resource Metadata template - Catalog.tsv`, `Catalog.tsv`), else
+  the part after the last ` - `. TSV is UTF-8, or UTF-16 with a byte-order
+  mark; a field starting with `"` is quoted (`""` is a quote). Cells are
+  trimmed; a boolean cell reads `true` / `false`, a date cell ISO 8601
+  (`2026-11-06`, with `T13:05:00` when it has a time), other numbers as
+  shown.
+- **Sheets and headers** match case- and space-insensitively (`ODRL Policy`
+  is `ODRLPolicy`). Rows with no value are skipped, and so is a row whose
+  only value is VPConnection (the template pre-fills row 2 that way; the
+  report counts them). `Mediatypes` and `Languages` are the template's
+  lookup lists and are not read. Any other sheet, and any column not in the
+  table below, is reported with the number of values left out.
+
+| Sheet | Record type | |
+|---|---|---|
+| Catalog | `catalog` | under the root |
+| Dataset, PatientRegistry, Biobank, Guideline | `dataset`, `patientregistry`, `biobank`, `guideline` | under a catalog |
+| Distribution | `distribution` | under a dataset |
+| DataService | `dataservice` (Access Service) when a distribution names it in AccessService, else `dataservice2` (Data Service) | under that distribution, else under a catalog |
+| Organisation | none: fills the nested publisher of the records that name it | |
+| ContactPoint | none: lists the contact points' URLs | |
+
+**Columns.** One table for every resource sheet. A column whose field the
+record type's ERDERA form does not have is reported (*no field in the
+ERDERA {type} shape*), never dropped silently; so is a value FDPlight writes
+itself (5.3: a catalog's `dct:issued` / `dct:modified`).
+
+| Column | Field | Value rule | No field in |
+|---|---|---|---|
+| Title | `dct:title` | as is | |
+| Description | `dct:description` | as is | |
+| License | `dct:license` | empty: `https://w3id.org/ejp-rd/resources/licenses/v1.0/`, reported as a default | |
+| Theme | `dcat:theme` | list | |
+| Keyword | `dcat:keyword` | list | |
+| Language | `dct:language` | list; an ISO 639-1 code becomes `http://id.loc.gov/vocabulary/iso639-1/{code}` (lower case), anything else stays | |
+| AccessRights | `dct:accessRights` | as is | |
+| LandingPage | `dcat:landingPage` | as is | |
+| Logo | `foaf:logo` | as is | |
+| Identifier | `dct:identifier` | as is | |
+| Version | `dcat:version` | as is | |
+| ConformsTo (twice in DataService: both count) | `dct:conformsTo` | as is | |
+| ODRLPolicy / ODRL Policy | `odrl:hasPolicy` | as is | |
+| Issued, Modified | `dct:issued`, `dct:modified` | date: `YYYY-MM-DD` becomes `YYYY-MM-DDT00:00:00` | catalog (5.3) |
+| VPConnection | `ejp:vpConnection` | empty: `ejp:VPDiscoverable`, reported as a default; `http://purl.org/ejp-rd/vocabulary/VPDiscoverable` and `…/VPInvisible` (the template's terms) are the w3id terms `ejp:VPDiscoverable` / `ejp:VPInvisible` | |
+| PersonalData | `dpv:hasPersonalData` | `true` or `false` (any case), else reported. The ERDERA dataset shape asks "Personal Data?" with the one value `dpv:HealthData`: `true` sets it, `false` leaves it empty | every type but dataset |
+| PopulationCoverage | `ejp:populationCoverage` → nested `rdfs:label` (AnnotationShape) | spelled as the shape's `sh:in` (National, International, Regional, European), case-insensitively; another value is kept, so the shape flags it | every type but patient registry and biobank |
+| Homepage | `foaf:homePage` | as is | every type but catalog |
+| ThemeTaxonomy | `dcat:themeTaxonomy` | as is | every type |
+| Type (DataService) | `dct:type` | as is | |
+| Type (Distribution: Access or Download) | none | reported | |
+| EndpointURL, EndpointDescription | `dcat:endpointURL`, `dcat:endpointDescription` | as is | every type but data services |
+| MediaType | `dct:format` | a media type (`text/csv`) becomes `http://www.iana.org/assignments/media-types/text/csv`; an IRI stays | every type but distribution |
+| Publisher | `dct:publisher` (nested, 5.6) | reference to an Organisation | |
+| ContactPoint | `dcat:contactPoint` (nested, 5.6) → `vcard:url` | the contact point's URL | |
+| ServesDataset | `dcat:servesDataset` | reference: the record's IRI | every type but data services |
+| Dataset (Catalog), Distribution, IsPartOf, AccessService | the tree (5.5) | references, below | |
+
+*List*: split on `|` when the cell has one, else on `,`; parts trimmed,
+empty parts dropped. *As is*: one value, the trimmed cell. Text values are
+plain literals: the sheet does not say the language of the metadata.
+
+Organisation rows fill the publisher: Title → `foaf:name`, Description →
+`dct:description`, LandingPage → `dcat:landingPage`, Logo → `foaf:logo`.
+Location and Identifier have no field and are reported.
+
+**References.** Every record gets its id (and so its IRI) before any
+reference is filled in. Titles are compared trimmed, with runs of white
+space as one space, case-insensitively. Titles must be unique across the
+resource sheets (and across Organisation rows): a repeat is reported and
+references go to the first (sheets in the template's order: Biobank,
+PatientRegistry, Guideline, Dataset, Distribution, DataService, Catalog;
+rows top to bottom). A reference that names no row of the right sheet is
+reported; its field stays empty, which is a red count when the field is
+required (Publisher). A ContactPoint URL that the ContactPoint sheet does
+not list is reported and used anyway, since the URL is the whole contact
+point.
+
+| Column | Names | Effect |
+|---|---|---|
+| Publisher | Organisation `Title` | the nested publisher is filled from that row |
+| ContactPoint | ContactPoint `URL` | the nested contact point's `vcard:url` |
+| Catalog `Dataset` (list) | a Dataset, PatientRegistry or Biobank `Title` | those records go under the catalog |
+| Dataset `Distribution` (list) | a Distribution `Title` | the distribution goes under the dataset |
+| Distribution `IsPartOf` | a Dataset `Title` | the distribution goes under that dataset, unless a dataset lists it |
+| Distribution `AccessService` (list) | a DataService `Title` | the service becomes that distribution's Access Service |
+| DataService `ServesDataset` (list) | a Dataset, PatientRegistry or Biobank `Title` | its IRI in `dcat:servesDataset` |
+
+- As in 4.1, the parent's list wins: a record listed twice stays with the
+  first parent, and a distribution whose IsPartOf disagrees with the dataset
+  that lists it stays with that dataset; both are reported.
+- In the ERDERA profile only datasets have distributions. A PatientRegistry,
+  Biobank or Catalog `Distribution` is resolved and reported as having no
+  place; a distribution no dataset takes is not imported (reported).
+- A dataset, registry, biobank, guideline or data service that no catalog
+  lists goes into a catalog named after its organisation (the Organisation
+  `Title` its Publisher names, else the Publisher text, else
+  *Resources without a publisher*). A catalog of the spreadsheet with that
+  title is used when there is one; otherwise one is added with that title,
+  that organisation as publisher, the default licence and VPConnection
+  (reported as defaults). The report names the records placed there.
+- **Ids** (2.3): the title as a slug (diacritics dropped, lower case, other
+  characters `-`, at most 60 characters), else the type key; `-2`, `-3`, …
+  make it unique within the project. Siblings are ordered by title, as in
+  4.1.
+
+**Report**, shown above the forms until closed: rows per sheet (pre-filled
+rows skipped, lookup lists), records created, placement (the organisation
+catalogs, records listed twice, distributions with no place), references
+not found, defaults applied, what was not imported (columns with no field,
+unknown columns and sheets, PersonalData that is neither true nor false),
+and duplicate titles. What the sheet left incomplete shows as red counts in
+the tree (6, rule 1).
+
+Known consequences of the ERDERA shapes (not of the import): a ConformsTo
+value gives two `dct:conformsTo` with the profile IRI FDPlight writes (5.2),
+and ERDERA allows one; the Distribution sheet has no column for the
+required `dcat:accessURL`, `dct:rights` and `dcat:byteSize`; ERDERA datasets
+require fixed values (`healthdcatap:hdab`, …, 3.2) that the template has no
+columns for. Each shows as a red count.
 
 ---
 
@@ -885,3 +1024,52 @@ Problems in the queries themselves (to report to ERDERA):
    `ejp:VPInvisible` record, so this has not shown yet.
 4. Level 1 selects `?resourceHomepage` but binds `?resourceHomePage`, so the
    homepage column is always empty.
+
+### 9.7 The ERDERA resource metadata template (2026-11-06)
+
+The workbook `template/EJPRD Resource Metadata template.xlsx` of
+ejp-rd-vp/resource-metadata-schema (commit 74df189, 2023-11-10, CC0), read
+with SheetJS 0.20.3, and the per-sheet documentation next to it
+(`template/{Sheet}.md`). Checked again in fixture 1 of the ERDERA D11
+demonstrator (`src/core/__tests__/fixtures/synthetic-registry/`).
+
+- Sheets: Organisation, ContactPoint, Biobank, PatientRegistry, Guideline,
+  Dataset, Distribution, DataService, Catalog, and the lookup lists
+  Mediatypes (`Name`, `Template`, `Reference`: IANA media types) and
+  Languages (`URI`, `code`, labels: ISO 639-1 at id.loc.gov).
+- Header rows. Organisation: Title, Description, LandingPage, Logo,
+  Location, Identifier. ContactPoint: URL. Biobank, PatientRegistry and
+  Dataset: License, Title, Description, Theme, Publisher, ContactPoint,
+  PersonalData, PopulationCoverage, Language, AccessRights, LandingPage,
+  Distribution, VPConnection, ODRL Policy, Keyword, Logo, Identifier, Issued,
+  Modified, Version, ConformsTo. Guideline: Title, Description, LandingPage,
+  License, Theme, Publisher, Language, PersonalData, ContactPoint, Issued,
+  Modified, AccessRights, Logo, ODRLPolicy, Version, ConformsTo, Keyword,
+  VPConnection, Identifier. Distribution: License, Title, Description,
+  Publisher, Version, AccessRights, ODRLPolicy, MediaType, IsPartOf, Type
+  (Access or Download), AccessService. DataService: License, Type, Title,
+  Description, PersonalData, Publisher, Theme, Language, ContactPoint,
+  PopulationCoverage, AccessRights, ConformsTo, EndpointDescription,
+  EndpointURL, LandingPage, VPConnection, ODRLPolicy, Logo, ServesDataset,
+  Keyword, Identifier, Issued, Modified, Version, ConformsTo (twice).
+  Catalog: License, Title, Publisher, PersonalData, Description, Theme,
+  ContactPoint, Language, AccessRights, LandingPage, Dataset, ThemeTaxonomy,
+  Homepage, VPConnection, ODRLPolicy, Keyword, Logo, Distribution,
+  Identifier, Issued, Modified, Version, ConformsTo. Several sheets have
+  further columns with no header and no values.
+- Row 2 of Biobank, PatientRegistry, Guideline and Catalog holds only
+  VPConnection `http://purl.org/ejp-rd/vocabulary/VPDiscoverable`; the
+  ERDERA shapes use `https://w3id.org/ejp-rd/vocabulary#VPDiscoverable`. The
+  documentation (Catalog.md, VPConnection) gives the w3id term.
+- The example rows (hPSCreg) separate keywords with `|`, hold PersonalData as
+  a boolean cell, name the Publisher by the Organisation's Title, and name a
+  dataset's Distribution by the distribution's Title. A DataService's Type
+  is `http://purl.org/ejp-rd/vocabulary/VPBeacon2_individuals`.
+- The documentation: Catalog `Dataset` is "Pointer to a dataset. Range:
+  dcat:Dataset or any of its sub classes (Patient registries or Biobanks)";
+  Issued and Modified have range `xsd:date` (the ERDERA shapes:
+  `xsd:dateTime`); PersonalData is "true" or "false"; Language is an ISO
+  639-1 two-letter code; the default licence is
+  `https://w3id.org/ejp-rd/resources/licenses/v1.0/`; Title "needs to be
+  unique". Where the documentation and the ERDERA shapes disagree, the import
+  follows the shapes.

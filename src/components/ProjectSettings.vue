@@ -8,6 +8,8 @@ import { BRANCH_PAGES_WORKFLOW } from '../core/ping';
 import { importProfileFromFdp } from '../core/profile';
 import { importFromUrl } from '../core/importUrl';
 import { profileFromFiles } from '../core/profileFiles';
+import { readSpreadsheet } from '../core/spreadsheet';
+import { canImportSpreadsheet, importSpreadsheet } from '../core/spreadsheetImport';
 import { PROFILES } from '../profiles';
 import W3idPanel from './W3idPanel.vue';
 import { useI18n } from '../composables/useI18n';
@@ -22,8 +24,10 @@ const hasRecords = (key: string) => p.entities.some((e) => e.type === key);
 
 const IMPORT = '__import';
 const FILES = '__files';
+const SHEET = '__sheet';
 const importing = ref(false);
 const openingFiles = ref(false);
+const importingSheet = ref(false);
 const fdpUrl = ref('');
 const importError = ref('');
 const busy = ref(false);
@@ -33,11 +37,13 @@ const confirmStartOver = () => !hasContent() || window.confirm(t('settings.switc
 
 function chooseProfile(e: Event) {
   const select = e.target as HTMLSelectElement;
-  if (select.value === IMPORT || select.value === FILES) {
+  if (select.value === IMPORT || select.value === FILES || select.value === SHEET) {
     importing.value = select.value === IMPORT;
     openingFiles.value = select.value === FILES;
+    importingSheet.value = select.value === SHEET;
     importError.value = '';
     fileErrors.value = [];
+    sheetError.value = '';
     select.value = props.state.profile.value;
     return;
   }
@@ -47,6 +53,7 @@ function chooseProfile(e: Event) {
   }
   importing.value = false;
   openingFiles.value = false;
+  importingSheet.value = false;
   props.state.switchProfile(select.value);
 }
 
@@ -82,6 +89,35 @@ async function openFiles() {
     if (!confirmStartOver()) return;
     props.state.useFileProfile(r.value);
     openingFiles.value = false;
+  } finally {
+    busy.value = false;
+  }
+}
+
+// SPEC §4.4: the ERDERA metadata spreadsheet, added under the root; the
+// report shows above the forms.
+const sheetFiles = ref<File[]>([]);
+const sheetError = ref('');
+const erdera = computed(() => canImportSpreadsheet(p.types));
+async function importSheet() {
+  sheetError.value = '';
+  busy.value = true;
+  try {
+    const files = await Promise.all(sheetFiles.value.map(async (f) => ({ name: f.name, data: new Uint8Array(await f.arrayBuffer()) })));
+    const read = readSpreadsheet(files);
+    if (!read.ok) {
+      sheetError.value = read.error;
+      return;
+    }
+    const r = importSpreadsheet({ sheets: read.sheets, project: p, forms: props.state.forms });
+    if (!r.ok) {
+      sheetError.value = r.error;
+      return;
+    }
+    r.report.notMapped.unshift(...read.notes);
+    props.state.addImported(r);
+    importingSheet.value = false;
+    sheetFiles.value = [];
   } finally {
     busy.value = false;
   }
@@ -150,8 +186,30 @@ const MODE_TEXT: Record<IriMode | 'ask', string> = { file: 'settings.modeFile', 
         <option v-if="state.profile.value === 'file'" value="file">{{ t('settings.fromFiles', { name: state.fileProfileName.value }) }}</option>
         <option :value="IMPORT">{{ t('settings.importFromFdp') }}</option>
         <option :value="FILES">{{ t('settings.openFiles') }}</option>
+        <option :value="SHEET">{{ t('settings.importSheet') }}</option>
       </select>
     </label>
+    <form v-if="importingSheet" class="settings__import" @submit.prevent="importSheet">
+      <template v-if="erdera">
+        <label class="settings__field">
+          <span>{{ t('settings.sheetFiles') }}</span>
+          <input
+            type="file"
+            multiple
+            required
+            accept=".xlsx,.tsv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/tab-separated-values"
+            @change="sheetFiles = [...(($event.target as HTMLInputElement).files ?? [])]"
+          />
+        </label>
+        <p class="settings__hint">{{ t('settings.sheetHint') }}</p>
+      </template>
+      <p v-else class="settings__hint">{{ t('settings.sheetNeedsErdera') }}</p>
+      <div class="settings__import-actions">
+        <button v-if="erdera" type="submit" class="primary" :disabled="busy || !sheetFiles.length">{{ busy ? t('settings.importing') : t('settings.sheetImport') }}</button>
+        <button type="button" class="link" @click="importingSheet = false">{{ t('settings.cancel') }}</button>
+      </div>
+      <p v-if="sheetError" class="settings__error" role="alert">{{ t('settings.sheetFailed', { error: tc(sheetError) }) }}</p>
+    </form>
     <form v-if="openingFiles" class="settings__import" @submit.prevent="openFiles">
       <label class="settings__field">
         <span>{{ t('settings.profileFiles') }}</span>

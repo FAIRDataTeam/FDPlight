@@ -7,6 +7,7 @@ import IndexStatus from './components/IndexStatus.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
 import PublishPanel from './components/PublishPanel.vue';
 import SetupWizard from './components/SetupWizard.vue';
+import SpreadsheetReport from './components/SpreadsheetReport.vue';
 import { useI18n } from './composables/useI18n';
 import { usePublish } from './composables/usePublish';
 import { LOCALES } from './i18n';
@@ -126,6 +127,8 @@ function removeSelected() {
         <PublishPanel :pub="pub" />
       </section>
     </div>
+
+    <SpreadsheetReport v-if="state.sheetReport.value" :report="state.sheetReport.value" @close="state.sheetReport.value = null" />
 
     <div class="columns">
       <nav ref="treeNav" class="card tree" :aria-label="t('app.entities')" @keydown="onTreeKey">
